@@ -1,4 +1,4 @@
-# Offrows - Project Tracker
+# Offrows
 
 A modern, offline-first project tracking application built with Next.js 15, TypeScript, and modern web technologies. Offrows provides a spreadsheet-like interface similar to Airtable and Baserow, with full offline functionality.
 
