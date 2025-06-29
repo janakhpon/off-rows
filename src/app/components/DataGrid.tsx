@@ -731,10 +731,6 @@ export default function DataGridComponent() {
             resizable: true,
             sortable: true
           }}
-          enableVirtualization={true}
-          enableColumnResize={true}
-          enableRowSelection={true}
-          enableKeyboardNavigation={true}
         />
       </div>
       {/* Add Row Button at Bottom Left */}
