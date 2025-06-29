@@ -1,7 +1,7 @@
 {
-    "name": "Offrows - Project Tracker",
+    "name": "Offrows - Modern Offline-First Spreadsheet & Database App",
     "short_name": "Offrows",
-    "description": "Offline first, open source alternative for simple yet efficient, secure data and tasks management platform. Alternative to Airtable and Baserow.",
+    "description": "Create, manage, and collaborate on spreadsheets and databases offline. A powerful alternative to Airtable and Google Sheets with file uploads, real-time editing, and dark mode support.",
     "icons": [
       {
         "src": "/android-chrome-192x192.png",
@@ -35,25 +35,59 @@
       }
     ],
     "theme_color": "#1E3A8A",
-    "background_color": "#F3F4F6",
-    "start_url": "/",
+    "background_color": "#FFFFFF",
+    "start_url": "https://off-rows.vercel.app/",
     "display": "standalone",
-    "orientation": "portrait",
-    "scope": "/",
-    "lang": "en",
-    "categories": ["business", "productivity", "utilities"],
+    "orientation": "portrait-primary",
+    "scope": "https://off-rows.vercel.app/",
+    "lang": "en-US",
+    "dir": "ltr",
+    "categories": ["business", "productivity", "utilities", "finance"],
     "screenshots": [
       {
         "src": "/preview.png",
         "sizes": "1200x630",
         "type": "image/png",
         "form_factor": "wide",
-        "label": "Offrows Project Tracker Interface"
+        "label": "Offrows Spreadsheet Interface with Dark Mode"
+      },
+      {
+        "src": "/offrows.png",
+        "sizes": "1200x630",
+        "type": "image/png",
+        "form_factor": "wide",
+        "label": "Offrows Database Management Interface"
       }
     ],
     "related_applications": [],
     "prefer_related_applications": false,
     "edge_side_panel": {
       "preferred_width": 400
-    }
+    },
+    "shortcuts": [
+      {
+        "name": "Create New Table",
+        "short_name": "New Table",
+        "description": "Create a new spreadsheet table",
+        "url": "https://off-rows.vercel.app/?action=new-table",
+        "icons": [
+          {
+            "src": "/favicon-32x32.png",
+            "sizes": "32x32"
+          }
+        ]
+      },
+      {
+        "name": "Open Recent",
+        "short_name": "Recent",
+        "description": "Open recently used tables",
+        "url": "https://off-rows.vercel.app/?action=recent",
+        "icons": [
+          {
+            "src": "/favicon-32x32.png",
+            "sizes": "32x32"
+          }
+        ]
+      }
+    ]
   }

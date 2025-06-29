@@ -31,6 +31,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Update data-theme attribute and localStorage
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
+    
+    // Also add/remove dark class for Tailwind compatibility
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   }, [theme]);
 
   const setTheme = (newTheme: Theme) => {

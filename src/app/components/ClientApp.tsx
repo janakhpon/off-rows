@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTables } from '../contexts/TableContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { useAppStore } from '@/lib/store';
 import { Table } from '@/lib/schemas';
 import Header from './Header';
@@ -10,6 +11,7 @@ import OfflineIndicator from './OfflineIndicator';
 
 export default function ClientApp() {
   const { tables, activeTable, setActiveTable } = useTables();
+  const { theme } = useTheme();
   const { addTable } = useAppStore();
   const [showCreateTable, setShowCreateTable] = useState(false);
   const [newTableName, setNewTableName] = useState('');
@@ -37,7 +39,12 @@ export default function ClientApp() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-white dark:bg-gray-800">
+    <div 
+      className="h-screen flex flex-col"
+      style={{
+        backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff'
+      }}
+    >
       <OfflineIndicator />
       <Header onToggleSidebar={() => {}} />
       
@@ -45,16 +52,38 @@ export default function ClientApp() {
         {/* Table Tabs */}
         <div className="w-full flex flex-col">
           {/* Tab Bar */}
-          <div className="flex items-center border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 space-x-2 overflow-x-auto">
+          <div 
+            className="flex items-center border-b px-4 py-2 space-x-2 overflow-x-auto"
+            style={{
+              borderColor: theme === 'dark' ? '#475569' : '#e5e7eb',
+              backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff'
+            }}
+          >
             {tables.map((table) => (
               <button
                 key={table.id}
                 onClick={() => setActiveTable(table)}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
-                  activeTable?.id === table.id
-                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
+                className="px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap"
+                style={{
+                  backgroundColor: activeTable?.id === table.id 
+                    ? (theme === 'dark' ? '#1e3a8a' : '#dbeafe')
+                    : 'transparent',
+                  color: activeTable?.id === table.id
+                    ? (theme === 'dark' ? '#93c5fd' : '#1d4ed8')
+                    : (theme === 'dark' ? '#9ca3af' : '#6b7280')
+                }}
+                onMouseEnter={(e) => {
+                  if (activeTable?.id !== table.id) {
+                    e.currentTarget.style.backgroundColor = theme === 'dark' ? '#374151' : '#f3f4f6';
+                    e.currentTarget.style.color = theme === 'dark' ? '#d1d5db' : '#374151';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTable?.id !== table.id) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = theme === 'dark' ? '#9ca3af' : '#6b7280';
+                  }
+                }}
                 type="button"
               >
                 {table.name}
@@ -64,7 +93,16 @@ export default function ClientApp() {
             {/* Create Table Button */}
             <button
               onClick={() => setShowCreateTable(true)}
-              className="px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/20 rounded-md transition-colors"
+              className="px-3 py-1.5 text-sm font-medium rounded-md transition-colors"
+              style={{
+                color: theme === 'dark' ? '#93c5fd' : '#1d4ed8'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = theme === 'dark' ? '#1e3a8a' : '#dbeafe';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
               type="button"
             >
               + New Table
@@ -81,14 +119,39 @@ export default function ClientApp() {
       {/* Create Table Modal */}
       {showCreateTable && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Create New Table</h2>
+          <div 
+            className="rounded-lg p-6 w-96 max-w-md mx-4"
+            style={{
+              backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff'
+            }}
+          >
+            <h2 
+              className="text-lg font-semibold mb-4"
+              style={{
+                color: theme === 'dark' ? '#f9fafc' : '#111827'
+              }}
+            >
+              Create New Table
+            </h2>
             <input
               type="text"
               value={newTableName}
               onChange={(e) => setNewTableName(e.target.value)}
               placeholder="Enter table name"
-              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+              className="w-full p-2 border rounded-md focus:ring-2 focus:border-transparent"
+              style={{
+                backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
+                borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
+                color: theme === 'dark' ? '#f9fafc' : '#111827'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#3b82f6';
+                e.target.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = theme === 'dark' ? '#4b5563' : '#d1d5db';
+                e.target.style.boxShadow = 'none';
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   handleCreateTable();
@@ -100,7 +163,16 @@ export default function ClientApp() {
             <div className="flex justify-end space-x-2 mt-4">
               <button
                 onClick={() => setShowCreateTable(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                className="px-4 py-2 text-sm font-medium rounded-md transition-colors"
+                style={{
+                  color: theme === 'dark' ? '#d1d5db' : '#374151'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = theme === 'dark' ? '#374151' : '#f3f4f6';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
                 type="button"
               >
                 Cancel

@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import NextImage from 'next/image';
 import { Calendar, FileText, Plus } from 'lucide-react';
 import { useTables } from '../contexts/TableContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { useAppStore } from '@/lib/store';
 import { Field, TableRow, FileValueWithId } from '@/lib/schemas';
 import AddColumnModal from './modals/AddColumnModal';
@@ -25,6 +26,7 @@ const getColumnWidth = (fieldType: string) => {
 
 export default function DataGridComponent() {
   const { activeTable, refreshTables, setActiveTable } = useTables();
+  const { theme } = useTheme();
   const { rows, addRow, updateRow, addColumn, deleteColumn, updateColWidths, updateRowHeights } = useAppStore();
   const [showAddColumn, setShowAddColumn] = useState(false);
   const [showDeleteColumn, setShowDeleteColumn] = useState(false);
@@ -140,6 +142,7 @@ export default function DataGridComponent() {
 
   // Define renderCell function before useMemo
   const renderCell = (field: Field, value: string | number | boolean | FileValueWithId | null, rowIdx?: number, colKey?: string) => {
+    console.log('renderCell called:', { fieldType: field.type, value, valueType: typeof value, rowIdx, colKey }); // Debug log
     switch (field.type) {
       case 'boolean':
         if (typeof value !== 'boolean') return null;
@@ -176,9 +179,18 @@ export default function DataGridComponent() {
         );
       case 'number':
         if (typeof value !== 'number') return null;
+        console.log('Rendering number cell:', value, 'type:', typeof value); // Debug log
         return (
           <div className="flex items-center h-full w-full">
-            <span className="text-sm text-gray-900 dark:text-gray-100">{value || 0}</span>
+            <span 
+              className="text-sm font-medium px-1"
+              style={{ 
+                color: theme === 'dark' ? '#f3f4f6' : '#111827',
+                backgroundColor: 'transparent'
+              }}
+            >
+              {value || 0}
+            </span>
           </div>
         );
       case 'image': {
@@ -249,7 +261,15 @@ export default function DataGridComponent() {
         if (typeof value !== 'string') return null;
         return (
           <div className="flex items-center h-full w-full">
-            <span className="text-sm text-gray-900 dark:text-gray-100">{value}</span>
+            <span 
+              className="text-sm px-1"
+              style={{ 
+                color: theme === 'dark' ? '#f3f4f6' : '#111827',
+                backgroundColor: 'transparent'
+              }}
+            >
+              {value}
+            </span>
           </div>
         );
     }
@@ -431,6 +451,7 @@ export default function DataGridComponent() {
 
   return (
     <div className="flex-grow overflow-auto flex flex-col min-w-0">
+      
       {/* Modals */}
       <AddColumnModal 
         open={showAddColumn} 
@@ -463,34 +484,85 @@ export default function DataGridComponent() {
       )}
 
       {/* Grid */}
-      <div className="flex flex-col border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 overflow-x-auto w-full min-w-0" style={{ minWidth: 600 }}>
+      <div 
+        className="flex flex-col border rounded-lg overflow-x-auto w-full min-w-0 shadow-sm" 
+        style={{ 
+          minWidth: 600,
+          borderColor: theme === 'dark' ? '#475569' : '#e5e7eb',
+          backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff'
+        }}
+        data-theme={theme}
+      >
         {/* Header Row */}
-        <div className="flex border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 sticky top-0 z-10 select-none min-w-0">
+        <div 
+          className="flex border-b sticky top-0 z-10 select-none min-w-0"
+          style={{
+            borderColor: theme === 'dark' ? '#475569' : '#e5e7eb',
+            backgroundColor: theme === 'dark' ? '#0f172a' : '#f9fafb'
+          }}
+        >
           {/* Row ID Header */}
-          <div className="flex items-center justify-center px-2 py-1 font-semibold text-xs text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 min-w-[60px] h-10 flex-shrink-0">
+          <div 
+            className="flex items-center justify-center px-2 py-1 font-semibold text-xs border-r min-w-[60px] h-10 flex-shrink-0"
+            style={{
+              borderColor: theme === 'dark' ? '#475569' : '#e5e7eb',
+              backgroundColor: theme === 'dark' ? '#0f172a' : '#f9fafb',
+              color: theme === 'dark' ? '#d1d5db' : '#374151'
+            }}
+          >
             <span className="truncate">#</span>
           </div>
           
           {activeTable.fields.map((field) => (
             <div
               key={field.id}
-              className="flex items-center px-2 py-1 font-semibold text-xs text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 min-w-[80px] h-10 relative group flex-shrink-0"
-              style={{ width: getColWidth(field.id, field.type), position: 'relative' }}
+              className="flex items-center px-2 py-1 font-semibold text-xs border-r min-w-[80px] h-10 relative group flex-shrink-0"
+              style={{ 
+                width: getColWidth(field.id, field.type), 
+                position: 'relative',
+                borderColor: theme === 'dark' ? '#475569' : '#e5e7eb',
+                backgroundColor: theme === 'dark' ? '#0f172a' : '#f9fafb',
+                color: theme === 'dark' ? '#d1d5db' : '#374151'
+              }}
             >
               <span className="truncate flex-1 min-w-0">{field.name}</span>
               {/* Resize handle */}
               <div
-                className="absolute right-0 top-0 h-full w-1 cursor-col-resize group-hover:bg-blue-500 dark:group-hover:bg-blue-400 transition-colors"
+                className="absolute right-0 top-0 h-full w-1 cursor-col-resize transition-colors"
+                style={{
+                  backgroundColor: theme === 'dark' ? '#3b82f6' : '#3b82f6',
+                  zIndex: 10
+                }}
                 onMouseDown={e => handleResizeStart(e, field.id)}
-                style={{ zIndex: 10 }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = theme === 'dark' ? '#60a5fa' : '#60a5fa';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = theme === 'dark' ? '#3b82f6' : '#3b82f6';
+                }}
               />
             </div>
           ))}
           {/* + Add Column Button as header cell */}
-          <div className="flex items-center justify-center px-2 py-1 min-w-[40px] h-10 flex-shrink-0">
+          <div 
+            className="flex items-center justify-center px-2 py-1 min-w-[40px] h-10 flex-shrink-0"
+            style={{
+              backgroundColor: theme === 'dark' ? '#0f172a' : '#f9fafb'
+            }}
+          >
             <button
               onClick={() => setShowAddColumn(true)}
-              className="flex items-center justify-center w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+              className="flex items-center justify-center w-7 h-7 rounded-full transition-colors"
+              style={{
+                backgroundColor: theme === 'dark' ? '#1e3a8a' : '#dbeafe',
+                color: theme === 'dark' ? '#93c5fd' : '#1d4ed8'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = theme === 'dark' ? '#1e40af' : '#bfdbfe';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = theme === 'dark' ? '#1e3a8a' : '#dbeafe';
+              }}
               title="Add Column"
               type="button"
             >
@@ -499,28 +571,59 @@ export default function DataGridComponent() {
           </div>
         </div>
         {/* Data Rows */}
-        <div className="flex flex-col divide-y divide-gray-100 dark:divide-gray-700 min-w-0">
+        <div 
+          className="flex flex-col divide-y min-w-0"
+          style={{
+            borderColor: theme === 'dark' ? '#374151' : '#f3f4f6'
+          }}
+        >
           {orderedRows.length === 0 ? (
-            <div className="flex items-center justify-center h-24 text-gray-500 dark:text-gray-400 text-sm">
+            <div 
+              className="flex items-center justify-center h-24 text-sm"
+              style={{
+                backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
+                color: theme === 'dark' ? '#9ca3af' : '#6b7280'
+              }}
+            >
               No data available
             </div>
           ) : (
             orderedRows.map((row, rowIndex) => (
               <div
                 key={row.id || rowIndex}
-                className="flex hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-colors min-w-0"
-                style={{ minHeight: rowHeights[row.id!] || defaultRowHeight }}
+                className="flex transition-colors min-w-0"
+                style={{ 
+                  minHeight: rowHeights[row.id!] || defaultRowHeight,
+                  backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = theme === 'dark' ? '#334155' : '#f0f9ff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = theme === 'dark' ? '#1e293b' : '#ffffff';
+                }}
               >
                 {/* Row ID Cell */}
-                <div className="flex items-center justify-center px-2 py-1 min-w-[60px] border-r border-gray-100 dark:border-gray-700 text-xs h-10 flex-shrink-0 bg-gray-50 dark:bg-gray-900">
-                  <span className="text-gray-600 dark:text-gray-400 font-medium">{row.id || rowIndex + 1}</span>
+                <div 
+                  className="flex items-center justify-center px-2 py-1 min-w-[60px] border-r text-xs h-10 flex-shrink-0"
+                  style={{
+                    borderColor: theme === 'dark' ? '#374151' : '#f3f4f6',
+                    backgroundColor: theme === 'dark' ? '#0f172a' : '#f9fafb',
+                    color: theme === 'dark' ? '#9ca3af' : '#6b7280'
+                  }}
+                >
+                  <span className="font-medium">{row.id || rowIndex + 1}</span>
                 </div>
                 
                 {activeTable.fields.map((field) => (
                   <div
                     key={field.id}
-                    className="flex items-center px-2 py-1 min-w-[80px] border-r border-gray-100 dark:border-gray-700 text-xs h-10 cursor-pointer group flex-shrink-0 min-w-0"
-                    style={{ width: getColWidth(field.id, field.type) }}
+                    className="flex items-center px-2 py-1 min-w-[80px] border-r text-xs h-10 cursor-pointer group flex-shrink-0 min-w-0"
+                    style={{ 
+                      width: getColWidth(field.id, field.type),
+                      borderColor: theme === 'dark' ? '#374151' : '#f3f4f6',
+                      backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff'
+                    }}
                   >
                     {field.type === 'image' || field.type === 'file'
                       ? renderEditableCell(field, (() => {
@@ -532,6 +635,7 @@ export default function DataGridComponent() {
                         })(), rowIndex, field.id)
                       : renderEditableCell(field, (() => {
                           const value = row.data[field.id];
+                          console.log('Extracting value for field:', field.id, 'value:', value, 'type:', typeof value); // Debug log
                           if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
                             return value;
                           }
@@ -540,16 +644,36 @@ export default function DataGridComponent() {
                   </div>
                 ))}
                 {/* Empty cell for add column button alignment */}
-                <div className="min-w-[40px] flex-shrink-0" />
+                <div 
+                  className="min-w-[40px] flex-shrink-0"
+                  style={{
+                    backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff'
+                  }}
+                />
               </div>
             ))
           )}
         </div>
         {/* + Add Row Button as a full-width row */}
-        <div className="flex border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 min-w-0">
+        <div 
+          className="flex border-t min-w-0"
+          style={{
+            borderColor: theme === 'dark' ? '#475569' : '#e5e7eb',
+            backgroundColor: theme === 'dark' ? '#0f172a' : '#f9fafb'
+          }}
+        >
           <button
             onClick={handleAddRow}
-            className="flex items-center justify-center w-full py-2 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-950/20 transition-colors font-medium text-xs"
+            className="flex items-center justify-center w-full py-2 transition-colors font-medium text-xs"
+            style={{
+              color: theme === 'dark' ? '#93c5fd' : '#1d4ed8'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = theme === 'dark' ? '#1e3a8a' : '#dbeafe';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
             type="button"
           >
             <Plus className="h-3 w-3 mr-1" /> Add row

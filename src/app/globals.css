@@ -79,6 +79,29 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Explicit dark mode classes for Tailwind */
+.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --card: #1e293b;
+  --card-foreground: #f8fafc;
+  --popover: #1e293b;
+  --popover-foreground: #f8fafc;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary: #334155;
+  --secondary-foreground: #f8fafc;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #334155;
+  --accent-foreground: #f8fafc;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #334155;
+  --input: #334155;
+  --ring: #3b82f6;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -160,13 +183,42 @@ code, pre {
   transform: translateY(0);
 }
 
+/* Theme-based dark mode support */
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+/* Ensure proper contrast for text in both themes */
+[data-theme="dark"] .text-gray-900 {
+  color: rgb(243 244 246) !important; /* gray-100 */
+}
+
+[data-theme="light"] .text-gray-100 {
+  color: rgb(17 24 39) !important; /* gray-900 */
+}
+
+/* Force dark mode text visibility */
+[data-theme="dark"] .text-gray-900,
+.dark .text-gray-900 {
+  color: rgb(243 244 246) !important;
+}
+
+[data-theme="dark"] .text-gray-100,
+.dark .text-gray-100 {
+  color: rgb(17 24 39) !important;
+}
+
 /* Data grid custom styles */
 .rdg {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
   font-family: var(--font-inter), system-ui, sans-serif;
-  background-color: white;
+  background-color: var(--background);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -174,17 +226,17 @@ code, pre {
 }
 
 .rdg-header-row {
-  background-color: #f9fafb;
+  background-color: var(--muted);
   border-bottom: 1px solid var(--border);
   display: flex;
   flex-direction: row;
 }
 
 .rdg-header-cell {
-  background-color: #f9fafb;
+  background-color: var(--muted);
   border-right: 1px solid var(--border);
   font-weight: 600;
-  color: #374151;
+  color: var(--foreground);
   padding: 8px 12px;
   display: flex;
   align-items: center;
@@ -193,116 +245,113 @@ code, pre {
 }
 
 .rdg-row {
-  background-color: white;
+  background-color: var(--background);
   transition: background-color 0.15s ease;
   display: flex;
   flex-direction: row;
 }
 
-.rdg-cell {
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  padding: 8px 12px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  background-color: white;
-  flex-shrink: 0;
-}
-
 .rdg-row:hover {
-  background-color: #f3f4f6;
+  background-color: var(--accent);
 }
 
 .rdg-row.selected {
-  background-color: #dbeafe;
+  background-color: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .rdg-row:last-child .rdg-cell {
   border-bottom: none;
 }
 
+.rdg-cell {
+  border-right: 1px solid var(--border);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-shrink: 0;
+  color: var(--foreground);
+  background-color: var(--background);
+}
+
 .rdg-cell:focus {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--ring);
   outline-offset: -2px;
   z-index: 1;
 }
 
-/* ID column styling */
 .rdg-cell[data-col-key="id"] {
-  background-color: #f9fafb;
-  font-weight: 500;
-  color: #6b7280;
+  background-color: var(--muted);
+  font-weight: 600;
+  color: var(--muted-foreground);
   justify-content: center;
+  min-width: 60px;
 }
 
 .rdg-header-cell[data-col-key="id"] {
-  background-color: #f3f4f6;
+  background-color: var(--muted);
   font-weight: 600;
-  color: #374151;
+  color: var(--muted-foreground);
   justify-content: center;
+  min-width: 60px;
 }
 
-/* Action column styling */
 .rdg-cell[data-col-key="actions"] {
-  background-color: #f9fafb;
   justify-content: center;
+  min-width: 80px;
 }
 
 .rdg-header-cell[data-col-key="actions"] {
-  background-color: #f3f4f6;
   justify-content: center;
+  min-width: 80px;
 }
 
-/* Input styling within cells */
 .rdg-cell input,
-.rdg-cell select {
+.rdg-cell select,
+.rdg-cell textarea {
+  background-color: var(--background);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 0.875rem;
   width: 100%;
-  border: none;
-  background: transparent;
   outline: none;
-  font-size: 14px;
-  color: inherit;
 }
 
 .rdg-cell input:focus,
-.rdg-cell select:focus {
-  background-color: white;
-  border: 1px solid #3b82f6;
-  border-radius: 4px;
-  padding: 2px 4px;
+.rdg-cell select:focus,
+.rdg-cell textarea:focus {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px var(--ring);
 }
 
-/* Checkbox styling */
 .rdg-cell input[type="checkbox"] {
   width: auto;
   margin: 0;
 }
 
-/* Dropdown styling */
 .rdg-cell select {
   cursor: pointer;
 }
 
-/* Badge styling for dropdown values */
 .rdg-cell .inline-flex {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
+  gap: 0.5rem;
+  width: 100%;
+  color: var(--foreground);
 }
 
-/* Icon styling */
 .rdg-cell svg {
   flex-shrink: 0;
+  color: var(--muted-foreground);
 }
 
-/* Image preview styling */
 .rdg-cell img {
-  border-radius: 4px;
-  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
 }
 
 /* Responsive adjustments */
