@@ -3,6 +3,7 @@
 @import "tailwindcss/utilities";
 @import "tailwindcss";
 @import "tw-animate-css";
+@import 'react-data-grid/lib/styles.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -212,162 +213,6 @@ code, pre {
   color: rgb(17 24 39) !important;
 }
 
-/* Data grid custom styles */
-.rdg {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  font-family: var(--font-inter), system-ui, sans-serif;
-  background-color: var(--background);
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-}
-
-.rdg-header-row {
-  background-color: var(--muted);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  flex-direction: row;
-}
-
-.rdg-header-cell {
-  background-color: var(--muted);
-  border-right: 1px solid var(--border);
-  font-weight: 600;
-  color: var(--foreground);
-  padding: 8px 12px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  flex-shrink: 0;
-}
-
-.rdg-row {
-  background-color: var(--background);
-  transition: background-color 0.15s ease;
-  display: flex;
-  flex-direction: row;
-}
-
-.rdg-row:hover {
-  background-color: var(--accent);
-}
-
-.rdg-row.selected {
-  background-color: var(--primary);
-  color: var(--primary-foreground);
-}
-
-.rdg-row:last-child .rdg-cell {
-  border-bottom: none;
-}
-
-.rdg-cell {
-  border-right: 1px solid var(--border);
-  padding: 8px 12px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  flex-shrink: 0;
-  color: var(--foreground);
-  background-color: var(--background);
-}
-
-.rdg-cell:focus {
-  outline: 2px solid var(--ring);
-  outline-offset: -2px;
-  z-index: 1;
-}
-
-.rdg-cell[data-col-key="id"] {
-  background-color: var(--muted);
-  font-weight: 600;
-  color: var(--muted-foreground);
-  justify-content: center;
-  min-width: 60px;
-}
-
-.rdg-header-cell[data-col-key="id"] {
-  background-color: var(--muted);
-  font-weight: 600;
-  color: var(--muted-foreground);
-  justify-content: center;
-  min-width: 60px;
-}
-
-.rdg-cell[data-col-key="actions"] {
-  justify-content: center;
-  min-width: 80px;
-}
-
-.rdg-header-cell[data-col-key="actions"] {
-  justify-content: center;
-  min-width: 80px;
-}
-
-.rdg-cell input,
-.rdg-cell select,
-.rdg-cell textarea {
-  background-color: var(--background);
-  color: var(--foreground);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 4px 8px;
-  font-size: 0.875rem;
-  width: 100%;
-  outline: none;
-}
-
-.rdg-cell input:focus,
-.rdg-cell select:focus,
-.rdg-cell textarea:focus {
-  border-color: var(--ring);
-  box-shadow: 0 0 0 2px var(--ring);
-}
-
-.rdg-cell input[type="checkbox"] {
-  width: auto;
-  margin: 0;
-}
-
-.rdg-cell select {
-  cursor: pointer;
-}
-
-.rdg-cell .inline-flex {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-  color: var(--foreground);
-}
-
-.rdg-cell svg {
-  flex-shrink: 0;
-  color: var(--muted-foreground);
-}
-
-.rdg-cell img {
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .rdg-header-cell,
-  .rdg-cell {
-    padding: 6px 8px;
-    font-size: 13px;
-  }
-  
-  .rdg-cell img {
-    width: 24px;
-    height: 24px;
-  }
-}
-
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
@@ -482,53 +327,6 @@ code, pre {
 
 .animate-slide-up {
   animation: slide-up 0.2s ease-out;
-}
-
-/* DataGrid customizations */
-.rdg {
-  @apply border border-gray-200 rounded-lg overflow-hidden;
-}
-
-.rdg-header-row {
-  @apply bg-gray-50 border-b border-gray-200;
-}
-
-.rdg-header-cell {
-  @apply border-r border-gray-200 last:border-r-0;
-}
-
-.rdg-row {
-  @apply border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150;
-}
-
-.rdg-row:last-child {
-  @apply border-b-0;
-}
-
-.rdg-cell {
-  @apply border-r border-gray-100 last:border-r-0;
-}
-
-.rdg-cell:focus {
-  @apply outline-none ring-2 ring-blue-500 ring-inset;
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  @apply bg-gray-100;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 rounded-full;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-400;
 }
 
 /* Modal backdrop blur */
@@ -653,4 +451,186 @@ code, pre {
 /* Smooth theme transitions */
 * {
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Airtable-like DataGrid Custom Styles */
+/*
+.rdg {
+}
+.rdg-header-row {
+}
+.rdg-header-cell {
+}
+.rdg-row {
+}
+.rdg-row:hover {
+}
+.rdg-row.selected {
+}
+.rdg-row:last-child .rdg-cell {
+}
+.rdg-cell {
+}
+.rdg-cell:focus {
+}
+.rdg-cell[data-col-key="id"] {
+}
+.rdg-header-cell[data-col-key="id"] {
+}
+.rdg-cell[data-col-key="actions"] {
+}
+.rdg-header-cell[data-col-key="actions"] {
+}
+.rdg-cell input,
+.rdg-cell select {
+}
+.rdg-cell input:focus,
+.rdg-cell select:focus {
+}
+.rdg-cell input[type="checkbox"] {
+}
+.rdg-cell select {
+}
+.rdg-cell .inline-flex {
+}
+.rdg-cell svg {
+}
+.rdg-cell img {
+}
+@media (max-width: 768px) {
+  .rdg-header-cell,
+  .rdg-cell {
+  }
+  .rdg-cell img {
+  }
+}
+.rdg-custom {
+}
+.rdg-custom .rdg {
+}
+.rdg-custom .rdg-header-row {
+}
+.rdg-custom .rdg-header-cell {
+}
+.rdg-custom .rdg-header-cell:last-child {
+}
+.rdg-custom .rdg-cell {
+}
+.rdg-custom .rdg-cell:last-child {
+}
+.rdg-custom .rdg-row {
+}
+.rdg-custom .rdg-row:hover {
+}
+.rdg-custom .rdg-row.selected {
+}
+.rdg-custom .rdg-row.selected:hover {
+}
+.rdg-custom .rdg-cell:focus {
+}
+.rdg-custom .rdg-cell input,
+.rdg-custom .rdg-cell select,
+.rdg-custom .rdg-cell textarea {
+}
+.rdg-custom .rdg-cell input:focus,
+.rdg-custom .rdg-cell select:focus,
+.rdg-custom .rdg-cell textarea:focus {
+}
+.rdg-custom .rdg-cell input[type="checkbox"] {
+}
+.rdg-custom .rdg-cell select {
+}
+.rdg-custom .rdg-cell .badge {
+}
+.rdg-custom .rdg-cell .badge.green {
+}
+.rdg-custom .rdg-cell .badge.yellow {
+}
+.rdg-custom .rdg-cell .badge.blue {
+}
+.rdg-custom .rdg-cell .cell-img {
+}
+.rdg-custom .rdg-cell .cell-link {
+}
+.rdg-custom .rdg-cell .cell-link:hover {
+}
+.rdg-custom .rdg-cell .cell-checkbox {
+}
+.rdg-custom .rdg-cell .cell-dropdown {
+}
+.rdg-custom .rdg-cell .cell-none {
+}
+.rdg-custom .rdg-cell .cell-summary {
+}
+.rdg-custom .rdg-cell .cell-crew {
+}
+.rdg-custom .rdg-header-row .rdg-cell {
+}
+.rdg-custom .rdg-header-row .rdg-cell:last-child {
+}
+.rdg-custom .rdg-cell.rdg-cell-resizable {
+}
+.rdg-custom .rdg-cell .rdg-resize-handle {
+}
+.rdg-custom .rdg-cell .rdg-resize-handle:hover {
+}
+.rdg-custom .rdg-cell[aria-colindex="1"] {
+}
+.rdg-custom .rdg-viewport {
+}
+*/
+
+/* --- DataGrid Custom Theme & Cell Styles --- */
+.rdg-custom .rdg,
+.rdg-custom .rdg-header-row,
+.rdg-custom .rdg-row,
+.rdg-custom .rdg-cell {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+[data-theme="dark"] .rdg-custom .rdg,
+[data-theme="dark"] .rdg-custom .rdg-header-row,
+[data-theme="dark"] .rdg-custom .rdg-row,
+[data-theme="dark"] .rdg-custom .rdg-cell {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+.rdg-custom .rdg-cell .cell-img {
+  max-width: 100%;
+  max-height: 48px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+.rdg-custom .rdg-cell .cell-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+.rdg-custom .rdg-cell input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+.rdg-custom .rdg-cell .cell-link {
+  color: var(--primary);
+  text-decoration: underline;
+  word-break: break-all;
+}
+.rdg-custom .rdg-cell .cell-none {
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+.rdg-custom .rdg-cell .cell-dropdown {
+  color: var(--foreground);
+  padding: 0 4px;
+}
+.rdg-custom .rdg-cell .cell-number {
+  text-align: right;
+  padding-right: 8px;
+  color: var(--foreground);
 }

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import NextImage from 'next/image';
 import { Menu, Search, Settings, Download, Upload, Share2, Plus } from 'lucide-react';
 import { useTables } from '../contexts/TableContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -83,13 +82,6 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
           </button>
           
           <div className="flex items-center space-x-3">
-            <NextImage
-              src="/offrows.png"
-              alt="Offrows"
-              width={32}
-              height={32}
-              className="h-8 w-8"
-            />
             <div className="hidden sm:block">
               <h1 
                 className="text-xl font-bold"

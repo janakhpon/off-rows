@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { TableProvider } from './contexts/TableContext';
+import 'react-data-grid/lib/styles.css';
 
 export const metadata: Metadata = {
   title: 'Offrows - Modern Offline-First Spreadsheet & Database App',

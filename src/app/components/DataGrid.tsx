@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from 'react';
-import NextImage from 'next/image';
-import { Calendar, FileText, Plus } from 'lucide-react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { DataGrid, RenderCellProps } from 'react-data-grid';
+import { Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { useTables } from '../contexts/TableContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAppStore } from '@/lib/store';
@@ -10,6 +10,8 @@ import { Field, TableRow, FileValueWithId } from '@/lib/schemas';
 import AddColumnModal from './modals/AddColumnModal';
 import DeleteColumnModal from './modals/DeleteColumnModal';
 import { fileOperations } from '@/lib/database';
+
+type DataGridRow = { id: number; data: Record<string, string | number | boolean | FileValueWithId | null> };
 
 const getColumnWidth = (fieldType: string) => {
   switch (fieldType) {
@@ -27,20 +29,19 @@ const getColumnWidth = (fieldType: string) => {
 export default function DataGridComponent() {
   const { activeTable, refreshTables, setActiveTable } = useTables();
   const { theme } = useTheme();
-  const { rows, addRow, updateRow, addColumn, deleteColumn, updateColWidths, updateRowHeights } = useAppStore();
+  const { rows, addRow, updateRow, deleteRow, addColumn, deleteColumn, updateColWidths, updateRowHeights, deleteTable } = useAppStore();
   const [showAddColumn, setShowAddColumn] = useState(false);
   const [showDeleteColumn, setShowDeleteColumn] = useState(false);
   const [columnToDelete, setColumnToDelete] = useState<Field | null>(null);
-  // Inline editing state
-  const [editingCell, setEditingCell] = useState<{ rowIdx: number; colKey: string } | null>(null);
-  const [editValue, setEditValue] = useState<string | number | boolean | FileValueWithId | null>(null);
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteType, setDeleteType] = useState<'rows' | 'table' | null>(null);
 
   // --- ROW ORDER STATE ---
   const [rowOrder, setRowOrder] = useState<number[]>([]);
   useEffect(() => {
     if (rows.length > 0) {
       setRowOrder((prev) => {
-        // If prev is empty or doesn't match, reset to current order
         if (prev.length !== rows.length || !prev.every((id, i) => id === rows[i].id)) {
           return rows.map((r) => r.id!);
         }
@@ -48,6 +49,7 @@ export default function DataGridComponent() {
       });
     }
   }, [rows]);
+
   // Helper to get rows in original order
   const orderedRows = useMemo(() => {
     if (!rowOrder.length) return rows;
@@ -57,69 +59,28 @@ export default function DataGridComponent() {
 
   // --- COLUMN WIDTH STATE (PERSISTED IN DB) ---
   const defaultColWidth = 140;
-  const minColWidth = 80;
   const [colWidths, setColWidths] = useState<Record<string, number>>({});
   useEffect(() => {
     if (activeTable && activeTable.colWidths) setColWidths(activeTable.colWidths);
   }, [activeTable]);
-  // Persist to DB on change
+  
   useEffect(() => {
     if (activeTable) updateColWidths(activeTable.id!, colWidths);
   }, [colWidths, activeTable, updateColWidths]);
 
   // --- ROW HEIGHT STATE (PERSISTED IN DB) ---
-  const defaultRowHeight = 36;
   const [rowHeights, setRowHeights] = useState<Record<string, number>>({});
   useEffect(() => {
     if (activeTable && activeTable.rowHeights) setRowHeights(activeTable.rowHeights);
   }, [activeTable]);
+  
   useEffect(() => {
     if (activeTable) updateRowHeights(activeTable.id!, rowHeights);
   }, [rowHeights, activeTable, updateRowHeights]);
 
-  const resizingCol = useRef<string | null>(null);
-  const startX = useRef<number>(0);
-  const startWidth = useRef<number>(0);
-  const [resizeLine, setResizeLine] = useState<number | null>(null);
-
   // Helper to get column width
   const getColWidth = (fieldId: string, fieldType?: string) =>
     colWidths[fieldId] || (fieldType ? getColumnWidth(fieldType) : defaultColWidth);
-
-  // --- COLUMN RESIZE HANDLERS ---
-  const handleResizeStart = (e: React.MouseEvent, fieldId: string) => {
-    e.preventDefault();
-    resizingCol.current = fieldId;
-    startX.current = e.clientX;
-    startWidth.current = getColWidths()[fieldId] || defaultColWidth;
-    setResizeLine(e.clientX);
-    document.addEventListener('mousemove', handleResizeMove);
-    document.addEventListener('mouseup', handleResizeEnd);
-  };
-  const handleResizeMove = (e: MouseEvent) => {
-    if (!resizingCol.current) return;
-    setResizeLine(e.clientX);
-  };
-  const handleResizeEnd = (e: MouseEvent) => {
-    if (!resizingCol.current) return;
-    const delta = e.clientX - startX.current;
-    setColWidths((prev) => {
-      const newWidth = Math.max(minColWidth, startWidth.current + delta);
-      return { ...prev, [resizingCol.current!]: newWidth };
-    });
-    resizingCol.current = null;
-    setResizeLine(null);
-    document.removeEventListener('mousemove', handleResizeMove);
-    document.removeEventListener('mouseup', handleResizeEnd);
-  };
-  const getColWidths = () => colWidths;
-
-  // --- FILE/IMAGE CELL HANDLER ---
-  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const handleFileClick = (rowIdx: number, colKey: string) => {
-    const refKey = `${rowIdx}-${colKey}`;
-    fileInputRefs.current[refKey]?.click();
-  };
 
   // Add state for file URLs
   const [fileUrls, setFileUrls] = useState<Record<number, string>>({});
@@ -140,263 +101,177 @@ export default function DataGridComponent() {
     }
   };
 
-  // Define renderCell function before useMemo
-  const renderCell = (field: Field, value: string | number | boolean | FileValueWithId | null, rowIdx?: number, colKey?: string) => {
-    console.log('renderCell called:', { fieldType: field.type, value, valueType: typeof value, rowIdx, colKey }); // Debug log
-    switch (field.type) {
-      case 'boolean':
-        if (typeof value !== 'boolean') return null;
-        return (
-          <div className="flex items-center justify-center h-full w-full">
-            <input
-              type="checkbox"
-              checked={!!value}
-              onChange={async (e) => {
-                if (rowIdx !== undefined && colKey) {
-                  await handleCellValueChange(rowIdx, colKey, e.target.checked);
-                }
-              }}
-              className="h-4 w-4 text-blue-600 dark:text-blue-400 border-gray-300 dark:border-gray-600 rounded cursor-pointer bg-white dark:bg-gray-700"
-            />
-          </div>
-        );
-      case 'dropdown':
-        if (typeof value !== 'string') return null;
-        return (
-          <div className="flex items-center h-full w-full">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-              {value || 'Not set'}
-            </span>
-          </div>
-        );
-      case 'date':
-        if (typeof value !== 'string') return null;
-        return (
-          <div className="flex items-center h-full w-full">
-            <Calendar className="mr-2 h-4 w-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
-            <span className="text-sm text-gray-600 dark:text-gray-300 truncate">{value || 'Not set'}</span>
-          </div>
-        );
-      case 'number':
-        if (typeof value !== 'number') return null;
-        console.log('Rendering number cell:', value, 'type:', typeof value); // Debug log
-        return (
-          <div className="flex items-center h-full w-full">
-            <span 
-              className="text-sm font-medium px-1"
-              style={{ 
-                color: theme === 'dark' ? '#f3f4f6' : '#111827',
-                backgroundColor: 'transparent'
-              }}
-            >
-              {value || 0}
-            </span>
-          </div>
-        );
-      case 'image': {
-        // Only support a single file object per cell
-        if (!value || typeof value !== 'object' || Array.isArray(value) || !('fileId' in value)) return null;
-        const v = value as FileValueWithId;
-        const imgUrl = getFileUrl(v.fileId);
-        return (
-          <div className="flex items-center h-full w-full cursor-pointer" onClick={() => rowIdx !== undefined && colKey && handleFileClick(rowIdx, colKey)}>
-            {imgUrl ? (
-              <a href={imgUrl} target="_blank" rel="noopener noreferrer" className="flex items-center" onClick={(e) => e.stopPropagation()}>
-                <NextImage src={imgUrl} alt={v.name} width={32} height={32} className="h-8 w-8 object-cover rounded border border-gray-200 dark:border-gray-600 flex-shrink-0" style={{ minWidth: 32, minHeight: 32 }} />
-              </a>
-            ) : (
-              <span className="text-sm text-gray-400 dark:text-gray-500">Click to upload</span>
-            )}
-            {rowIdx !== undefined && colKey && (
-              <input
-                type="file"
-                accept="image/png,image/jpeg"
-                ref={el => { fileInputRefs.current[`${rowIdx}-${colKey}`] = el; }}
-                style={{ display: 'none' }}
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    const fileId = await fileOperations.addFile(file);
-                    await handleCellValueChange(rowIdx, colKey, { name: file.name, type: file.type, fileId });
-                  }
-                }}
-              />
-            )}
-          </div>
-        );
-      }
-      case 'file': {
-        // Only support a single file object per cell
-        if (!value || typeof value !== 'object' || Array.isArray(value) || !('fileId' in value)) return null;
-        const fileValue = value as FileValueWithId;
-        const fileUrl = getFileUrl(fileValue.fileId);
-        return (
-          <div className="flex items-center h-full w-full cursor-pointer" onClick={() => rowIdx !== undefined && colKey && handleFileClick(rowIdx, colKey)}>
-            {fileUrl ? (
-              <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-1 text-blue-600 dark:text-blue-400 underline" onClick={(e) => e.stopPropagation()}>
-                <FileText className="h-4 w-4 text-green-500 dark:text-green-400 flex-shrink-0" />
-                <span className="text-xs truncate max-w-[80px]">{fileValue.name}</span>
-              </a>
-            ) : (
-              <span className="text-sm text-gray-400 dark:text-gray-500">Click to upload</span>
-            )}
-            {rowIdx !== undefined && colKey && (
-              <input
-                type="file"
-                ref={el => { fileInputRefs.current[`${rowIdx}-${colKey}`] = el; }}
-                style={{ display: 'none' }}
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    const fileId = await fileOperations.addFile(file);
-                    await handleCellValueChange(rowIdx, colKey, { name: file.name, type: file.type, fileId });
-                  }
-                }}
-              />
-            )}
-          </div>
-        );
-      }
-      default:
-        if (typeof value !== 'string') return null;
-        return (
-          <div className="flex items-center h-full w-full">
-            <span 
-              className="text-sm px-1"
-              style={{ 
-                color: theme === 'dark' ? '#f3f4f6' : '#111827',
-                backgroundColor: 'transparent'
-              }}
-            >
-              {value}
-            </span>
-          </div>
-        );
+  // --- DELETE FUNCTIONALITY ---
+  const handleDeleteRows = async () => {
+    const rowsToDelete = Array.from(selectedRows);
+    for (const rowId of rowsToDelete) {
+      await deleteRow(rowId);
+    }
+    setSelectedRows(new Set());
+    setShowDeleteConfirm(false);
+    setDeleteType(null);
+  };
+
+  const handleDeleteTable = async () => {
+    if (activeTable) {
+      // Delete the entire table using the store function
+      await deleteTable(activeTable.id!);
+      setShowDeleteConfirm(false);
+      setDeleteType(null);
     }
   };
 
-  const handleCellValueChange = async (rowIdx: number, colKey: string, value: string | number | boolean | FileValueWithId | null) => {
-    const row = rows[rowIdx];
-    if (!row) return;
-    const field = activeTable?.fields.find(f => f.id === colKey);
-    if (!field) return;
-    let newValue: string | number | boolean | FileValueWithId | null = value;
-    if ((field.type === 'image' || field.type === 'file')) {
-      if (typeof value !== 'object' || value === null || !('fileId' in value)) return;
-      newValue = value as FileValueWithId;
-    } else {
-      if (typeof value === 'object') newValue = '';
-    }
-    const updatedRow = {
-      ...row,
-      data: { ...row.data, [colKey]: newValue },
-    };
-    await updateRow(row.id!, { data: updatedRow.data });
+  const confirmDelete = (type: 'rows' | 'table') => {
+    setDeleteType(type);
+    setShowDeleteConfirm(true);
   };
 
-  // Render cell with inline editing
-  const renderEditableCell = (field: Field, value: string | number | boolean | FileValueWithId | null, rowIdx: number, colKey: string) => {
-    const isEditing = editingCell && editingCell.rowIdx === rowIdx && editingCell.colKey === colKey;
-    if (!isEditing) {
-      return (
-        <div
-          className="w-full h-full cursor-pointer"
-          tabIndex={0}
-          onClick={() => {
-            setEditingCell({ rowIdx, colKey });
-            setEditValue(value ?? '');
-          }}
-          onDoubleClick={() => {
-            setEditingCell({ rowIdx, colKey });
-            setEditValue(value ?? '');
-          }}
-          onKeyDown={e => {
-            if (e.key === 'Enter') {
-              setEditingCell({ rowIdx, colKey });
-              setEditValue(value ?? '');
+  // --- REACT-DATA-GRID COLUMNS ---
+  const [imageModal, setImageModal] = useState<{ url: string; name: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const columns = useMemo(() => {
+    if (!activeTable) return [];
+    return activeTable.fields.map((field) => ({
+      key: field.id,
+      name: field.name,
+      width: getColWidth(field.id, field.type),
+      resizable: true,
+      renderCell: ({ row }: RenderCellProps<DataGridRow>) => {
+        const value = row.data[field.id];
+        switch (field.type) {
+          case 'dropdown':
+            return <span className="cell-dropdown">{typeof value === 'string' ? value : 'None'}</span>;
+          case 'boolean':
+            return (
+              <span className="cell-checkbox">
+                <input
+                  type="checkbox"
+                  checked={!!value}
+                  onChange={e => {
+                    // Update the boolean value in the DB/store
+                    updateRow(row.id, { data: { ...row.data, [field.id]: e.target.checked } });
+                  }}
+                  aria-label={field.name}
+                />
+              </span>
+            );
+          case 'image': {
+            if (value && typeof value === 'object' && !Array.isArray(value) && 'fileId' in value) {
+              const v = value as FileValueWithId;
+              const imgUrl = getFileUrl(v.fileId);
+              return imgUrl ? (
+                <>
+                  <img
+                    src={imgUrl}
+                    alt={v.name}
+                    className="cursor-pointer cell-img"
+                    onClick={() => setImageModal({ url: imgUrl, name: v.name })}
+                  />
+                </>
+              ) : <span className="cell-none">None</span>;
             }
-          }}
-        >
-          {renderCell(field, value, rowIdx, colKey)}
-        </div>
-      );
-    }
-    // Editor
-    const inputValue = typeof editValue === 'boolean' ? '' : editValue ?? '';
-    switch (field.type) {
-      case 'boolean':
-        return (
-          <input
-            type="checkbox"
-            checked={!!editValue}
-            autoFocus
-            onChange={e => setEditValue(e.target.checked)}
-            onBlur={async () => { if (typeof editValue !== 'object') { await handleCellValueChange(rowIdx, colKey, editValue ?? ''); } setEditingCell(null); }}
-            onKeyDown={async e => { if (e.key === 'Enter' && typeof editValue !== 'object') { await handleCellValueChange(rowIdx, colKey, editValue ?? ''); setEditingCell(null); } else if (e.key === 'Escape') { setEditingCell(null); } }}
-            className="h-4 w-4 text-blue-600 dark:text-blue-400 border-gray-300 dark:border-gray-600 rounded cursor-pointer bg-white dark:bg-gray-700"
-          />
-        );
-      case 'dropdown':
-        return (
-          <select
-            value={typeof inputValue === 'object' ? '' : inputValue ?? ''}
-            autoFocus
-            onChange={e => setEditValue(e.target.value)}
-            onBlur={async () => { if (typeof editValue !== 'object') { await handleCellValueChange(rowIdx, colKey, editValue ?? ''); } setEditingCell(null); }}
-            onKeyDown={async e => { if (e.key === 'Enter' && typeof editValue !== 'object') { await handleCellValueChange(rowIdx, colKey, editValue ?? ''); setEditingCell(null); } else if (e.key === 'Escape') { setEditingCell(null); } }}
-            className="w-full p-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 cursor-pointer bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-          >
-            <option value="">Select...</option>
-            {field.options?.map(option => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        );
-      case 'date':
-        return (
-          <input
-            type="date"
-            value={typeof inputValue === 'object' ? '' : inputValue ?? ''}
-            autoFocus
-            onChange={e => setEditValue(e.target.value)}
-            onBlur={async () => { if (typeof editValue !== 'object') { await handleCellValueChange(rowIdx, colKey, editValue ?? ''); } setEditingCell(null); }}
-            onKeyDown={async e => { if (e.key === 'Enter' && typeof editValue !== 'object') { await handleCellValueChange(rowIdx, colKey, editValue ?? ''); setEditingCell(null); } else if (e.key === 'Escape') { setEditingCell(null); } }}
-            className="w-full p-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 cursor-pointer bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-          />
-        );
-      case 'image':
-      case 'file':
-        return (
-          <input
-            type="file"
-            accept={field.type === 'image' ? 'image/png,image/jpeg' : '.pdf,.csv,.json'}
-            autoFocus
-            onChange={async (e) => { const file = e.target.files?.[0]; if (file) { const fileId = await fileOperations.addFile(file); await handleCellValueChange(rowIdx, colKey, { name: file.name, type: file.type, fileId }); } setEditingCell(null); }}
-            className="w-full text-xs text-gray-900 dark:text-gray-100"
-          />
-        );
-      default:
-        return (
-          <input
-            type={field.type === 'number' ? 'number' : 'text'}
-            value={typeof inputValue === 'object' ? '' : inputValue ?? ''}
-            autoFocus
-            onChange={e => setEditValue(e.target.value)}
-            onBlur={async () => { if (typeof editValue !== 'object') { await handleCellValueChange(rowIdx, colKey, editValue ?? ''); } setEditingCell(null); }}
-            onKeyDown={async e => { if (e.key === 'Enter' && typeof editValue !== 'object') { await handleCellValueChange(rowIdx, colKey, editValue ?? ''); setEditingCell(null); } else if (e.key === 'Escape') { setEditingCell(null); } }}
-            className="w-full p-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 cursor-pointer bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-          />
-        );
-    }
-  };
+            // If empty, show upload button
+            return (
+              <>
+                <button
+                  className="text-xs text-blue-600 underline"
+                  onClick={() => fileInputRef.current?.click()}
+                  type="button"
+                >
+                  Upload
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      // Save file to IndexedDB and update row
+                      const fileId = await fileOperations.addFile(file);
+                      updateRow(row.id, { data: { ...row.data, [field.id]: { fileId, name: file.name, type: file.type } } });
+                    }
+                  }}
+                />
+              </>
+            );
+          }
+          case 'file': {
+            if (!value || typeof value !== 'object' || Array.isArray(value) || !('fileId' in value)) {
+              return <span className="cell-none">None</span>;
+            }
+            const fileValue = value as FileValueWithId;
+            const fileUrl = getFileUrl(fileValue.fileId);
+            return fileUrl ? (
+              <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="cell-link">{fileValue.name}</a>
+            ) : <span className="cell-none">None</span>;
+          }
+          case 'date': {
+            return (
+              <input
+                type="date"
+                className="w-full text-center bg-transparent border-none focus:ring-0"
+                value={typeof value === 'string' ? value : ''}
+                onChange={e => updateRow(row.id, { data: { ...row.data, [field.id]: e.target.value } })}
+                style={{ minWidth: 100 }}
+              />
+            );
+          }
+          case 'number': {
+            return (
+              <input
+                type="number"
+                className="w-full text-right bg-transparent border-none cell-number focus:ring-0"
+                value={typeof value === 'number' ? value : ''}
+                onChange={e => {
+                  const num = e.target.value === '' ? null : Number(e.target.value);
+                  updateRow(row.id, { data: { ...row.data, [field.id]: num } });
+                }}
+                style={{ minWidth: 60 }}
+              />
+            );
+          }
+          default:
+            if (field.id === 'devilfruit') {
+              if (!value || typeof value !== 'string' || value === 'None') return <span className="badge">None</span>;
+              let badgeClass = 'badge';
+              if (value.includes('Gum') || value.includes('Hana')) badgeClass += ' green';
+              else if (value.includes('Hito')) badgeClass += ' yellow';
+              else badgeClass += ' blue';
+              return <span className={badgeClass}>{value}</span>;
+            }
+            if (field.id === 'crew' || field.id === 'memberName' || field.id === 'crewName') {
+              return <span className="cell-crew">{typeof value === 'string' ? value : ''}</span>;
+            }
+            if (field.id === 'summary') {
+              return <span className="cell-summary">{typeof value === 'string' ? value : ''}</span>;
+            }
+            if (typeof value === 'string' || typeof value === 'number') {
+              return <span>{value}</span>;
+            }
+            return <span />;
+        }
+      }
+    }));
+  }, [activeTable, theme, getColWidth, getFileUrl, updateRow]);
 
-  const confirmDeleteColumn = async () => {
-    if (columnToDelete) {
-      await deleteColumn(columnToDelete.id);
-      setShowDeleteColumn(false);
-      setColumnToDelete(null);
+  // --- REACT-DATA-GRID ROWS ---
+  const gridRows = useMemo(() => {
+    return orderedRows.map((row) => ({
+      id: row.id!,
+      data: row.data,
+      ...row.data
+    })) as DataGridRow[];
+  }, [orderedRows]);
+
+  // --- REACT-DATA-GRID EVENTS ---
+  const handleRowsChange = async (newRows: DataGridRow[]) => {
+    for (const newRow of newRows) {
+      const originalRow = orderedRows.find(r => r.id === newRow.id);
+      if (originalRow && JSON.stringify(originalRow.data) !== JSON.stringify(newRow.data)) {
+        await updateRow(newRow.id, { data: newRow.data });
+      }
     }
   };
 
@@ -406,7 +281,6 @@ export default function DataGridComponent() {
     const newRow: Omit<TableRow, 'id' | 'createdAt' | 'updatedAt'> = {
       tableId: activeTable.id!,
       data: activeTable.fields.reduce((acc, field) => {
-        // For file/image fields, ensure we only get a single file object, not an array
         if (field.type === 'image' || field.type === 'file') {
           if (field.defaultValue && typeof field.defaultValue === 'object' && !Array.isArray(field.defaultValue) && 'fileId' in field.defaultValue) {
             acc[field.id] = field.defaultValue as FileValueWithId;
@@ -423,6 +297,14 @@ export default function DataGridComponent() {
     await addRow(newRow);
   };
 
+  const confirmDeleteColumn = async () => {
+    if (columnToDelete) {
+      await deleteColumn(columnToDelete.id);
+      setShowDeleteColumn(false);
+      setColumnToDelete(null);
+    }
+  };
+
   useEffect(() => {
     const fileIds: number[] = [];
     orderedRows.forEach(row => {
@@ -435,23 +317,36 @@ export default function DataGridComponent() {
       });
     });
     fileIds.forEach(id => { if (!fileUrls[id]) fetchAndCacheFileUrl(id); });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderedRows, activeTable]);
+  }, [orderedRows, activeTable, fileUrls]);
+
+  const [rowHeight, setRowHeight] = useState(36); // default: medium
 
   if (!activeTable) {
     return (
-      <div className="flex-grow overflow-auto flex items-center justify-center">
+      <div className="flex overflow-auto flex-grow justify-center items-center">
         <div className="text-center">
-          <div className="text-gray-500 text-lg mb-2">No table selected</div>
-          <p className="text-gray-400">Please select a table from the sidebar to view data</p>
+          <div 
+            className="mb-2 text-lg"
+            style={{
+              color: theme === 'dark' ? '#6b7280' : '#6b7280'
+            }}
+          >
+            No table selected
+          </div>
+          <p 
+            style={{
+              color: theme === 'dark' ? '#9ca3af' : '#9ca3af'
+            }}
+          >
+            Please select a table from the sidebar to view data
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-grow overflow-auto flex flex-col min-w-0">
-      
+    <div className="flex overflow-auto flex-col flex-grow min-w-0">
       {/* Modals */}
       <AddColumnModal 
         open={showAddColumn} 
@@ -459,7 +354,6 @@ export default function DataGridComponent() {
         onAddColumn={async (field) => {
           await addColumn(field);
           await refreshTables();
-          // Set the updated table as active
           const updated = (await refreshTables(), activeTable && (await refreshTables(), activeTable.id) ? (useAppStore.getState().tables.find(t => t.id === activeTable.id) || activeTable) : activeTable);
           setActiveTable(updated);
           setShowAddColumn(false);
@@ -475,210 +369,218 @@ export default function DataGridComponent() {
         columnName={columnToDelete?.name || ''}
       />
 
-      {/* Resize line indicator */}
-      {resizeLine !== null && (
-        <div
-          className="fixed top-0 left-0 h-full w-0.5 bg-blue-500 z-50 pointer-events-none"
-          style={{ left: resizeLine }}
-        />
-      )}
-
-      {/* Grid */}
-      <div 
-        className="flex flex-col border rounded-lg overflow-x-auto w-full min-w-0 shadow-sm" 
-        style={{ 
-          minWidth: 600,
-          borderColor: theme === 'dark' ? '#475569' : '#e5e7eb',
-          backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff'
-        }}
-        data-theme={theme}
-      >
-        {/* Header Row */}
-        <div 
-          className="flex border-b sticky top-0 z-10 select-none min-w-0"
-          style={{
-            borderColor: theme === 'dark' ? '#475569' : '#e5e7eb',
-            backgroundColor: theme === 'dark' ? '#0f172a' : '#f9fafb'
-          }}
-        >
-          {/* Row ID Header */}
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50">
           <div 
-            className="flex items-center justify-center px-2 py-1 font-semibold text-xs border-r min-w-[60px] h-10 flex-shrink-0"
+            className="p-6 mx-4 w-96 max-w-md rounded-lg"
             style={{
-              borderColor: theme === 'dark' ? '#475569' : '#e5e7eb',
-              backgroundColor: theme === 'dark' ? '#0f172a' : '#f9fafb',
-              color: theme === 'dark' ? '#d1d5db' : '#374151'
+              backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff'
             }}
           >
-            <span className="truncate">#</span>
-          </div>
-          
-          {activeTable.fields.map((field) => (
-            <div
-              key={field.id}
-              className="flex items-center px-2 py-1 font-semibold text-xs border-r min-w-[80px] h-10 relative group flex-shrink-0"
-              style={{ 
-                width: getColWidth(field.id, field.type), 
-                position: 'relative',
-                borderColor: theme === 'dark' ? '#475569' : '#e5e7eb',
-                backgroundColor: theme === 'dark' ? '#0f172a' : '#f9fafb',
+            <div className="flex items-center mb-4">
+              <AlertTriangle className="mr-3 w-6 h-6" style={{ color: theme === 'dark' ? '#f59e0b' : '#f59e0b' }} />
+              <h2 
+                className="text-lg font-semibold"
+                style={{
+                  color: theme === 'dark' ? '#f9fafc' : '#111827'
+                }}
+              >
+                Confirm Delete
+              </h2>
+            </div>
+            <p 
+              className="mb-4"
+              style={{
                 color: theme === 'dark' ? '#d1d5db' : '#374151'
               }}
             >
-              <span className="truncate flex-1 min-w-0">{field.name}</span>
-              {/* Resize handle */}
-              <div
-                className="absolute right-0 top-0 h-full w-1 cursor-col-resize transition-colors"
-                style={{
-                  backgroundColor: theme === 'dark' ? '#3b82f6' : '#3b82f6',
-                  zIndex: 10
+              {deleteType === 'rows' 
+                ? `Are you sure you want to delete ${selectedRows.size} selected row(s)? This action cannot be undone.`
+                : 'Are you sure you want to delete this entire table? This action cannot be undone.'
+              }
+            </p>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setDeleteType(null);
                 }}
-                onMouseDown={e => handleResizeStart(e, field.id)}
+                className="px-4 py-2 text-sm font-medium rounded-md transition-colors"
+                style={{
+                  color: theme === 'dark' ? '#d1d5db' : '#374151'
+                }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = theme === 'dark' ? '#60a5fa' : '#60a5fa';
+                  e.currentTarget.style.backgroundColor = theme === 'dark' ? '#374151' : '#f3f4f6';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = theme === 'dark' ? '#3b82f6' : '#3b82f6';
+                  e.currentTarget.style.backgroundColor = 'transparent';
                 }}
-              />
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={deleteType === 'rows' ? handleDeleteRows : handleDeleteTable}
+                className="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors"
+                style={{
+                  backgroundColor: theme === 'dark' ? '#dc2626' : '#dc2626'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = theme === 'dark' ? '#b91c1c' : '#b91c1c';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = theme === 'dark' ? '#dc2626' : '#dc2626';
+                }}
+                type="button"
+              >
+                Delete
+              </button>
             </div>
-          ))}
-          {/* + Add Column Button as header cell */}
-          <div 
-            className="flex items-center justify-center px-2 py-1 min-w-[40px] h-10 flex-shrink-0"
-            style={{
-              backgroundColor: theme === 'dark' ? '#0f172a' : '#f9fafb'
-            }}
-          >
+          </div>
+        </div>
+      )}
+
+      {/* Image Modal */}
+      {imageModal && (
+        <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-60">
+          <div className="flex flex-col items-center p-4 w-full max-w-lg bg-white rounded-lg shadow-lg dark:bg-gray-900">
+            <img src={imageModal.url} alt={imageModal.name} className="mb-4 max-w-full max-h-96" />
+            <div className="mb-2 text-sm text-center">{imageModal.name}</div>
             <button
-              onClick={() => setShowAddColumn(true)}
-              className="flex items-center justify-center w-7 h-7 rounded-full transition-colors"
-              style={{
-                backgroundColor: theme === 'dark' ? '#1e3a8a' : '#dbeafe',
-                color: theme === 'dark' ? '#93c5fd' : '#1d4ed8'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = theme === 'dark' ? '#1e40af' : '#bfdbfe';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = theme === 'dark' ? '#1e3a8a' : '#dbeafe';
-              }}
-              title="Add Column"
-              type="button"
+              className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
+              onClick={() => setImageModal(null)}
             >
-              <Plus className="h-4 w-4" />
+              Close
             </button>
           </div>
         </div>
-        {/* Data Rows */}
-        <div 
-          className="flex flex-col divide-y min-w-0"
-          style={{
-            borderColor: theme === 'dark' ? '#374151' : '#f3f4f6'
-          }}
-        >
-          {orderedRows.length === 0 ? (
-            <div 
-              className="flex items-center justify-center h-24 text-sm"
-              style={{
-                backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
-                color: theme === 'dark' ? '#9ca3af' : '#6b7280'
-              }}
-            >
-              No data available
-            </div>
-          ) : (
-            orderedRows.map((row, rowIndex) => (
-              <div
-                key={row.id || rowIndex}
-                className="flex transition-colors min-w-0"
-                style={{ 
-                  minHeight: rowHeights[row.id!] || defaultRowHeight,
-                  backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = theme === 'dark' ? '#334155' : '#f0f9ff';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = theme === 'dark' ? '#1e293b' : '#ffffff';
-                }}
-              >
-                {/* Row ID Cell */}
-                <div 
-                  className="flex items-center justify-center px-2 py-1 min-w-[60px] border-r text-xs h-10 flex-shrink-0"
-                  style={{
-                    borderColor: theme === 'dark' ? '#374151' : '#f3f4f6',
-                    backgroundColor: theme === 'dark' ? '#0f172a' : '#f9fafb',
-                    color: theme === 'dark' ? '#9ca3af' : '#6b7280'
-                  }}
-                >
-                  <span className="font-medium">{row.id || rowIndex + 1}</span>
-                </div>
-                
-                {activeTable.fields.map((field) => (
-                  <div
-                    key={field.id}
-                    className="flex items-center px-2 py-1 min-w-[80px] border-r text-xs h-10 cursor-pointer group flex-shrink-0 min-w-0"
-                    style={{ 
-                      width: getColWidth(field.id, field.type),
-                      borderColor: theme === 'dark' ? '#374151' : '#f3f4f6',
-                      backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff'
-                    }}
-                  >
-                    {field.type === 'image' || field.type === 'file'
-                      ? renderEditableCell(field, (() => {
-                          const value = row.data[field.id];
-                          if (value && typeof value === 'object' && !Array.isArray(value) && 'fileId' in value) {
-                            return value as FileValueWithId;
-                          }
-                          return null;
-                        })(), rowIndex, field.id)
-                      : renderEditableCell(field, (() => {
-                          const value = row.data[field.id];
-                          console.log('Extracting value for field:', field.id, 'value:', value, 'type:', typeof value); // Debug log
-                          if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-                            return value;
-                          }
-                          return null;
-                        })(), rowIndex, field.id)}
-                  </div>
-                ))}
-                {/* Empty cell for add column button alignment */}
-                <div 
-                  className="min-w-[40px] flex-shrink-0"
-                  style={{
-                    backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff'
-                  }}
-                />
-              </div>
-            ))
-          )}
-        </div>
-        {/* + Add Row Button as a full-width row */}
-        <div 
-          className="flex border-t min-w-0"
-          style={{
-            borderColor: theme === 'dark' ? '#475569' : '#e5e7eb',
-            backgroundColor: theme === 'dark' ? '#0f172a' : '#f9fafb'
-          }}
-        >
+      )}
+
+      {/* Toolbar */}
+      <div 
+        className="flex justify-between items-center p-4 border-b"
+        style={{
+          borderColor: theme === 'dark' ? '#475569' : '#e5e7eb',
+          backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff'
+        }}
+      >
+        <div className="flex items-center space-x-2">
           <button
             onClick={handleAddRow}
-            className="flex items-center justify-center w-full py-2 transition-colors font-medium text-xs"
+            className="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
             style={{
+              backgroundColor: theme === 'dark' ? '#1e3a8a' : '#dbeafe',
               color: theme === 'dark' ? '#93c5fd' : '#1d4ed8'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = theme === 'dark' ? '#1e3a8a' : '#dbeafe';
+              e.currentTarget.style.backgroundColor = theme === 'dark' ? '#1e40af' : '#bfdbfe';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.backgroundColor = theme === 'dark' ? '#1e3a8a' : '#dbeafe';
             }}
             type="button"
           >
-            <Plus className="h-3 w-3 mr-1" /> Add row
+            <Plus className="mr-1 w-4 h-4" /> Add Row
+          </button>
+          
+          {selectedRows.size > 0 && (
+            <button
+              onClick={() => confirmDelete('rows')}
+              className="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
+              style={{
+                backgroundColor: theme === 'dark' ? '#dc2626' : '#fef2f2',
+                color: theme === 'dark' ? '#fca5a5' : '#dc2626'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = theme === 'dark' ? '#b91c1c' : '#fee2e2';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = theme === 'dark' ? '#dc2626' : '#fef2f2';
+              }}
+              type="button"
+            >
+              <Trash2 className="mr-1 w-4 h-4" /> Delete {selectedRows.size} Row{selectedRows.size > 1 ? 's' : ''}
+            </button>
+          )}
+          {/* Row Height Dropdown */}
+          <label className="ml-4 text-xs text-gray-500">Row height:</label>
+          <select
+            value={rowHeight}
+            onChange={e => setRowHeight(Number(e.target.value))}
+            className="px-2 py-1 text-xs rounded border focus:outline-none focus:ring-2 focus:ring-blue-400"
+            style={{ minWidth: 80 }}
+          >
+            <option value={28}>Small</option>
+            <option value={36}>Medium</option>
+            <option value={48}>Large</option>
+          </select>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setShowAddColumn(true)}
+            className="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
+            style={{
+              backgroundColor: theme === 'dark' ? '#1e3a8a' : '#dbeafe',
+              color: theme === 'dark' ? '#93c5fd' : '#1d4ed8'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = theme === 'dark' ? '#1e40af' : '#bfdbfe';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = theme === 'dark' ? '#1e3a8a' : '#dbeafe';
+            }}
+            type="button"
+          >
+            <Plus className="mr-1 w-4 h-4" /> Add Column
+          </button>
+          
+          <button
+            onClick={() => confirmDelete('table')}
+            className="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
+            style={{
+              backgroundColor: theme === 'dark' ? '#dc2626' : '#fef2f2',
+              color: theme === 'dark' ? '#fca5a5' : '#dc2626'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = theme === 'dark' ? '#b91c1c' : '#fee2e2';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = theme === 'dark' ? '#dc2626' : '#fef2f2';
+            }}
+            type="button"
+          >
+            <Trash2 className="mr-1 w-4 h-4" /> Delete Table
           </button>
         </div>
+      </div>
+
+      {/* Data Grid */}
+      <div className="flex-1">
+        <DataGrid
+          columns={columns}
+          rows={gridRows}
+          onRowsChange={handleRowsChange}
+          selectedRows={selectedRows}
+          onSelectedRowsChange={setSelectedRows}
+          rowHeight={rowHeight}
+          style={{
+            backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
+            color: theme === 'dark' ? '#f9fafc' : '#111827'
+          }}
+          className="rdg-custom"
+        />
+      </div>
+      {/* Add Row Button at Bottom Left */}
+      <div className="flex items-center p-2" style={{ minHeight: 40 }}>
+        <button
+          onClick={handleAddRow}
+          className="flex items-center px-3 py-1 text-sm font-medium bg-white rounded-md border border-gray-200 shadow-sm hover:bg-gray-50"
+          style={{ color: '#2563eb' }}
+        >
+          + Add
+        </button>
       </div>
     </div>
   );
