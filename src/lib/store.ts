@@ -51,41 +51,79 @@ interface AppState {
   updateRowHeights: (tableId: number, rowHeights: Record<string, number>) => Promise<void>;
 }
 
+// Pure functions for state updates
+const createInitialState = (): Omit<AppState, 'initialize' | 'setActiveTable' | 'setSidebarCollapsed' | 'setSelectedRows' | 'setError' | 'addTable' | 'updateTable' | 'deleteTable' | 'refreshTables' | 'addRow' | 'updateRow' | 'deleteRow' | 'bulkUpdateRows' | 'refreshRows' | 'addView' | 'updateView' | 'deleteView' | 'setActiveView' | 'refreshViews' | 'addColumn' | 'deleteColumn' | 'updateColWidths' | 'updateRowHeights'> => ({
+  tables: [],
+  activeTable: null,
+  rows: [],
+  views: [],
+  activeView: null,
+  loading: false,
+  error: null,
+  sidebarCollapsed: false,
+  selectedRows: new Set<number>(),
+});
+
+const withLoading = <T extends object>(updates: T) => ({
+  ...updates,
+  loading: true,
+  error: null,
+});
+
+const withError = (error: string) => ({
+  loading: false,
+  error,
+});
+
+const withoutLoading = <T extends object>(updates: T) => ({
+  ...updates,
+  loading: false,
+});
+
+// Utility function for async operations with error handling
+const withAsyncErrorHandling = async <T>(
+  operation: () => Promise<T>,
+  errorMessage: string
+): Promise<T> => {
+  try {
+    return await operation();
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : errorMessage);
+  }
+};
+
 export const useAppStore = create<AppState>()(
   devtools(
     persist(
       (set, get) => ({
         // Initial state
-        tables: [],
-        activeTable: null,
-        rows: [],
-        views: [],
-        activeView: null,
-        loading: false,
-        error: null,
-        sidebarCollapsed: false,
-        selectedRows: new Set(),
+        ...createInitialState(),
 
         // Basic actions
         initialize: async () => {
-          set({ loading: true, error: null });
+          set(withLoading({}));
           try {
-            await initializeDatabase();
-            await get().refreshTables();
+            await withAsyncErrorHandling(
+              async () => {
+                await initializeDatabase();
+                await get().refreshTables();
+              },
+              'Failed to initialize'
+            );
+            set(withoutLoading({}));
           } catch (error) {
-            set({ error: error instanceof Error ? error.message : 'Failed to initialize' });
-          } finally {
-            set({ loading: false });
+            set(withError(error instanceof Error ? error.message : 'Failed to initialize'));
           }
         },
 
         setActiveTable: (table) => {
-          set({ activeTable: table, selectedRows: new Set() });
+          const updates = { activeTable: table, selectedRows: new Set<number>() };
+          set(updates);
           if (table) {
             get().refreshRows();
             get().refreshViews();
           } else {
-            set({ rows: [], views: [], activeView: null });
+            set({ ...updates, rows: [], views: [], activeView: null });
           }
         },
 
@@ -95,107 +133,136 @@ export const useAppStore = create<AppState>()(
 
         // Table operations
         addTable: async (table) => {
-          set({ loading: true, error: null });
+          set(withLoading({}));
           try {
-            await tableOperations.add(table);
-            await get().refreshTables();
-            
-            // Set as active table if it's the first one
-            const { tables } = get();
-            if (tables.length === 1) {
-              get().setActiveTable(tables[0]);
-            }
+            await withAsyncErrorHandling(
+              async () => {
+                await tableOperations.add(table);
+                await get().refreshTables();
+                
+                // Set as active table if it's the first one
+                const { tables } = get();
+                if (tables.length === 1) {
+                  get().setActiveTable(tables[0]);
+                }
+              },
+              'Failed to add table'
+            );
+            set(withoutLoading({}));
           } catch (error) {
-            set({ error: error instanceof Error ? error.message : 'Failed to add table' });
-          } finally {
-            set({ loading: false });
+            set(withError(error instanceof Error ? error.message : 'Failed to add table'));
           }
         },
 
         updateTable: async (id, updates) => {
-          set({ loading: true, error: null });
+          set(withLoading({}));
           try {
-            await tableOperations.update(id, updates);
-            await get().refreshTables();
-            
-            // Update active table if it was the one updated
-            const { activeTable } = get();
-            if (activeTable?.id === id) {
-              const updatedTable = get().tables.find(t => t.id === id);
-              if (updatedTable) {
-                set({ activeTable: updatedTable });
-              }
-            }
+            await withAsyncErrorHandling(
+              async () => {
+                await tableOperations.update(id, updates);
+                await get().refreshTables();
+                
+                // Update active table if it was the one updated
+                const { activeTable } = get();
+                if (activeTable?.id === id) {
+                  const updatedTable = get().tables.find(t => t.id === id);
+                  if (updatedTable) {
+                    set({ activeTable: updatedTable });
+                  }
+                }
+              },
+              'Failed to update table'
+            );
+            set(withoutLoading({}));
           } catch (error) {
-            set({ error: error instanceof Error ? error.message : 'Failed to update table' });
-          } finally {
-            set({ loading: false });
+            set(withError(error instanceof Error ? error.message : 'Failed to update table'));
           }
         },
 
         deleteTable: async (id) => {
-          set({ loading: true, error: null });
+          set(withLoading({}));
           try {
-            await tableOperations.delete(id);
-            await get().refreshTables();
-            
-            // Clear active table if it was deleted
-            const { activeTable } = get();
-            if (activeTable?.id === id) {
-              const { tables } = get();
-              set({ activeTable: tables.length > 0 ? tables[0] : null });
-            }
+            await withAsyncErrorHandling(
+              async () => {
+                await tableOperations.delete(id);
+                await get().refreshTables();
+                
+                // Clear active table if it was deleted
+                const { activeTable } = get();
+                if (activeTable?.id === id) {
+                  const { tables } = get();
+                  set({ activeTable: tables.length > 0 ? tables[0] : null });
+                }
+              },
+              'Failed to delete table'
+            );
+            set(withoutLoading({}));
           } catch (error) {
-            set({ error: error instanceof Error ? error.message : 'Failed to delete table' });
-          } finally {
-            set({ loading: false });
+            set(withError(error instanceof Error ? error.message : 'Failed to delete table'));
           }
         },
 
         refreshTables: async () => {
           try {
-            const tables = await tableOperations.getAll();
+            const tables = await withAsyncErrorHandling(
+              () => tableOperations.getAll(),
+              'Failed to refresh tables'
+            );
             set({ tables });
           } catch (error) {
-            set({ error: error instanceof Error ? error.message : 'Failed to refresh tables' });
+            set(withError(error instanceof Error ? error.message : 'Failed to refresh tables'));
           }
         },
 
         // Row operations
         addRow: async (row) => {
-          set({ loading: true, error: null });
+          set(withLoading({}));
           try {
-            await rowOperations.add(row);
-            await get().refreshRows();
+            await withAsyncErrorHandling(
+              async () => {
+                await rowOperations.add(row);
+                await get().refreshRows();
+              },
+              'Failed to add row'
+            );
+            set(withoutLoading({}));
           } catch (error) {
-            set({ error: error instanceof Error ? error.message : 'Failed to add row' });
-          } finally {
-            set({ loading: false });
+            set(withError(error instanceof Error ? error.message : 'Failed to add row'));
+            throw error;
           }
         },
 
         updateRow: async (id, updates) => {
-          set({ loading: true, error: null });
+          set(withLoading({}));
           try {
-            await rowOperations.update(id, updates);
-            await get().refreshRows();
+            await withAsyncErrorHandling(
+              async () => {
+                await rowOperations.update(id, updates);
+                await get().refreshRows();
+              },
+              'Failed to update row'
+            );
+            set(withoutLoading({}));
           } catch (error) {
-            set({ error: error instanceof Error ? error.message : 'Failed to update row' });
-          } finally {
-            set({ loading: false });
+            set(withError(error instanceof Error ? error.message : 'Failed to update row'));
+            throw error;
           }
         },
 
         deleteRow: async (id) => {
-          set({ loading: true, error: null });
+          set(withLoading({}));
           try {
-            await rowOperations.delete(id);
-            await get().refreshRows();
-            set({ selectedRows: new Set() });
+            await withAsyncErrorHandling(
+              async () => {
+                await rowOperations.delete(id);
+                await get().refreshRows();
+              },
+              'Failed to delete row'
+            );
+            set(withoutLoading({ selectedRows: new Set<number>() }));
           } catch (error) {
-            set({ error: error instanceof Error ? error.message : 'Failed to delete row' });
-          } finally {
-            set({ loading: false });
+            set(withError(error instanceof Error ? error.message : 'Failed to delete row'));
+            throw error;
           }
         },
 
@@ -206,6 +273,7 @@ export const useAppStore = create<AppState>()(
             set({ rows });
           } catch (error) {
             set({ error: error instanceof Error ? error.message : 'Failed to update rows' });
+            throw error;
           } finally {
             set({ loading: false });
           }
@@ -284,33 +352,49 @@ export const useAppStore = create<AppState>()(
         addColumn: async (field) => {
           const { activeTable } = get();
           if (!activeTable) return;
-          const newField = { ...field, id: field.id || field.name.toLowerCase().replace(/\s+/g, '_') };
-          const updatedFields = [...activeTable.fields, newField];
-          await tableOperations.update(activeTable.id!, { fields: updatedFields });
-          await get().refreshTables();
-          // Optionally, update all rows to include the new field with default value
-          const rows = await rowOperations.getByTableId(activeTable.id!);
-          for (const row of rows) {
-            if (!(newField.id in row.data)) {
-              row.data[newField.id] = newField.defaultValue || null;
+          set({ loading: true, error: null });
+          try {
+            const newField = { ...field, id: field.id || field.name.toLowerCase().replace(/\s+/g, '_') };
+            const updatedFields = [...activeTable.fields, newField];
+            await tableOperations.update(activeTable.id!, { fields: updatedFields });
+            await get().refreshTables();
+            // Optionally, update all rows to include the new field with default value
+            const rows = await rowOperations.getByTableId(activeTable.id!);
+            for (const row of rows) {
+              if (!(newField.id in row.data)) {
+                row.data[newField.id] = newField.defaultValue || null;
+              }
             }
+            await rowOperations.bulkUpdate(rows);
+            await get().refreshRows();
+          } catch (error) {
+            set({ error: error instanceof Error ? error.message : 'Failed to add column' });
+            throw error;
+          } finally {
+            set({ loading: false });
           }
-          await rowOperations.bulkUpdate(rows);
-          await get().refreshRows();
         },
         deleteColumn: async (fieldId) => {
           const { activeTable } = get();
           if (!activeTable) return;
-          const updatedFields = activeTable.fields.filter(f => f.id !== fieldId);
-          await tableOperations.update(activeTable.id!, { fields: updatedFields });
-          await get().refreshTables();
-          // Remove the field from all rows
-          const rows = await rowOperations.getByTableId(activeTable.id!);
-          for (const row of rows) {
-            delete row.data[fieldId];
+          set({ loading: true, error: null });
+          try {
+            const updatedFields = activeTable.fields.filter(f => f.id !== fieldId);
+            await tableOperations.update(activeTable.id!, { fields: updatedFields });
+            await get().refreshTables();
+            // Remove the field from all rows
+            const rows = await rowOperations.getByTableId(activeTable.id!);
+            for (const row of rows) {
+              delete row.data[fieldId];
+            }
+            await rowOperations.bulkUpdate(rows);
+            await get().refreshRows();
+          } catch (error) {
+            set({ error: error instanceof Error ? error.message : 'Failed to delete column' });
+            throw error;
+          } finally {
+            set({ loading: false });
           }
-          await rowOperations.bulkUpdate(rows);
-          await get().refreshRows();
         },
 
         // Add actions for colWidths/rowHeights

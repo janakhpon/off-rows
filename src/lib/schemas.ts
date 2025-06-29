@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Field type schema
-export const FieldTypeSchema = z.enum(['text', 'number', 'boolean', 'date', 'dropdown', 'image', 'file']);
+export const FieldTypeSchema = z.enum(['text', 'number', 'boolean', 'date', 'dropdown', 'image', 'file', 'images', 'files']);
 
 // File/Image value schema
 export const FileValueSchema = z.object({
@@ -19,7 +19,14 @@ export const FieldSchema = z.object({
   type: FieldTypeSchema,
   required: z.boolean().optional(),
   options: z.array(z.string()).optional(), // For dropdown type
-  defaultValue: z.union([z.string(), z.number(), z.boolean(), z.null(), FileValueSchema]).optional(), // Only allow single file objects, not arrays
+  defaultValue: z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    FileValueSchema,
+    z.array(FileValueSchema) // For images/files
+  ]).optional(),
 });
 
 // Table schema
@@ -43,7 +50,8 @@ export const TableRowSchema = z.object({
     z.number(),
     z.boolean(),
     z.null(),
-    FileValueSchema // Only allow a single file object for file/image fields
+    FileValueSchema, // For file/image
+    z.array(FileValueSchema) // For images/files
   ])),
   order: z.number().optional(),
   createdAt: z.date(),

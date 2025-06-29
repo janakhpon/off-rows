@@ -179,41 +179,50 @@ export async function initializeDatabase() {
   }
 }
 
+// Utility functions for date handling
+const createTimestamp = () => new Date();
+const parseDate = (date: string | Date) => new Date(date);
+
+// Utility function for adding timestamps to objects
+const addTimestamps = <T extends object>(obj: T) => ({
+  ...obj,
+  createdAt: createTimestamp(),
+  updatedAt: createTimestamp(),
+});
+
+// Utility function for updating timestamps
+const updateTimestamp = <T extends object>(obj: T) => ({
+  ...obj,
+  updatedAt: createTimestamp(),
+});
+
+// Utility function for parsing dates in database results
+const parseDates = <T extends { createdAt: string | Date; updatedAt: string | Date }>(obj: T) => ({
+  ...obj,
+  createdAt: parseDate(obj.createdAt),
+  updatedAt: parseDate(obj.updatedAt),
+});
+
 // Table operations
 export const tableOperations = {
   async getAll(): Promise<Table[]> {
     const tables = await db.table('tables').toArray() as Table[];
-    return tables.map(table => ({
-      ...table,
-      createdAt: new Date(table.createdAt),
-      updatedAt: new Date(table.updatedAt),
-    }));
+    return tables.map(parseDates);
   },
 
   async getById(id: number): Promise<Table | undefined> {
     const table = await db.table('tables').get(id) as Table | undefined;
-    if (table) {
-      return {
-        ...table,
-        createdAt: new Date(table.createdAt),
-        updatedAt: new Date(table.updatedAt),
-      };
-    }
-    return undefined;
+    return table ? parseDates(table) : undefined;
   },
 
   async add(table: Omit<Table, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
     // Validate with Zod
-    const validatedTable = TableSchemaType.parse({
-      ...table,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
+    const validatedTable = TableSchemaType.parse(addTimestamps(table));
 
     const tableId = await db.table('tables').add(validatedTable) as number;
 
     // Create default view for new table
-    await db.table('views').add({
+    const defaultView = addTimestamps({
       tableId,
       name: 'Default View',
       hiddenFields: [],
@@ -222,18 +231,14 @@ export const tableOperations = {
       rowHeight: 'default',
       colorRules: [],
       isDefault: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     });
+    await db.table('views').add(defaultView);
 
     return tableId;
   },
 
   async update(id: number, updates: Partial<Omit<Table, 'id' | 'createdAt'>>): Promise<void> {
-    await db.table('tables').update(id, {
-      ...updates,
-      updatedAt: new Date(),
-    });
+    await db.table('tables').update(id, updateTimestamp(updates));
   },
 
   async delete(id: number): Promise<void> {
@@ -243,11 +248,11 @@ export const tableOperations = {
   },
 
   async updateColWidths(tableId: number, colWidths: Record<string, number>) {
-    await db.table('tables').update(tableId, { colWidths, updatedAt: new Date() });
+    await db.table('tables').update(tableId, updateTimestamp({ colWidths }));
   },
 
   async updateRowHeights(tableId: number, rowHeights: Record<string, number>) {
-    await db.table('tables').update(tableId, { rowHeights, updatedAt: new Date() });
+    await db.table('tables').update(tableId, updateTimestamp({ rowHeights }));
   },
 };
 
@@ -256,38 +261,28 @@ export const rowOperations = {
   async getByTableId(tableId: number): Promise<TableRow[]> {
     const rows = await db.table('rows').where('tableId').equals(tableId).toArray() as TableRow[];
     // Always sort by 'order' (fallback to id)
-    return rows.sort((a, b) => (a.order ?? a.id ?? 0) - (b.order ?? b.id ?? 0));
+    return rows
+      .map(parseDates)
+      .sort((a, b) => (a.order ?? a.id ?? 0) - (b.order ?? b.id ?? 0));
   },
 
   async getById(id: number): Promise<TableRow | undefined> {
     const row = await db.table('rows').get(id) as TableRow | undefined;
-    if (row) {
-      return {
-        ...row,
-        createdAt: new Date(row.createdAt),
-        updatedAt: new Date(row.updatedAt),
-      };
-    }
-    return undefined;
+    return row ? parseDates(row) : undefined;
   },
 
   async add(row: Omit<TableRow, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
     // Find max order for this table
     const maxOrder = await db.table('rows').where('tableId').equals(row.tableId).toArray().then(rs => rs.reduce((max, r) => Math.max(max, r.order ?? 0), 0));
-    const validatedRow = TableRowSchemaType.parse({
+    const validatedRow = TableRowSchemaType.parse(addTimestamps({
       ...row,
       order: maxOrder + 1,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
+    }));
     return await db.table('rows').add(validatedRow) as number;
   },
 
   async update(id: number, updates: Partial<Omit<TableRow, 'id' | 'createdAt'>>): Promise<void> {
-    await db.table('rows').update(id, {
-      ...updates,
-      updatedAt: new Date(),
-    });
+    await db.table('rows').update(id, updateTimestamp(updates));
   },
 
   async delete(id: number): Promise<void> {
@@ -303,53 +298,28 @@ export const rowOperations = {
 export const viewOperations = {
   async getByTableId(tableId: number): Promise<ViewSettings[]> {
     const views = await db.table('views').where('tableId').equals(tableId).toArray() as ViewSettings[];
-    return views.map(view => ({
-      ...view,
-      createdAt: new Date(view.createdAt),
-      updatedAt: new Date(view.updatedAt),
-    }));
+    return views.map(parseDates);
   },
 
   async getDefaultView(tableId: number): Promise<ViewSettings | undefined> {
     const view = await db.table('views').where('tableId').equals(tableId).filter(view => view.isDefault === true).first() as ViewSettings | undefined;
-    if (view) {
-      return {
-        ...view,
-        createdAt: new Date(view.createdAt),
-        updatedAt: new Date(view.updatedAt),
-      };
-    }
-    return undefined;
+    return view ? parseDates(view) : undefined;
   },
 
   async getById(id: number): Promise<ViewSettings | undefined> {
     const view = await db.table('views').get(id) as ViewSettings | undefined;
-    if (view) {
-      return {
-        ...view,
-        createdAt: new Date(view.createdAt),
-        updatedAt: new Date(view.updatedAt),
-      };
-    }
-    return undefined;
+    return view ? parseDates(view) : undefined;
   },
 
   async add(view: Omit<ViewSettings, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
     // Validate with Zod
-    const validatedView = ViewSettingsSchemaType.parse({
-      ...view,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
+    const validatedView = ViewSettingsSchemaType.parse(addTimestamps(view));
 
     return await db.table('views').add(validatedView) as number;
   },
 
   async update(id: number, updates: Partial<Omit<ViewSettings, 'id' | 'createdAt'>>): Promise<void> {
-    await db.table('views').update(id, {
-      ...updates,
-      updatedAt: new Date(),
-    });
+    await db.table('views').update(id, updateTimestamp(updates));
   },
 
   async delete(id: number): Promise<void> {

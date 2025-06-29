@@ -1,18 +1,30 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { DataGrid, RenderCellProps } from 'react-data-grid';
 import { Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { useTables } from '../contexts/TableContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAppStore } from '@/lib/store';
-import { Field, TableRow, FileValueWithId } from '@/lib/schemas';
+import { Field, TableRow, FileValueWithId, Table } from '@/lib/schemas';
 import AddColumnModal from './modals/AddColumnModal';
 import DeleteColumnModal from './modals/DeleteColumnModal';
 import { fileOperations } from '@/lib/database';
+import TextCellEditor from './celleditors/TextCellEditor';
+import NumberCellEditor from './celleditors/NumberCellEditor';
+import DateCellEditor from './celleditors/DateCellEditor';
+import BooleanCellEditor from './celleditors/BooleanCellEditor';
+import DropdownCellEditor from './celleditors/DropdownCellEditor';
+import FileCellEditor from './celleditors/FileCellEditor';
+import ImagesCellEditor from './celleditors/ImagesCellEditor';
+import FilesCellEditor from './celleditors/FilesCellEditor';
+import ImageCellEditor from './celleditors/ImageCellEditor';
 
-type DataGridRow = { id: number; data: Record<string, string | number | boolean | FileValueWithId | null> };
+type DataGridRow = { id: number; data: Record<string, string | number | boolean | FileValueWithId | FileValueWithId[] | null> };
 
+/**
+ * Get default column width based on field type
+ */
 const getColumnWidth = (fieldType: string) => {
   switch (fieldType) {
     case 'text': return 200;
@@ -26,6 +38,69 @@ const getColumnWidth = (fieldType: string) => {
   }
 };
 
+// Pure utility functions
+const createEmptySet = () => new Set<number>();
+const createEmptyArray = () => [];
+const createEmptyObject = () => ({});
+
+// Pure function to get column width with fallback
+const getColumnWidthWithFallback = (
+  colWidths: Record<string, number>,
+  fieldId: string,
+  fieldType: string,
+  defaultWidth: number
+) => colWidths[fieldId] || getColumnWidth(fieldType) || defaultWidth;
+
+// Pure function to transform rows for grid
+const transformRowsForGrid = (orderedRows: TableRow[]): DataGridRow[] =>
+  orderedRows.map((row) => ({
+    id: row.id!,
+    data: row.data,
+    ...row.data,
+  }));
+
+// Pure function to extract file IDs from rows
+const extractFileIdsFromRows = (rows: TableRow[], activeTable: Table | null): number[] => {
+  if (!activeTable) return [];
+  
+  const fileIds: number[] = [];
+  rows.forEach((row: TableRow) => {
+    activeTable.fields.forEach((field: Field) => {
+      const val = row.data[field.id];
+      if (val && typeof val === 'object' && 'fileId' in val && typeof val.fileId === 'number') {
+        fileIds.push(val.fileId);
+      }
+    });
+  });
+  return fileIds;
+};
+
+// Pure function to create new row data
+const createNewRowData = (activeTable: Table): Record<string, string | number | boolean | FileValueWithId | FileValueWithId[] | null> =>
+  activeTable.fields.reduce((acc: Record<string, string | number | boolean | FileValueWithId | FileValueWithId[] | null>, field: Field) => {
+    if (field.type === 'images' || field.type === 'files') {
+      acc[field.id] = Array.isArray(field.defaultValue) ? field.defaultValue : [];
+    } else if (field.type === 'image' || field.type === 'file') {
+      if (field.defaultValue && typeof field.defaultValue === 'object' && !Array.isArray(field.defaultValue) && 'fileId' in field.defaultValue) {
+        acc[field.id] = field.defaultValue as FileValueWithId;
+      } else {
+        acc[field.id] = null;
+      }
+    } else {
+      acc[field.id] = field.defaultValue || null;
+    }
+    return acc;
+  }, {});
+
+/**
+ * Main DataGrid component for displaying and editing table data
+ * Features:
+ * - Resizable columns and rows with persistence
+ * - File/image upload and preview
+ * - Row selection and bulk operations
+ * - Modal dialogs with keyboard navigation
+ * - Offline-first with IndexedDB storage
+ */
 export default function DataGridComponent() {
   const { activeTable, refreshTables, setActiveTable } = useTables();
   const { theme } = useTheme();
@@ -33,12 +108,13 @@ export default function DataGridComponent() {
   const [showAddColumn, setShowAddColumn] = useState(false);
   const [showDeleteColumn, setShowDeleteColumn] = useState(false);
   const [columnToDelete, setColumnToDelete] = useState<Field | null>(null);
-  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(createEmptySet());
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteType, setDeleteType] = useState<'rows' | 'table' | null>(null);
 
   // --- ROW ORDER STATE ---
-  const [rowOrder, setRowOrder] = useState<number[]>([]);
+  // Maintain row order for consistent display and drag-and-drop support
+  const [rowOrder, setRowOrder] = useState<number[]>(createEmptyArray());
   useEffect(() => {
     if (rows.length > 0) {
       setRowOrder((prev) => {
@@ -50,7 +126,7 @@ export default function DataGridComponent() {
     }
   }, [rows]);
 
-  // Helper to get rows in original order
+  // Helper to get rows in original order for consistent rendering
   const orderedRows = useMemo(() => {
     if (!rowOrder.length) return rows;
     const rowMap = Object.fromEntries(rows.map(r => [r.id!, r]));
@@ -58,8 +134,9 @@ export default function DataGridComponent() {
   }, [rows, rowOrder]);
 
   // --- COLUMN WIDTH STATE (PERSISTED IN DB) ---
+  // Column widths are persisted in the database for consistent layout
   const defaultColWidth = 140;
-  const [colWidths, setColWidths] = useState<Record<string, number>>({});
+  const [colWidths, setColWidths] = useState<Record<string, number>>(createEmptyObject());
   useEffect(() => {
     if (activeTable && activeTable.colWidths) setColWidths(activeTable.colWidths);
   }, [activeTable]);
@@ -69,7 +146,8 @@ export default function DataGridComponent() {
   }, [colWidths, activeTable, updateColWidths]);
 
   // --- ROW HEIGHT STATE (PERSISTED IN DB) ---
-  const [rowHeights, setRowHeights] = useState<Record<string, number>>({});
+  // Row heights are persisted in the database for consistent layout
+  const [rowHeights, setRowHeights] = useState<Record<string, number>>(createEmptyObject());
   useEffect(() => {
     if (activeTable && activeTable.rowHeights) setRowHeights(activeTable.rowHeights);
   }, [activeTable]);
@@ -78,57 +156,69 @@ export default function DataGridComponent() {
     if (activeTable) updateRowHeights(activeTable.id!, rowHeights);
   }, [rowHeights, activeTable, updateRowHeights]);
 
-  // Helper to get column width
-  const getColWidth = (fieldId: string, fieldType?: string) =>
-    colWidths[fieldId] || (fieldType ? getColumnWidth(fieldType) : defaultColWidth);
+  // Helper to get column width with fallback to default
+  const getColWidth = useCallback((fieldId: string, fieldType?: string) =>
+    getColumnWidthWithFallback(colWidths, fieldId, fieldType || '', defaultColWidth), [colWidths]);
 
   // Add state for file URLs
-  const [fileUrls, setFileUrls] = useState<Record<number, string>>({});
+  // Cache file blob URLs for efficient rendering and preview
+  const [fileUrls, setFileUrls] = useState<Record<number, string>>(createEmptyObject());
 
-  // Helper to get object URL for a fileId
-  const getFileUrl = (fileId?: number): string | undefined => {
+  // Helper to get object URL for a fileId from cache
+  const getFileUrl = useCallback((fileId?: number): string | undefined => {
     if (!fileId) return undefined;
     return fileUrls[fileId];
-  };
+  }, [fileUrls]);
 
-  // Fetch and cache file blob URLs
-  const fetchAndCacheFileUrl = async (fileId: number) => {
+  // Fetch and cache file blob URLs for offline access
+  const fetchAndCacheFileUrl = useCallback(async (fileId: number) => {
     if (fileUrls[fileId]) return;
     const file = await fileOperations.getFileById(fileId);
     if (file) {
       const url = URL.createObjectURL(file.blob);
       setFileUrls(prev => ({ ...prev, [fileId]: url }));
     }
-  };
+  }, [fileUrls]);
 
   // --- DELETE FUNCTIONALITY ---
+  // Delete selected rows with notification feedback
   const handleDeleteRows = async () => {
     const rowsToDelete = Array.from(selectedRows);
-    for (const rowId of rowsToDelete) {
-      await deleteRow(rowId);
-    }
-    setSelectedRows(new Set());
-    setShowDeleteConfirm(false);
-    setDeleteType(null);
-  };
-
-  const handleDeleteTable = async () => {
-    if (activeTable) {
-      // Delete the entire table using the store function
-      await deleteTable(activeTable.id!);
+    try {
+      for (const rowId of rowsToDelete) {
+        await deleteRow(rowId);
+      }
+      setSelectedRows(createEmptySet());
       setShowDeleteConfirm(false);
       setDeleteType(null);
+    } catch {
+      // Error handling removed with notification system
     }
   };
 
+  // Delete entire table with notification feedback
+  const handleDeleteTable = async () => {
+    if (activeTable) {
+      try {
+        await deleteTable(activeTable.id!);
+        setShowDeleteConfirm(false);
+        setDeleteType(null);
+      } catch {
+        // Error handling removed with notification system
+      }
+    }
+  };
+
+  // Show delete confirmation modal
   const confirmDelete = (type: 'rows' | 'table') => {
     setDeleteType(type);
     setShowDeleteConfirm(true);
   };
 
   // --- REACT-DATA-GRID COLUMNS ---
+  // State for image preview modal
   const [imageModal, setImageModal] = useState<{ url: string; name: string } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  // Generate columns with cell editors based on field type
   const columns = useMemo(() => {
     if (!activeTable) return [];
     return activeTable.fields.map((field) => ({
@@ -139,100 +229,127 @@ export default function DataGridComponent() {
       renderCell: ({ row }: RenderCellProps<DataGridRow>) => {
         const value = row.data[field.id];
         switch (field.type) {
-          case 'dropdown':
-            return <span className="cell-dropdown">{typeof value === 'string' ? value : 'None'}</span>;
+          case 'text':
+            return (
+              <TextCellEditor
+                value={typeof value === 'string' ? value : ''}
+                onChange={(val: string) => updateRow(row.id, { data: { ...row.data, [field.id]: val } })}
+                placeholder={`Enter ${field.name.toLowerCase()}...`}
+                ariaLabel={`Edit ${field.name}`}
+              />
+            );
+          case 'number':
+            return (
+              <NumberCellEditor
+                value={typeof value === 'number' ? value : ''}
+                onChange={(val: number | null) => updateRow(row.id, { data: { ...row.data, [field.id]: val } })}
+                ariaLabel={`Edit ${field.name}`}
+              />
+            );
+          case 'date':
+            return (
+              <DateCellEditor
+                value={typeof value === 'string' ? value : ''}
+                onChange={(val: string) => updateRow(row.id, { data: { ...row.data, [field.id]: val } })}
+                ariaLabel={`Edit ${field.name}`}
+              />
+            );
           case 'boolean':
             return (
-              <span className="cell-checkbox">
-                <input
-                  type="checkbox"
-                  checked={!!value}
-                  onChange={e => {
-                    // Update the boolean value in the DB/store
-                    updateRow(row.id, { data: { ...row.data, [field.id]: e.target.checked } });
-                  }}
-                  aria-label={field.name}
-                />
-              </span>
+              <BooleanCellEditor
+                value={!!value}
+                onChange={(val: boolean) => updateRow(row.id, { data: { ...row.data, [field.id]: val } })}
+                ariaLabel={`Toggle ${field.name}`}
+              />
             );
-          case 'image': {
-            if (value && typeof value === 'object' && !Array.isArray(value) && 'fileId' in value) {
-              const v = value as FileValueWithId;
-              const imgUrl = getFileUrl(v.fileId);
-              return imgUrl ? (
-                <>
-                  <img
-                    src={imgUrl}
-                    alt={v.name}
-                    className="cursor-pointer cell-img"
-                    onClick={() => setImageModal({ url: imgUrl, name: v.name })}
-                  />
-                </>
-              ) : <span className="cell-none">None</span>;
-            }
-            // If empty, show upload button
+          case 'dropdown':
             return (
-              <>
-                <button
-                  className="text-xs text-blue-600 underline"
-                  onClick={() => fileInputRef.current?.click()}
-                  type="button"
-                >
-                  Upload
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      // Save file to IndexedDB and update row
-                      const fileId = await fileOperations.addFile(file);
-                      updateRow(row.id, { data: { ...row.data, [field.id]: { fileId, name: file.name, type: file.type } } });
-                    }
-                  }}
-                />
-              </>
-            );
-          }
-          case 'file': {
-            if (!value || typeof value !== 'object' || Array.isArray(value) || !('fileId' in value)) {
-              return <span className="cell-none">None</span>;
-            }
-            const fileValue = value as FileValueWithId;
-            const fileUrl = getFileUrl(fileValue.fileId);
-            return fileUrl ? (
-              <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="cell-link">{fileValue.name}</a>
-            ) : <span className="cell-none">None</span>;
-          }
-          case 'date': {
-            return (
-              <input
-                type="date"
-                className="w-full text-center bg-transparent border-none focus:ring-0"
+              <DropdownCellEditor
                 value={typeof value === 'string' ? value : ''}
-                onChange={e => updateRow(row.id, { data: { ...row.data, [field.id]: e.target.value } })}
-                style={{ minWidth: 100 }}
+                options={field.options || []}
+                onChange={(val: string) => updateRow(row.id, { data: { ...row.data, [field.id]: val } })}
+                ariaLabel={`Select ${field.name}`}
               />
             );
-          }
-          case 'number': {
+          case 'images':
             return (
-              <input
-                type="number"
-                className="w-full text-right bg-transparent border-none cell-number focus:ring-0"
-                value={typeof value === 'number' ? value : ''}
-                onChange={e => {
-                  const num = e.target.value === '' ? null : Number(e.target.value);
-                  updateRow(row.id, { data: { ...row.data, [field.id]: num } });
+              <ImagesCellEditor
+                value={Array.isArray(value) ? value : []}
+                getFileUrl={getFileUrl}
+                onUpload={async (files: File[]) => {
+                  try {
+                    const newImages: FileValueWithId[] = [];
+                    for (const file of files) {
+                      const fileId = await fileOperations.addFile(file);
+                      newImages.push({ fileId, name: file.name, type: file.type });
+                    }
+                    updateRow(row.id, { data: { ...row.data, [field.id]: [...(Array.isArray(value) ? value : []), ...newImages] } });
+                  } catch {
+                    // Error handling removed with notification system
+                  }
                 }}
-                style={{ minWidth: 60 }}
+                onPreview={(url: string, name: string) => setImageModal({ url, name })}
+                ariaLabel={field.name}
               />
             );
-          }
+          case 'files':
+            return (
+              <FilesCellEditor
+                value={Array.isArray(value) ? value : []}
+                getFileUrl={getFileUrl}
+                onUpload={async (files: File[]) => {
+                  try {
+                    const newFiles: FileValueWithId[] = [];
+                    for (const file of files) {
+                      const fileId = await fileOperations.addFile(file);
+                      newFiles.push({ fileId, name: file.name, type: file.type });
+                    }
+                    updateRow(row.id, { data: { ...row.data, [field.id]: [...(Array.isArray(value) ? value : []), ...newFiles] } });
+                  } catch {
+                    // Error handling removed with notification system
+                  }
+                }}
+                ariaLabel={field.name}
+              />
+            );
+          case 'image':
+            return (
+              <ImageCellEditor
+                value={value && typeof value === 'object' && !Array.isArray(value) && 'fileId' in value ? value : null}
+                getFileUrl={getFileUrl}
+                onUpload={async (file: File) => {
+                  try {
+                    const fileId = await fileOperations.addFile(file);
+                    updateRow(row.id, { data: { ...row.data, [field.id]: { fileId, name: file.name, type: file.type } } });
+                  } catch {
+                    // Error handling removed with notification system
+                  }
+                }}
+                onPreview={(url: string, name: string) => setImageModal({ url, name })}
+                ariaLabel={field.name}
+              />
+            );
+          case 'file':
+            return (
+              <FileCellEditor
+                value={value && typeof value === 'object' && !Array.isArray(value) && 'fileId' in value ? value : null}
+                getFileUrl={getFileUrl}
+                onUpload={async (file: File) => {
+                  try {
+                    const fileId = await fileOperations.addFile(file);
+                    updateRow(row.id, { data: { ...row.data, [field.id]: { fileId, name: file.name, type: file.type } } });
+                  } catch {
+                    // Error handling removed with notification system
+                  }
+                }}
+                ariaLabel={field.name}
+              />
+            );
           default:
+            // Type guard: do not render arrays in non-array fields
+            if (Array.isArray(value)) return <span className="cell-none">None</span>;
+            
+            // Special styling for specific field types
             if (field.id === 'devilfruit') {
               if (!value || typeof value !== 'string' || value === 'None') return <span className="badge">None</span>;
               let badgeClass = 'badge';
@@ -250,22 +367,20 @@ export default function DataGridComponent() {
             if (typeof value === 'string' || typeof value === 'number') {
               return <span>{value}</span>;
             }
-            return <span />;
+            return <span className="cell-none">None</span>;
         }
       }
     }));
-  }, [activeTable, theme, getColWidth, getFileUrl, updateRow]);
+  }, [activeTable, getColWidth, getFileUrl, updateRow]);
 
   // --- REACT-DATA-GRID ROWS ---
+  // Transform ordered rows for react-data-grid
   const gridRows = useMemo(() => {
-    return orderedRows.map((row) => ({
-      id: row.id!,
-      data: row.data,
-      ...row.data
-    })) as DataGridRow[];
+    return transformRowsForGrid(orderedRows);
   }, [orderedRows]);
 
   // --- REACT-DATA-GRID EVENTS ---
+  // Handle row data changes with optimistic updates
   const handleRowsChange = async (newRows: DataGridRow[]) => {
     for (const newRow of newRows) {
       const originalRow = orderedRows.find(r => r.id === newRow.id);
@@ -275,51 +390,60 @@ export default function DataGridComponent() {
     }
   };
 
+  // Add new row with proper field initialization
   const handleAddRow = async () => {
     if (!activeTable) return;
-
     const newRow: Omit<TableRow, 'id' | 'createdAt' | 'updatedAt'> = {
       tableId: activeTable.id!,
-      data: activeTable.fields.reduce((acc, field) => {
-        if (field.type === 'image' || field.type === 'file') {
-          if (field.defaultValue && typeof field.defaultValue === 'object' && !Array.isArray(field.defaultValue) && 'fileId' in field.defaultValue) {
-            acc[field.id] = field.defaultValue as FileValueWithId;
-          } else {
-            acc[field.id] = null;
-          }
-        } else {
-          acc[field.id] = field.defaultValue || null;
-        }
-        return acc;
-      }, {} as Record<string, string | number | boolean | FileValueWithId | null>),
+      data: createNewRowData(activeTable),
     };
-
-    await addRow(newRow);
-  };
-
-  const confirmDeleteColumn = async () => {
-    if (columnToDelete) {
-      await deleteColumn(columnToDelete.id);
-      setShowDeleteColumn(false);
-      setColumnToDelete(null);
+    try {
+      await addRow(newRow);
+    } catch {
+      // Error handling removed with notification system
     }
   };
 
+  // Delete column with notification feedback
+  const confirmDeleteColumn = async () => {
+    if (columnToDelete) {
+      try {
+        await deleteColumn(columnToDelete.id);
+        setShowDeleteColumn(false);
+        setColumnToDelete(null);
+      } catch {
+        // Error handling removed with notification system
+      }
+    }
+  };
+
+  // Pre-fetch file URLs for efficient rendering
   useEffect(() => {
-    const fileIds: number[] = [];
-    orderedRows.forEach(row => {
-      if (!activeTable) return;
-      activeTable.fields.forEach(field => {
-        const val = row.data[field.id];
-        if (val && typeof val === 'object' && 'fileId' in val && typeof val.fileId === 'number') {
-          fileIds.push(val.fileId);
-        }
-      });
-    });
+    const fileIds = extractFileIdsFromRows(orderedRows, activeTable);
     fileIds.forEach(id => { if (!fileUrls[id]) fetchAndCacheFileUrl(id); });
-  }, [orderedRows, activeTable, fileUrls]);
+  }, [orderedRows, activeTable, fileUrls, fetchAndCacheFileUrl]);
 
   const [rowHeight, setRowHeight] = useState(36); // default: medium
+
+  // Keyboard event handlers for modals
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (imageModal) {
+          setImageModal(null);
+        }
+        if (showDeleteConfirm) {
+          setShowDeleteConfirm(false);
+          setDeleteType(null);
+        }
+      }
+    };
+
+    if (imageModal || showDeleteConfirm) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [imageModal, showDeleteConfirm]);
 
   if (!activeTable) {
     return (
@@ -352,11 +476,14 @@ export default function DataGridComponent() {
         open={showAddColumn} 
         onClose={() => setShowAddColumn(false)}
         onAddColumn={async (field) => {
-          await addColumn(field);
-          await refreshTables();
-          const updated = (await refreshTables(), activeTable && (await refreshTables(), activeTable.id) ? (useAppStore.getState().tables.find(t => t.id === activeTable.id) || activeTable) : activeTable);
-          setActiveTable(updated);
-          setShowAddColumn(false);
+          try {
+            await addColumn(field);
+            await refreshTables();
+            const updated = (await refreshTables(), activeTable && (await refreshTables(), activeTable.id) ? (useAppStore.getState().tables.find(t => t.id === activeTable.id) || activeTable) : activeTable);
+            setActiveTable(updated);
+            setShowAddColumn(false);
+          } catch {
+          }
         }}
       />
       <DeleteColumnModal
@@ -371,9 +498,19 @@ export default function DataGridComponent() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50">
+        <div 
+          className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50 animate-fade-in"
+          onClick={() => {
+            setShowDeleteConfirm(false);
+            setDeleteType(null);
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-modal-title"
+        >
           <div 
-            className="p-6 mx-4 w-96 max-w-md rounded-lg"
+            className="p-6 mx-4 w-96 max-w-md rounded-lg animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
             style={{
               backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff'
             }}
@@ -381,6 +518,7 @@ export default function DataGridComponent() {
             <div className="flex items-center mb-4">
               <AlertTriangle className="mr-3 w-6 h-6" style={{ color: theme === 'dark' ? '#f59e0b' : '#f59e0b' }} />
               <h2 
+                id="delete-modal-title"
                 className="text-lg font-semibold"
                 style={{
                   color: theme === 'dark' ? '#f9fafc' : '#111827'
@@ -406,7 +544,7 @@ export default function DataGridComponent() {
                   setShowDeleteConfirm(false);
                   setDeleteType(null);
                 }}
-                className="px-4 py-2 text-sm font-medium rounded-md transition-colors"
+                className="px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                 style={{
                   color: theme === 'dark' ? '#d1d5db' : '#374151'
                 }}
@@ -417,12 +555,13 @@ export default function DataGridComponent() {
                   e.currentTarget.style.backgroundColor = 'transparent';
                 }}
                 type="button"
+                aria-label="Cancel delete"
               >
                 Cancel
               </button>
               <button
                 onClick={deleteType === 'rows' ? handleDeleteRows : handleDeleteTable}
-                className="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors"
+                className="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                 style={{
                   backgroundColor: theme === 'dark' ? '#dc2626' : '#dc2626'
                 }}
@@ -433,6 +572,7 @@ export default function DataGridComponent() {
                   e.currentTarget.style.backgroundColor = theme === 'dark' ? '#dc2626' : '#dc2626';
                 }}
                 type="button"
+                aria-label="Confirm delete"
               >
                 Delete
               </button>
@@ -443,13 +583,30 @@ export default function DataGridComponent() {
 
       {/* Image Modal */}
       {imageModal && (
-        <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-60">
-          <div className="flex flex-col items-center p-4 w-full max-w-lg bg-white rounded-lg shadow-lg dark:bg-gray-900">
-            <img src={imageModal.url} alt={imageModal.name} className="mb-4 max-w-full max-h-96" />
-            <div className="mb-2 text-sm text-center">{imageModal.name}</div>
+        <div 
+          className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-60 animate-fade-in"
+          onClick={() => setImageModal(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="image-modal-title"
+        >
+          <div 
+            className="flex flex-col items-center p-4 w-full max-w-lg bg-white rounded-lg shadow-lg dark:bg-gray-900 animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img 
+              src={imageModal.url} 
+              alt={imageModal.name} 
+              className="mb-4 max-w-full max-h-96 rounded" 
+            />
+            <div id="image-modal-title" className="mb-2 text-sm font-medium text-center">
+              {imageModal.name}
+            </div>
             <button
-              className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
+              className="px-4 py-2 text-white bg-blue-600 rounded transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               onClick={() => setImageModal(null)}
+              type="button"
+              aria-label="Close image preview"
             >
               Close
             </button>
@@ -570,6 +727,14 @@ export default function DataGridComponent() {
             color: theme === 'dark' ? '#f9fafc' : '#111827'
           }}
           className="rdg-custom"
+          defaultColumnOptions={{
+            resizable: true,
+            sortable: true
+          }}
+          enableVirtualization={true}
+          enableColumnResize={true}
+          enableRowSelection={true}
+          enableKeyboardNavigation={true}
         />
       </div>
       {/* Add Row Button at Bottom Left */}

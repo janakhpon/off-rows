@@ -3,6 +3,9 @@ import './globals.css';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { TableProvider } from './contexts/TableContext';
 import 'react-data-grid/lib/styles.css';
+import ErrorBoundary from './components/ErrorBoundary';
+import OfflineIndicator from './components/OfflineIndicator';
+// import { NotificationProvider } from './contexts/NotificationContext';
 
 export const metadata: Metadata = {
   title: 'Offrows - Modern Offline-First Spreadsheet & Database App',
@@ -56,11 +59,11 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  verification: {
-    google: 'your-google-verification-code',
-    yandex: 'your-yandex-verification-code',
-    yahoo: 'your-yahoo-verification-code',
-  },
+  // verification: {
+  //   google: 'your-google-verification-code',
+  //   yandex: 'your-yandex-verification-code',
+  //   yahoo: 'your-yahoo-verification-code',
+  // },
   category: 'productivity',
 };
 
@@ -89,10 +92,13 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#1E3A8A" />
       </head>
-      <body className="antialiased">
+      <body className="min-h-screen font-sans antialiased bg-background">
         <ThemeProvider>
           <TableProvider>
-            {children}
+            <ErrorBoundary>
+              <OfflineIndicator />
+              {children}
+            </ErrorBoundary>
           </TableProvider>
         </ThemeProvider>
       </body>

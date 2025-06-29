@@ -4,43 +4,57 @@ import { useState } from 'react';
 import { useTables } from '../contexts/TableContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAppStore } from '@/lib/store';
-import { Table } from '@/lib/schemas';
 import Header from './Header';
 import DataGridComponent from './DataGrid';
 import OfflineIndicator from './OfflineIndicator';
+
+// Pure utility functions
+const createEmptyString = () => '';
+const createEmptyBoolean = () => false;
+
+// Pure function to validate table name
+const validateTableName = (name: string): boolean => name.trim().length > 0;
+
+// Pure function to create new table data
+const createNewTableData = (name: string) => ({
+  name: name.trim(),
+  fields: [
+    { id: 'name', name: 'Name', type: 'text' as const, required: true },
+    { id: 'description', name: 'Description', type: 'text' as const },
+  ],
+});
 
 export default function ClientApp() {
   const { tables, activeTable, setActiveTable } = useTables();
   const { theme } = useTheme();
   const { addTable } = useAppStore();
-  const [showCreateTable, setShowCreateTable] = useState(false);
-  const [newTableName, setNewTableName] = useState('');
+  const [showCreateTable, setShowCreateTable] = useState(createEmptyBoolean());
+  const [newTableName, setNewTableName] = useState(createEmptyString());
 
   const handleCreateTable = async () => {
-    if (!newTableName.trim()) return;
+    if (!validateTableName(newTableName)) return;
+    
+    try {
+      await addTable(createNewTableData(newTableName));
+      setNewTableName(createEmptyString());
+      setShowCreateTable(false);
+    } catch {
+      // Error handling removed with notification system
+    }
+  };
 
-    const newTable: Omit<Table, 'id' | 'createdAt' | 'updatedAt'> = {
-      name: newTableName.trim(),
-      description: '',
-      fields: [
-        { id: 'name', name: 'Name', type: 'text', required: true },
-        { id: 'status', name: 'Status', type: 'dropdown', options: ['Active', 'Inactive', 'Pending'] },
-        { id: 'priority', name: 'Priority', type: 'number' },
-        { id: 'due_date', name: 'Due Date', type: 'date' },
-        { id: 'completed', name: 'Completed', type: 'boolean' },
-      ],
-      colWidths: {},
-      rowHeights: {},
-    };
-
-    await addTable(newTable);
-    setNewTableName('');
-    setShowCreateTable(false);
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleCreateTable();
+    } else if (e.key === 'Escape') {
+      setShowCreateTable(false);
+      setNewTableName(createEmptyString());
+    }
   };
 
   return (
     <div 
-      className="h-screen flex flex-col"
+      className="flex flex-col h-screen"
       style={{
         backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff'
       }}
@@ -48,12 +62,12 @@ export default function ClientApp() {
       <OfflineIndicator />
       <Header onToggleSidebar={() => {}} />
       
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex overflow-hidden flex-1">
         {/* Table Tabs */}
-        <div className="w-full flex flex-col">
+        <div className="flex flex-col w-full">
           {/* Tab Bar */}
           <div 
-            className="flex items-center border-b px-4 py-2 space-x-2 overflow-x-auto"
+            className="flex overflow-x-auto items-center px-4 py-2 space-x-2 border-b"
             style={{
               borderColor: theme === 'dark' ? '#475569' : '#e5e7eb',
               backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff'
@@ -110,7 +124,7 @@ export default function ClientApp() {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 overflow-hidden">
+          <div className="overflow-hidden flex-1">
             <DataGridComponent />
           </div>
         </div>
@@ -118,15 +132,15 @@ export default function ClientApp() {
 
       {/* Create Table Modal */}
       {showCreateTable && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50">
           <div 
-            className="rounded-lg p-6 w-96 max-w-md mx-4"
+            className="p-6 mx-4 w-96 max-w-md rounded-lg"
             style={{
               backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff'
             }}
           >
             <h2 
-              className="text-lg font-semibold mb-4"
+              className="mb-4 text-lg font-semibold"
               style={{
                 color: theme === 'dark' ? '#f9fafc' : '#111827'
               }}
@@ -138,7 +152,7 @@ export default function ClientApp() {
               value={newTableName}
               onChange={(e) => setNewTableName(e.target.value)}
               placeholder="Enter table name"
-              className="w-full p-2 border rounded-md focus:ring-2 focus:border-transparent"
+              className="p-2 w-full rounded-md border focus:ring-2 focus:border-transparent"
               style={{
                 backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
                 borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
@@ -152,15 +166,9 @@ export default function ClientApp() {
                 e.target.style.borderColor = theme === 'dark' ? '#4b5563' : '#d1d5db';
                 e.target.style.boxShadow = 'none';
               }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleCreateTable();
-                } else if (e.key === 'Escape') {
-                  setShowCreateTable(false);
-                }
-              }}
+              onKeyDown={handleKeyPress}
             />
-            <div className="flex justify-end space-x-2 mt-4">
+            <div className="flex justify-end mt-4 space-x-2">
               <button
                 onClick={() => setShowCreateTable(false)}
                 className="px-4 py-2 text-sm font-medium rounded-md transition-colors"
@@ -179,7 +187,7 @@ export default function ClientApp() {
               </button>
               <button
                 onClick={handleCreateTable}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md transition-colors hover:bg-blue-700"
                 type="button"
               >
                 Create

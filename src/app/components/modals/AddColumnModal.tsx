@@ -11,13 +11,14 @@ interface AddColumnModalProps {
   onAddColumn?: (field: z.infer<typeof FieldSchema>) => void;
 }
 
+type DefaultValueType = string | string[];
 const defaultField = {
   id: '',
   name: '',
   type: 'text',
   required: false,
   options: [] as string[],
-  defaultValue: '',
+  defaultValue: '' as DefaultValueType,
 };
 
 export default function AddColumnModal({ open, onClose, onAddColumn }: AddColumnModalProps) {
@@ -111,6 +112,17 @@ export default function AddColumnModal({ open, onClose, onAddColumn }: AddColumn
               />
             </div>
           )}
+          {(form.type === 'images' || form.type === 'files') && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Default Value (comma separated file names for placeholder only)</label>
+              <input
+                name="defaultValue"
+                value={Array.isArray(form.defaultValue) ? form.defaultValue.join(', ') : ''}
+                onChange={e => setForm(prev => ({ ...prev, defaultValue: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
+                className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              />
+            </div>
+          )}
           <div className="flex items-center space-x-2">
             <input
               type="checkbox"
@@ -120,15 +132,6 @@ export default function AddColumnModal({ open, onClose, onAddColumn }: AddColumn
               className="h-4 w-4 text-blue-600 border-gray-300 rounded"
             />
             <label className="text-sm text-gray-700">Required</label>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Default Value</label>
-            <input
-              name="defaultValue"
-              value={form.defaultValue as string}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-            />
           </div>
           {error && <div className="text-red-600 text-sm">{error}</div>}
           <div className="flex justify-end">
