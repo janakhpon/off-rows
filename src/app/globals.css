@@ -42,6 +42,20 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --airtable-header-bg: #f8fafc;
+  --airtable-header-fg: #3b4a54;
+  --airtable-row-even: #f4f6fa;
+  --airtable-row-odd: #ffffff;
+  --airtable-row-hover: #e9f2fb;
+  --airtable-row-selected: #d2eaff;
+  --airtable-badge-bg: #e3e8ef;
+  --airtable-badge-fg: #3b4a54;
+  --airtable-badge-blue-bg: #e3f0fc;
+  --airtable-badge-blue-fg: #2176d2;
+  --airtable-badge-green-bg: #e6f4ea;
+  --airtable-badge-green-fg: #268e6c;
+  --airtable-badge-yellow-bg: #fff7e0;
+  --airtable-badge-yellow-fg: #b38600;
 }
 
 [data-theme="dark"] {
@@ -359,12 +373,12 @@ code, pre {
 
 /* Loading spinner */
 .spinner {
-  @apply animate-spin rounded-full border-2 border-gray-300 border-t-blue-600;
+  @apply rounded-full border-2 border-gray-300 animate-spin border-t-blue-600;
 }
 
 /* Tooltip styles */
 .tooltip {
-  @apply absolute z-50 px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg opacity-0 pointer-events-none transition-opacity duration-200;
+  @apply absolute z-50 px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg opacity-0 transition-opacity duration-200 pointer-events-none;
 }
 
 .tooltip.show {
@@ -373,7 +387,7 @@ code, pre {
 
 /* Responsive grid */
 .grid-responsive {
-  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
+  @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
 }
 
 /* Focus styles for accessibility */
@@ -383,47 +397,47 @@ code, pre {
 
 /* Custom checkbox styles */
 .checkbox-custom {
-  @apply h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer transition-colors duration-200;
+  @apply w-4 h-4 text-blue-600 rounded border-gray-300 transition-colors duration-200 cursor-pointer focus:ring-blue-500;
 }
 
 /* Dropdown styles */
 .dropdown-custom {
-  @apply w-full p-2 text-sm border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 cursor-pointer transition-colors duration-200;
+  @apply p-2 w-full text-sm rounded border border-gray-300 transition-colors duration-200 cursor-pointer focus:ring-blue-500 focus:border-blue-500;
 }
 
 /* Input styles */
 .input-custom {
-  @apply w-full p-2 text-sm border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200;
+  @apply p-2 w-full text-sm rounded border border-gray-300 transition-colors duration-200 focus:ring-blue-500 focus:border-blue-500;
 }
 
 /* Badge styles */
 .badge {
-  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  @apply inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full;
 }
 
 .badge-blue {
-  @apply bg-blue-100 text-blue-800;
+  @apply text-blue-800 bg-blue-100;
 }
 
 .badge-green {
-  @apply bg-green-100 text-green-800;
+  @apply text-green-800 bg-green-100;
 }
 
 .badge-red {
-  @apply bg-red-100 text-red-800;
+  @apply text-red-800 bg-red-100;
 }
 
 .badge-gray {
-  @apply bg-gray-100 text-gray-800;
+  @apply text-gray-800 bg-gray-100;
 }
 
 /* Icon button styles */
 .icon-button {
-  @apply p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200 cursor-pointer;
+  @apply p-1 text-gray-400 rounded transition-colors duration-200 cursor-pointer hover:text-blue-600 hover:bg-blue-50;
 }
 
 .icon-button-danger {
-  @apply p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors duration-200 cursor-pointer;
+  @apply p-1 text-gray-400 rounded transition-colors duration-200 cursor-pointer hover:text-red-600 hover:bg-red-50;
 }
 
 /* Sidebar transition */
@@ -468,8 +482,31 @@ code, pre {
 .rdg-custom .rdg-row,
 .rdg-custom .rdg-cell {
   background-color: var(--background) !important;
-  color: var(--foreground) !important;
   border-color: var(--border) !important;
+}
+
+.rdg-custom .rdg-header-row {
+  background-color: var(--background) !important;
+}
+
+.rdg-custom .rdg-header-cell {
+  background-color: var(--background) !important;
+  color: var(--airtable-header-fg) !important;
+  border-right: 1px solid var(--border) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.rdg-custom .rdg-row:nth-child(even),
+.rdg-custom .rdg-row:nth-child(odd),
+.rdg-custom .rdg-row.selected,
+.rdg-custom .rdg-row:hover {
+  background-color: var(--background) !important;
+}
+
+.rdg-custom .rdg-cell,
+.rdg-custom .rdg-cell:last-child {
+  border-right: 1px solid var(--border) !important;
+  border-bottom: 1px solid var(--border) !important;
 }
 
 /* Enhanced Grid Styling */
@@ -482,7 +519,7 @@ code, pre {
 
 /* Header Row Styling */
 .rdg-custom .rdg-header-row {
-  background-color: var(--muted) !important;
+  background-color: var(--airtable-header-bg) !important;
   border-bottom: 2px solid var(--border) !important;
   font-weight: 600;
   font-size: 0.875rem;
@@ -494,14 +531,14 @@ code, pre {
   padding: 12px 8px !important;
   border-right: 1px solid var(--border) !important;
   border-bottom: 1px solid var(--border) !important;
-  background-color: var(--muted) !important;
-  color: var(--muted-foreground) !important;
+  background-color: var(--airtable-header-bg) !important;
+  color: var(--airtable-header-fg) !important;
   font-weight: 600;
   position: relative;
 }
 
 .rdg-custom .rdg-header-cell:last-child {
-  border-right: none !important;
+  border-right: 1px solid var(--border) !important;
 }
 
 /* Row Styling */
@@ -511,16 +548,16 @@ code, pre {
 }
 
 .rdg-custom .rdg-row:hover {
-  background-color: var(--accent) !important;
+  background-color: var(--airtable-row-hover) !important;
 }
 
 .rdg-custom .rdg-row.selected {
-  background-color: var(--primary) !important;
-  color: var(--primary-foreground) !important;
+  background-color: var(--airtable-row-selected) !important;
+  color: var(--airtable-header-fg) !important;
 }
 
 .rdg-custom .rdg-row.selected:hover {
-  background-color: var(--primary) !important;
+  background-color: var(--airtable-row-selected) !important;
 }
 
 /* Cell Styling */
@@ -534,7 +571,7 @@ code, pre {
 }
 
 .rdg-custom .rdg-cell:last-child {
-  border-right: none !important;
+  border-right: 1px solid var(--border) !important;
 }
 
 .rdg-custom .rdg-cell:focus {
@@ -665,21 +702,23 @@ code, pre {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  background: var(--airtable-badge-bg);
+  color: var(--airtable-badge-fg);
 }
 
 .rdg-custom .rdg-cell .badge.green {
-  background-color: #dcfce7;
-  color: #166534;
+  background-color: var(--airtable-badge-green-bg);
+  color: var(--airtable-badge-green-fg);
 }
 
 .rdg-custom .rdg-cell .badge.yellow {
-  background-color: #fef3c7;
-  color: #92400e;
+  background-color: var(--airtable-badge-yellow-bg);
+  color: var(--airtable-badge-yellow-fg);
 }
 
 .rdg-custom .rdg-cell .badge.blue {
-  background-color: #dbeafe;
-  color: #1e40af;
+  background-color: var(--airtable-badge-blue-bg);
+  color: var(--airtable-badge-blue-fg);
 }
 
 /* Resize Handle Styling */
@@ -718,8 +757,8 @@ code, pre {
 }
 
 [data-theme="dark"] .rdg-custom .rdg-header-cell {
-  background-color: var(--muted) !important;
-  color: var(--muted-foreground) !important;
+  background-color: var(--airtable-header-bg) !important;
+  color: var(--airtable-header-fg) !important;
 }
 
 [data-theme="dark"] .rdg-custom .rdg-cell input[type="checkbox"] {
@@ -763,3 +802,116 @@ code, pre {
     transform: translateY(0);
   }
 }
+
+/* --- Airtable-like Enhancements --- */
+.rdg-custom .rdg-row:nth-child(even) {
+  background-color: var(--airtable-row-even) !important;
+}
+
+.rdg-custom .rdg-row:nth-child(odd) {
+  background-color: var(--airtable-row-odd) !important;
+}
+
+.rdg-custom .rdg-header-row {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  box-shadow: 0 2px 6px 0 rgba(0,0,0,0.04);
+}
+
+.rdg-custom .rdg-header-cell {
+  background-color: var(--airtable-header-bg) !important;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: 0 1px 0 0 var(--border);
+}
+
+.rdg-custom .rdg-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+}
+
+.rdg-custom .rdg-cell .cell-summary,
+.rdg-custom .rdg-cell .cell-crew {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.rdg-custom .rdg-cell .badge {
+  border-radius: 9999px;
+  padding: 3px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--airtable-badge-bg);
+  color: var(--airtable-badge-fg);
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.04);
+  margin-right: 2px;
+}
+
+.rdg-custom .rdg-cell .badge.green {
+  background: var(--airtable-badge-green-bg);
+  color: var(--airtable-badge-green-fg);
+}
+.rdg-custom .rdg-cell .badge.yellow {
+  background: var(--airtable-badge-yellow-bg);
+  color: var(--airtable-badge-yellow-fg);
+}
+.rdg-custom .rdg-cell .badge.blue {
+  background: var(--airtable-badge-blue-bg);
+  color: var(--airtable-badge-blue-fg);
+}
+
+.rdg-custom .rdg-cell .cell-img, .rdg-custom .rdg-cell .cell-avatar {
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.06);
+  display: inline-block;
+}
+
+.rdg-custom .rdg-cell .cell-img:hover, .rdg-custom .rdg-cell .cell-avatar:hover {
+  box-shadow: 0 2px 8px 0 rgba(59,130,246,0.15);
+  cursor: pointer;
+}
+
+.rdg-custom .rdg-row:hover {
+  background-color: var(--airtable-row-hover) !important;
+  box-shadow: 0 2px 8px 0 rgba(59,130,246,0.06);
+}
+
+.rdg-custom .rdg-row.selected {
+  background-color: var(--airtable-row-selected) !important;
+  color: var(--airtable-header-fg) !important;
+}
+
+.rdg-custom .rdg-cell:focus {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: -2px;
+  z-index: 2;
+}
+
+@media (max-width: 768px) {
+  .rdg-custom .rdg-header-cell,
+  .rdg-custom .rdg-cell {
+    font-size: 0.85rem;
+    padding: 6px 4px !important;
+  }
+  .rdg-custom .rdg-cell .cell-summary,
+  .rdg-custom .rdg-cell .cell-crew {
+    max-width: 120px;
+  }
+  .rdg-custom .rdg-cell .cell-img, .rdg-custom .rdg-cell .cell-avatar {
+    width: 24px;
+    height: 24px;
+  }
+}
+

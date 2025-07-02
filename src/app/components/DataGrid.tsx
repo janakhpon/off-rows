@@ -228,6 +228,32 @@ export default function DataGridComponent() {
       resizable: true,
       renderCell: ({ row }: RenderCellProps<DataGridRow>) => {
         const value = row.data[field.id];
+        // Custom field ID rendering for Airtable-like look
+        if (field.id === 'crew' || field.id === 'memberName' || field.id === 'crewName') {
+          return (
+            <span className="badge" title={typeof value === 'string' ? value : ''}>
+              {typeof value === 'string' ? value : ''}
+            </span>
+          );
+        }
+        if (field.id === 'summary') {
+          return (
+            <span className="cell-summary" title={typeof value === 'string' ? value : ''}>
+              {typeof value === 'string' ? value : ''}
+            </span>
+          );
+        }
+        if (field.id === 'crew_img' || field.id === 'avatar') {
+          // Render as rounded avatar
+          if (typeof value === 'string' && value) {
+            return <img src={value} alt="avatar" className="cell-avatar" aria-label={field.name} title="Click to preview" />;
+          }
+          if (value && typeof value === 'object' && 'fileId' in value && getFileUrl(value.fileId)) {
+            return <img src={getFileUrl(value.fileId)} alt="avatar" className="cell-avatar" aria-label={field.name} title="Click to preview" />;
+          }
+          return <span className="cell-none">None</span>;
+        }
+        // Default field type rendering
         switch (field.type) {
           case 'text':
             return (
@@ -348,7 +374,6 @@ export default function DataGridComponent() {
           default:
             // Type guard: do not render arrays in non-array fields
             if (Array.isArray(value)) return <span className="cell-none">None</span>;
-            
             // Special styling for specific field types
             if (field.id === 'devilfruit') {
               if (!value || typeof value !== 'string' || value === 'None') return <span className="badge">None</span>;
@@ -358,14 +383,13 @@ export default function DataGridComponent() {
               else badgeClass += ' blue';
               return <span className={badgeClass}>{value}</span>;
             }
-            if (field.id === 'crew' || field.id === 'memberName' || field.id === 'crewName') {
-              return <span className="cell-crew">{typeof value === 'string' ? value : ''}</span>;
-            }
-            if (field.id === 'summary') {
-              return <span className="cell-summary">{typeof value === 'string' ? value : ''}</span>;
-            }
+            // For all other string/number fields, add ellipsis and tooltip
             if (typeof value === 'string' || typeof value === 'number') {
-              return <span>{value}</span>;
+              return (
+                <span title={String(value)} style={{ display: 'inline-block', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>
+                  {value}
+                </span>
+              );
             }
             return <span className="cell-none">None</span>;
         }

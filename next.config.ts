@@ -31,6 +31,9 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  pwa: {
+    precachePages: ['/', '/about'],
+  },
 };
 
 const pwaConfig = withPWA({

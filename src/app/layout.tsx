@@ -5,7 +5,6 @@ import { TableProvider } from './contexts/TableContext';
 import 'react-data-grid/lib/styles.css';
 import ErrorBoundary from './components/ErrorBoundary';
 import OfflineIndicator from './components/OfflineIndicator';
-// import { NotificationProvider } from './contexts/NotificationContext';
 
 export const metadata: Metadata = {
   title: 'Offrows - Modern Offline-First Spreadsheet & Database App',
