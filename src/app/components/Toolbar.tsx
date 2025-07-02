@@ -36,8 +36,8 @@ export default function Toolbar() {
 
   if (!activeTable) {
     return (
-      <div className="bg-white border-b border-gray-200 px-4 py-3">
-        <div className="flex items-center justify-between">
+      <div className="px-4 py-3 bg-white border-b border-gray-200">
+        <div className="flex justify-between items-center">
           <div className="text-gray-500">No table selected</div>
         </div>
       </div>
@@ -176,50 +176,50 @@ export default function Toolbar() {
           {notification.message}
         </div>
       )}
-      <div className="bg-white border-b border-gray-200 px-4 py-3">
-        <div className="flex items-center justify-between">
+      <div className="px-4 py-3 bg-white border-b border-gray-200">
+        <div className="flex justify-between items-center">
           <div className="flex items-center space-x-2">
             {/* File Menu */}
             <div className="relative">
               <button
                 onClick={() => setIsFileMenuOpen(!isFileMenuOpen)}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                className="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                <FileText className="mr-2 h-4 w-4" />
+                <FileText className="mr-2 w-4 h-4" />
                 File
-                <ChevronDown className="ml-2 h-4 w-4" />
+                <ChevronDown className="ml-2 w-4 h-4" />
               </button>
               
               {isFileMenuOpen && (
-                <div className="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                <div className="absolute left-0 z-50 mt-2 w-56 bg-white rounded-md border border-gray-200 shadow-lg">
                   <div className="py-1">
                     <button
                       onClick={handleImportCSV}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      className="block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100"
                     >
-                      <Upload className="inline mr-2 h-4 w-4" />
+                      <Upload className="inline mr-2 w-4 h-4" />
                       Import CSV
                     </button>
                     <button
                       onClick={handleImportJSON}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      className="block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100"
                     >
-                      <Upload className="inline mr-2 h-4 w-4" />
+                      <Upload className="inline mr-2 w-4 h-4" />
                       Import JSON
                     </button>
-                    <div className="border-t border-gray-200 my-1"></div>
+                    <div className="my-1 border-t border-gray-200"></div>
                     <button
                       onClick={handleExportCSV}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      className="block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100"
                     >
-                      <Download className="inline mr-2 h-4 w-4" />
+                      <Download className="inline mr-2 w-4 h-4" />
                       Export CSV
                     </button>
                     <button
                       onClick={handleExportJSON}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      className="block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100"
                     >
-                      <Download className="inline mr-2 h-4 w-4" />
+                      <Download className="inline mr-2 w-4 h-4" />
                       Export JSON
                     </button>
                   </div>
@@ -231,44 +231,44 @@ export default function Toolbar() {
             <div className="relative">
               <button
                 onClick={() => setIsViewMenuOpen(!isViewMenuOpen)}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                className="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                <Eye className="mr-2 h-4 w-4" />
+                <Eye className="mr-2 w-4 h-4" />
                 View Options
-                <ChevronDown className="ml-2 h-4 w-4" />
+                <ChevronDown className="ml-2 w-4 h-4" />
               </button>
               
               {isViewMenuOpen && (
-                <div className="absolute left-0 mt-2 w-64 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                <div className="absolute left-0 z-50 mt-2 w-64 bg-white rounded-md border border-gray-200 shadow-lg">
                   <div className="py-1">
-                    <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    <div className="px-4 py-2 text-xs font-medium tracking-wide text-gray-500 uppercase">
                       Hide Fields
                     </div>
                     {activeTable.fields.map((field: Field) => (
-                      <label key={field.id} className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                        <input type="checkbox" className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
+                      <label key={field.id} className="flex items-center px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100">
+                        <input type="checkbox" className="mr-3 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" />
                         {field.name}
                       </label>
                     ))}
-                    <div className="border-t border-gray-200 my-1"></div>
-                    <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    <div className="my-1 border-t border-gray-200"></div>
+                    <div className="px-4 py-2 text-xs font-medium tracking-wide text-gray-500 uppercase">
                       Row Height
                     </div>
                     <button
                       onClick={() => handleRowHeightChange('compact')}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      className="block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100"
                     >
                       Compact
                     </button>
                     <button
                       onClick={() => handleRowHeightChange('default')}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      className="block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100"
                     >
                       Default
                     </button>
                     <button
                       onClick={() => handleRowHeightChange('large')}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      className="block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100"
                     >
                       Large
                     </button>
@@ -281,29 +281,29 @@ export default function Toolbar() {
             <div className="relative">
               <button
                 onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                className="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                <Filter className="mr-2 h-4 w-4" />
+                <Filter className="mr-2 w-4 h-4" />
                 Filter
-                <ChevronDown className="ml-2 h-4 w-4" />
+                <ChevronDown className="ml-2 w-4 h-4" />
               </button>
               
               {isFilterMenuOpen && (
-                <div className="absolute left-0 mt-2 w-80 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                <div className="absolute left-0 z-50 mt-2 w-80 bg-white rounded-md border border-gray-200 shadow-lg">
                   <div className="p-4">
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex justify-between items-center mb-3">
                       <h3 className="text-sm font-medium text-gray-900">Add Filter</h3>
                       <button
                         onClick={() => setIsFilterMenuOpen(false)}
                         className="text-gray-400 hover:text-gray-600"
                       >
-                        <X className="h-4 w-4" />
+                        <X className="w-4 h-4" />
                       </button>
                     </div>
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Field</label>
-                        <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <label className="block mb-1 text-xs font-medium text-gray-700">Field</label>
+                        <select className="px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
                           <option>Select a field</option>
                           {activeTable.fields.map((field: Field) => (
                             <option key={field.id} value={field.id}>{field.name}</option>
@@ -311,8 +311,8 @@ export default function Toolbar() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Operator</label>
-                        <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <label className="block mb-1 text-xs font-medium text-gray-700">Operator</label>
+                        <select className="px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
                           <option>equals</option>
                           <option>contains</option>
                           <option>greater than</option>
@@ -320,14 +320,14 @@ export default function Toolbar() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Value</label>
+                        <label className="block mb-1 text-xs font-medium text-gray-700">Value</label>
                         <input
                           type="text"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="Enter value"
                         />
                       </div>
-                      <button className="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors">
+                      <button className="px-4 py-2 w-full text-sm font-medium text-white bg-blue-600 rounded-md transition-colors hover:bg-blue-700">
                         Add Filter
                       </button>
                     </div>
@@ -340,29 +340,29 @@ export default function Toolbar() {
             <div className="relative">
               <button
                 onClick={() => setIsSortMenuOpen(!isSortMenuOpen)}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                className="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                <SortAsc className="mr-2 h-4 w-4" />
+                <SortAsc className="mr-2 w-4 h-4" />
                 Sort
-                <ChevronDown className="ml-2 h-4 w-4" />
+                <ChevronDown className="ml-2 w-4 h-4" />
               </button>
               
               {isSortMenuOpen && (
-                <div className="absolute left-0 mt-2 w-64 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                <div className="absolute left-0 z-50 mt-2 w-64 bg-white rounded-md border border-gray-200 shadow-lg">
                   <div className="p-4">
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex justify-between items-center mb-3">
                       <h3 className="text-sm font-medium text-gray-900">Sort Rules</h3>
                       <button
                         onClick={() => setIsSortMenuOpen(false)}
                         className="text-gray-400 hover:text-gray-600"
                       >
-                        <X className="h-4 w-4" />
+                        <X className="w-4 h-4" />
                       </button>
                     </div>
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Sort by</label>
-                        <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <label className="block mb-1 text-xs font-medium text-gray-700">Sort by</label>
+                        <select className="px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
                           <option>Select a field</option>
                           {activeTable.fields.map((field: Field) => (
                             <option key={field.id} value={field.id}>{field.name}</option>
@@ -370,13 +370,13 @@ export default function Toolbar() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Order</label>
-                        <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <label className="block mb-1 text-xs font-medium text-gray-700">Order</label>
+                        <select className="px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
                           <option value="asc">Ascending</option>
                           <option value="desc">Descending</option>
                         </select>
                       </div>
-                      <button className="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors">
+                      <button className="px-4 py-2 w-full text-sm font-medium text-white bg-blue-600 rounded-md transition-colors hover:bg-blue-700">
                         Add Sort Rule
                       </button>
                     </div>
@@ -387,8 +387,8 @@ export default function Toolbar() {
           </div>
 
           <div className="flex items-center space-x-2">
-            <button className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-              <Settings className="mr-2 h-4 w-4" />
+            <button className="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+              <Settings className="mr-2 w-4 h-4" />
               Settings
             </button>
           </div>

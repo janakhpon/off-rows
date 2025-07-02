@@ -59,22 +59,6 @@ const transformRowsForGrid = (orderedRows: TableRow[]): DataGridRow[] =>
     ...row.data,
   }));
 
-// Pure function to extract file IDs from rows
-const extractFileIdsFromRows = (rows: TableRow[], activeTable: Table | null): number[] => {
-  if (!activeTable) return [];
-  
-  const fileIds: number[] = [];
-  rows.forEach((row: TableRow) => {
-    activeTable.fields.forEach((field: Field) => {
-      const val = row.data[field.id];
-      if (val && typeof val === 'object' && 'fileId' in val && typeof val.fileId === 'number') {
-        fileIds.push(val.fileId);
-      }
-    });
-  });
-  return fileIds;
-};
-
 // Pure function to create new row data
 const createNewRowData = (activeTable: Table): Record<string, string | number | boolean | FileValueWithId | FileValueWithId[] | null> =>
   activeTable.fields.reduce((acc: Record<string, string | number | boolean | FileValueWithId | FileValueWithId[] | null>, field: Field) => {
@@ -179,6 +163,29 @@ export default function DataGridComponent() {
       setFileUrls(prev => ({ ...prev, [fileId]: url }));
     }
   }, [fileUrls]);
+
+  // Ensure all fileIds in images/files fields are cached for display
+  useEffect(() => {
+    if (!activeTable) return;
+    const fileIds: number[] = [];
+    rows.forEach((row: TableRow) => {
+      activeTable.fields.forEach((field: Field) => {
+        const val = row.data[field.id];
+        if (field.type === 'images' || field.type === 'files') {
+          if (Array.isArray(val)) {
+            val.forEach((v) => {
+              if (v && typeof v === 'object' && 'fileId' in v && typeof v.fileId === 'number') {
+                fileIds.push(v.fileId);
+              }
+            });
+          }
+        } else if ((field.type === 'image' || field.type === 'file') && val && typeof val === 'object' && 'fileId' in val && typeof val.fileId === 'number') {
+          fileIds.push(val.fileId);
+        }
+      });
+    });
+    fileIds.forEach((id) => fetchAndCacheFileUrl(id));
+  }, [rows, activeTable, fetchAndCacheFileUrl]);
 
   // --- DELETE FUNCTIONALITY ---
   // Delete selected rows with notification feedback
@@ -440,12 +447,6 @@ export default function DataGridComponent() {
       }
     }
   };
-
-  // Pre-fetch file URLs for efficient rendering
-  useEffect(() => {
-    const fileIds = extractFileIdsFromRows(orderedRows, activeTable);
-    fileIds.forEach(id => { if (!fileUrls[id]) fetchAndCacheFileUrl(id); });
-  }, [orderedRows, activeTable, fileUrls, fetchAndCacheFileUrl]);
 
   const [rowHeight, setRowHeight] = useState(36); // default: medium
 
