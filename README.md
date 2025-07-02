@@ -207,5 +207,10 @@ Sync from Cloud -> overwrite the current changes with all the changes from the c
 
 when creating new rows, editing existing rows, deleting existing rows - always mark them properly with related status which will be used for syncing with the data from the cloud db.
 
-What is the best way to sync to cloud db? I want to make it dynamic, user can can connect to either to supabase or psql instance directly by providing a proper env or credentials but they should totally be optional since we are offline first (fully operational without the need for cloud or signing up) - but when user wants to sync, they need to be signed up and sync to a default cloud db (supabase) provided to them by default without needing them to provide credentials to connect to an additional db (their supabase or psql instance).
+What is the best way to sync to cloud db? I want to make it dynamic, user can can connect to either to supabase or psql instance directly by providing a proper env or credentials but they should totally be optional since we are offline first (fully operational without the need for cloud or signing up) - but when user wants to sync, they need to be signed up and sync to a default cloud db (supabase) provided to them by default without needing them to provide credentials to connect to an additional db (their supabase or psql instance). Should we do implementation ready in both supabase and psql + s3  and let the user choose by selecting to sync to one of them?
 
+Encryption-Decryption
+  - we should provide a data encryption before storing the data to IDB and when read from it, decrypt it?
+
+Viz page
+  - can try to visualize the data by selecting a table (for example, select a table, what column to use as x axis, what to use as y axis of line chart, area chart? ...etc)
