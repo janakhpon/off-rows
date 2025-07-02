@@ -13,7 +13,7 @@ const ImagesCellEditor: React.FC<ImagesCellEditorProps> = ({ value, getFileUrl, 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   return (
-    <div className="flex flex-row gap-2 items-center transition-all duration-200">
+    <div className="flex flex-row gap-2 items-center h-full transition-all duration-200">
       {value.map((img) => {
         const imgUrl = getFileUrl(img.fileId);
         return imgUrl ? (

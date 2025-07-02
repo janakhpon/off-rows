@@ -11,41 +11,39 @@ interface ImageCellEditorProps {
 
 const ImageCellEditor: React.FC<ImageCellEditorProps> = ({ value, getFileUrl, onUpload, onPreview, ariaLabel }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const imgUrl = value && value.fileId ? getFileUrl(value.fileId) : undefined;
 
   return (
-    <div className="flex items-center justify-center transition-all duration-200">
-      {imgUrl ? (
+    <div className="flex flex-row gap-2 items-center h-full transition-all duration-200">
+      {value && getFileUrl(value.fileId) ? (
         <img
-          src={imgUrl}
-          alt={value?.name || 'Image'}
-          className="cell-img cursor-pointer transition-all duration-200"
-          onClick={() => onPreview(imgUrl, value?.name || 'Image')}
+          src={getFileUrl(value.fileId)!}
+          alt={value.name}
+          className="cell-img cursor-pointer w-14 h-14 object-cover transition-all duration-200 border border-gray-200"
+          style={{ borderRadius: 6 }}
+          onClick={() => onPreview(getFileUrl(value.fileId)!, value.name)}
           tabIndex={0}
-          aria-label={ariaLabel || 'Preview image'}
+          aria-label={ariaLabel || `Preview image ${value.name}`}
         />
-      ) : (
-        <>
-          <button
-            className="text-xs text-blue-600 underline transition-colors duration-150"
-            onClick={() => fileInputRef.current?.click()}
-            type="button"
-            aria-label={ariaLabel || 'Upload image'}
-          >
-            Upload
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            style={{ display: 'none' }}
-            onChange={e => {
-              const file = e.target.files?.[0];
-              if (file) onUpload(file);
-            }}
-          />
-        </>
-      )}
+      ) : null}
+      <button
+        className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 hover:bg-blue-100 text-blue-600 text-lg font-bold border border-gray-300 transition-colors duration-150 ml-1"
+        onClick={() => fileInputRef.current?.click()}
+        type="button"
+        aria-label={ariaLabel || (value ? 'Replace image' : 'Upload image')}
+        tabIndex={0}
+      >
+        +
+      </button>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={e => {
+          const file = e.target.files?.[0];
+          if (file) onUpload(file);
+        }}
+      />
     </div>
   );
 };

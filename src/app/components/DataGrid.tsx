@@ -19,6 +19,7 @@ import FileCellEditor from './celleditors/FileCellEditor';
 import ImagesCellEditor from './celleditors/ImagesCellEditor';
 import FilesCellEditor from './celleditors/FilesCellEditor';
 import ImageCellEditor from './celleditors/ImageCellEditor';
+import { cn } from '@/lib/utils';
 
 type DataGridRow = { id: number; data: Record<string, string | number | boolean | FileValueWithId | FileValueWithId[] | null> };
 
@@ -85,7 +86,11 @@ const createNewRowData = (activeTable: Table): Record<string, string | number | 
  * - Modal dialogs with keyboard navigation
  * - Offline-first with IndexedDB storage
  */
-export default function DataGridComponent() {
+interface DataGridComponentProps {
+  searchQuery?: string;
+}
+
+export default function DataGridComponent({ searchQuery = '' }: DataGridComponentProps) {
   const { activeTable, refreshTables, setActiveTable } = useTables();
   const { theme } = useTheme();
   const { rows, addRow, updateRow, deleteRow, addColumn, deleteColumn, updateColWidths, updateRowHeights, deleteTable } = useAppStore();
@@ -114,8 +119,20 @@ export default function DataGridComponent() {
   const orderedRows = useMemo(() => {
     if (!rowOrder.length) return rows;
     const rowMap = Object.fromEntries(rows.map(r => [r.id!, r]));
-    return rowOrder.map(id => rowMap[id]).filter(Boolean);
-  }, [rows, rowOrder]);
+    let filteredRows = rowOrder.map(id => rowMap[id]).filter(Boolean);
+    if (searchQuery.trim() !== '' && activeTable) {
+      const q = searchQuery.trim().toLowerCase();
+      // Only search text fields
+      const textFields = activeTable.fields.filter(f => f.type === 'text').map(f => f.id);
+      filteredRows = filteredRows.filter(row =>
+        textFields.some(fid => {
+          const val = row.data[fid];
+          return val !== null && val !== undefined && String(val).toLowerCase().includes(q);
+        })
+      );
+    }
+    return filteredRows;
+  }, [rows, rowOrder, searchQuery, activeTable]);
 
   // --- COLUMN WIDTH STATE (PERSISTED IN DB) ---
   // Column widths are persisted in the database for consistent layout
@@ -225,10 +242,72 @@ export default function DataGridComponent() {
   // --- REACT-DATA-GRID COLUMNS ---
   // State for image preview modal
   const [imageModal, setImageModal] = useState<{ url: string; name: string } | null>(null);
-  // Generate columns with cell editors based on field type
+  // --- SELECT ALL CHECKBOX LOGIC ---
+  const allRowIds = orderedRows.map(row => row.id).filter((id): id is number => typeof id === 'number');
+  const allSelected = selectedRows.size > 0 && allRowIds.every(id => selectedRows.has(id));
+  const someSelected = selectedRows.size > 0 && !allSelected;
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedRows(new Set<number>(allRowIds));
+    } else {
+      setSelectedRows(new Set<number>());
+    }
+  };
+  const handleSelectRow = (rowId: number | undefined, checked: boolean) => {
+    if (typeof rowId !== 'number') return;
+    const newSet = new Set(selectedRows);
+    if (checked) {
+      newSet.add(rowId);
+    } else {
+      newSet.delete(rowId);
+    }
+    setSelectedRows(newSet as Set<number>);
+  };
+
+  // --- COLUMNS ---
   const columns = useMemo(() => {
     if (!activeTable) return [];
-    return activeTable.fields.map((field) => ({
+    // Row number column
+    const rowNumberCol = {
+      key: 'rowNumber',
+      name: '#',
+      width: 50,
+      resizable: false,
+      renderCell: ({ rowIdx }: { rowIdx: number }) => (
+        <span className="block text-xs text-center text-gray-400">{rowIdx + 1}</span>
+      ),
+      headerCellClass: 'text-center',
+      cellClass: 'text-center',
+    };
+    // Select all checkbox column
+    const selectCol = {
+      key: 'select',
+      name: (
+        <input
+          type="checkbox"
+          checked={allSelected}
+          ref={el => { if (el) el.indeterminate = someSelected; }}
+          onChange={e => handleSelectAll(e.target.checked)}
+          aria-label="Select all rows"
+          className="accent-blue-600"
+        />
+      ),
+      width: 40,
+      resizable: false,
+      renderCell: ({ row }: RenderCellProps<DataGridRow>) => (
+        <input
+          type="checkbox"
+          checked={selectedRows.has(row.id)}
+          onChange={e => handleSelectRow(row.id, e.target.checked)}
+          aria-label="Select row"
+          className="accent-blue-600"
+        />
+      ),
+      headerCellClass: 'text-center',
+      cellClass: 'text-center',
+    };
+    // Data columns
+    const dataCols = activeTable.fields.map((field) => ({
       key: field.id,
       name: field.name,
       width: getColWidth(field.id, field.type),
@@ -402,7 +481,8 @@ export default function DataGridComponent() {
         }
       }
     }));
-  }, [activeTable, getColWidth, getFileUrl, updateRow]);
+    return [rowNumberCol, selectCol, ...dataCols];
+  }, [activeTable, getColWidth, selectedRows, allSelected, someSelected]);
 
   // --- REACT-DATA-GRID ROWS ---
   // Transform ordered rows for react-data-grid
@@ -470,6 +550,32 @@ export default function DataGridComponent() {
     }
   }, [imageModal, showDeleteConfirm]);
 
+  // --- Highlight logic for matching rows ---
+  const isRowMatch = (row: DataGridRow) => {
+    if (!searchQuery.trim() || !activeTable) return false;
+    const q = searchQuery.trim().toLowerCase();
+    const textFields = activeTable.fields.filter(f => f.type === 'text').map(f => f.id);
+    return textFields.some(fid => {
+      const val = row.data[fid];
+      return val !== null && val !== undefined && String(val).toLowerCase().includes(q);
+    });
+  };
+
+  // --- SUMMARY FOOTER LOGIC ---
+  const showSummary = orderedRows.length > 0 && activeTable;
+  let numberFieldSums: Record<string, number> = {};
+  if (showSummary) {
+    numberFieldSums = activeTable.fields
+      .filter(f => f.type === 'number')
+      .reduce((acc, field) => {
+        acc[field.id] = orderedRows.reduce((sum, row) => {
+          const val = row.data[field.id];
+          return sum + (typeof val === 'number' ? val : 0);
+        }, 0);
+        return acc;
+      }, {} as Record<string, number>);
+  }
+
   if (!activeTable) {
     return (
       <div className="flex overflow-auto flex-grow justify-center items-center">
@@ -495,7 +601,7 @@ export default function DataGridComponent() {
   }
 
   return (
-    <div className="flex overflow-auto flex-col flex-grow min-w-0">
+    <div className="flex overflow-auto flex-col flex-grow px-2 min-w-0">
       {/* Modals */}
       <AddColumnModal 
         open={showAddColumn} 
@@ -536,27 +642,17 @@ export default function DataGridComponent() {
           <div 
             className="p-6 mx-4 w-96 max-w-md rounded-lg animate-scale-in"
             onClick={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff'
-            }}
           >
             <div className="flex items-center mb-4">
               <AlertTriangle className="mr-3 w-6 h-6" style={{ color: theme === 'dark' ? '#f59e0b' : '#f59e0b' }} />
               <h2 
                 id="delete-modal-title"
                 className="text-lg font-semibold"
-                style={{
-                  color: theme === 'dark' ? '#f9fafc' : '#111827'
-                }}
               >
                 Confirm Delete
               </h2>
             </div>
             <p 
-              className="mb-4"
-              style={{
-                color: theme === 'dark' ? '#d1d5db' : '#374151'
-              }}
             >
               {deleteType === 'rows' 
                 ? `Are you sure you want to delete ${selectedRows.size} selected row(s)? This action cannot be undone.`
@@ -570,34 +666,14 @@ export default function DataGridComponent() {
                   setDeleteType(null);
                 }}
                 className="px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-                style={{
-                  color: theme === 'dark' ? '#d1d5db' : '#374151'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = theme === 'dark' ? '#374151' : '#f3f4f6';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
                 type="button"
-                aria-label="Cancel delete"
               >
                 Cancel
               </button>
               <button
                 onClick={deleteType === 'rows' ? handleDeleteRows : handleDeleteTable}
                 className="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                style={{
-                  backgroundColor: theme === 'dark' ? '#dc2626' : '#dc2626'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = theme === 'dark' ? '#b91c1c' : '#b91c1c';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = theme === 'dark' ? '#dc2626' : '#dc2626';
-                }}
                 type="button"
-                aria-label="Confirm delete"
               >
                 Delete
               </button>
@@ -616,7 +692,7 @@ export default function DataGridComponent() {
           aria-labelledby="image-modal-title"
         >
           <div 
-            className="flex flex-col items-center p-4 w-full max-w-lg bg-white rounded-lg shadow-lg dark:bg-gray-900 animate-scale-in"
+            className="flex flex-col items-center p-4 w-full max-w-lg bg-white rounded-lg shadow-lg animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
             <img 
@@ -641,45 +717,14 @@ export default function DataGridComponent() {
 
       {/* Toolbar */}
       <div 
-        className="flex justify-between items-center p-4 border-b"
-        style={{
-          borderColor: theme === 'dark' ? '#475569' : '#e5e7eb',
-          backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff'
-        }}
+        className="flex justify-between items-center p-2 border-b"
       >
         <div className="flex items-center space-x-2">
-          <button
-            onClick={handleAddRow}
-            className="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
-            style={{
-              backgroundColor: theme === 'dark' ? '#1e3a8a' : '#dbeafe',
-              color: theme === 'dark' ? '#93c5fd' : '#1d4ed8'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = theme === 'dark' ? '#1e40af' : '#bfdbfe';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = theme === 'dark' ? '#1e3a8a' : '#dbeafe';
-            }}
-            type="button"
-          >
-            <Plus className="mr-1 w-4 h-4" /> Add Row
-          </button>
           
           {selectedRows.size > 0 && (
             <button
               onClick={() => confirmDelete('rows')}
               className="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
-              style={{
-                backgroundColor: theme === 'dark' ? '#dc2626' : '#fef2f2',
-                color: theme === 'dark' ? '#fca5a5' : '#dc2626'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = theme === 'dark' ? '#b91c1c' : '#fee2e2';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = theme === 'dark' ? '#dc2626' : '#fef2f2';
-              }}
               type="button"
             >
               <Trash2 className="mr-1 w-4 h-4" /> Delete {selectedRows.size} Row{selectedRows.size > 1 ? 's' : ''}
@@ -691,28 +736,27 @@ export default function DataGridComponent() {
             value={rowHeight}
             onChange={e => setRowHeight(Number(e.target.value))}
             className="px-2 py-1 text-xs rounded border focus:outline-none focus:ring-2 focus:ring-blue-400"
-            style={{ minWidth: 80 }}
+            style={{ minWidth: 100 }}
           >
-            <option value={28}>Small</option>
-            <option value={36}>Medium</option>
-            <option value={48}>Large</option>
+            <option value={40}             style={{
+              backgroundColor: theme === 'dark' ? '#1e3a8a' : '#dbeafe',
+              color: theme === 'dark' ? '#93c5fd' : '#1d4ed8'
+            }}>Small</option>
+            <option value={60}             style={{
+              backgroundColor: theme === 'dark' ? '#1e3a8a' : '#dbeafe',
+              color: theme === 'dark' ? '#93c5fd' : '#1d4ed8'
+            }}>Medium</option>
+            <option value={80}             style={{
+              backgroundColor: theme === 'dark' ? '#1e3a8a' : '#dbeafe',
+              color: theme === 'dark' ? '#93c5fd' : '#1d4ed8'
+            }}>Large</option>
           </select>
         </div>
 
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setShowAddColumn(true)}
-            className="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
-            style={{
-              backgroundColor: theme === 'dark' ? '#1e3a8a' : '#dbeafe',
-              color: theme === 'dark' ? '#93c5fd' : '#1d4ed8'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = theme === 'dark' ? '#1e40af' : '#bfdbfe';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = theme === 'dark' ? '#1e3a8a' : '#dbeafe';
-            }}
+            className="flex items-center p-1 text-xs font-medium rounded-md transition-colors md:py-2 md:px-3 md:text-sm"
             type="button"
           >
             <Plus className="mr-1 w-4 h-4" /> Add Column
@@ -720,17 +764,7 @@ export default function DataGridComponent() {
           
           <button
             onClick={() => confirmDelete('table')}
-            className="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
-            style={{
-              backgroundColor: theme === 'dark' ? '#dc2626' : '#fef2f2',
-              color: theme === 'dark' ? '#fca5a5' : '#dc2626'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = theme === 'dark' ? '#b91c1c' : '#fee2e2';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = theme === 'dark' ? '#dc2626' : '#fef2f2';
-            }}
+            className="flex items-center p-1 text-xs font-medium rounded-md transition-colors md:px-3 md:py-2 md:text-sm"
             type="button"
           >
             <Trash2 className="mr-1 w-4 h-4" /> Delete Table
@@ -747,23 +781,39 @@ export default function DataGridComponent() {
           selectedRows={selectedRows}
           onSelectedRowsChange={setSelectedRows}
           rowHeight={rowHeight}
-          style={{
-            backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
-            color: theme === 'dark' ? '#f9fafc' : '#111827'
-          }}
           className="rdg-custom"
           defaultColumnOptions={{
             resizable: true,
             sortable: true
           }}
+          rowClass={row => cn(isRowMatch(row) && 'bg-yellow-100 dark:bg-yellow-900/40')}
+           style={{
+            backgroundColor: theme === 'dark' ? '#303b4f' : '#ffffff',
+            color: theme === 'dark' ? '#f9fafc' : '#111827'
+          }}
         />
+        {/* Summary Footer Row */}
+        {showSummary && (
+          <div className={cn(
+            'flex w-full border-t text-xs font-medium',
+            theme === 'dark' ? 'bg-blue-950 text-blue-100 border-blue-900' : 'bg-blue-50 text-blue-900 border-blue-200'
+          )}>
+            <div className="px-2 py-2 min-w-[50px] text-center">Summary</div>
+            {/* For each column, show sum if number, else blank */}
+            {activeTable.fields.map((field) => (
+              <div key={field.id} className="px-2 py-2 min-w-[120px] text-right">
+                {field.type === 'number' ? numberFieldSums[field.id] : ''}
+              </div>
+            ))}
+            {/* Add extra cells for select/row number columns if needed */}
+          </div>
+        )}
       </div>
       {/* Add Row Button at Bottom Left */}
       <div className="flex items-center p-2" style={{ minHeight: 40 }}>
         <button
           onClick={handleAddRow}
           className="flex items-center px-3 py-1 text-sm font-medium bg-white rounded-md border border-gray-200 shadow-sm hover:bg-gray-50"
-          style={{ color: '#2563eb' }}
         >
           + Add
         </button>

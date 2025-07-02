@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { cn } from '@/lib/utils';
 
 interface DropdownCellEditorProps {
   value: string;
@@ -25,7 +26,10 @@ const DropdownCellEditor: React.FC<DropdownCellEditorProps> = ({
   return (
     <select
       ref={selectRef}
-      className="w-full h-full px-2 py-1 bg-transparent border-none outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded text-sm cursor-pointer"
+      className={cn(
+        "w-full h-full px-2 py-1 bg-transparent border-none outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded text-sm cursor-pointer",
+        "dark:bg-gray-800 dark:text-gray-200"
+      )}
       value={value || ''}
       aria-label={ariaLabel || 'Select option'}
       onChange={e => onChange(e.target.value)}
@@ -36,11 +40,6 @@ const DropdownCellEditor: React.FC<DropdownCellEditorProps> = ({
         if (e.key === 'Escape') {
           e.currentTarget.blur();
         }
-      }}
-      style={{ 
-        minWidth: 80,
-        color: 'inherit',
-        fontSize: 'inherit'
       }}
     >
       <option value="">Select...</option>

@@ -2,17 +2,17 @@
 
 import { useTheme } from './contexts/ThemeContext';
 import ClientApp from './components/ClientApp';
+import { cn } from '@/lib/utils';
 
 export default function Home() {
   const { theme } = useTheme();
   
   return (
-    <main 
-      className="h-screen"
-      style={{
-        backgroundColor: theme === 'dark' ? '#0f172a' : '#f9fafb',
-        color: theme === 'dark' ? '#f9fafc' : '#111827'
-      }}
+    <main
+      className={cn(
+        "h-screen",
+        theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
+      )}
     >
       <ClientApp />
     </main>

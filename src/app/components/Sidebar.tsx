@@ -4,7 +4,6 @@ import { Menu, Plus, Database, ChevronRight, Settings, HelpCircle, Github } from
 import { useTables } from '../contexts/TableContext';
 import { useAppStore } from '@/lib/store';
 import { Table } from '@/lib/schemas';
-
 interface SidebarProps {
   isCollapsed: boolean;
   onToggle: () => void;
@@ -56,7 +55,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       {/* Mobile overlay */}
       {!isCollapsed && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden modal-backdrop"
+          className="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden modal-backdrop"
           onClick={onToggle}
         />
       )}
@@ -68,36 +67,36 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         ${isCollapsed ? '-translate-x-full md:translate-x-0' : 'translate-x-0'}
       `}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+        <div className="flex justify-between items-center p-4 bg-gray-50 border-b border-gray-200">
           {!isCollapsed && (
             <div className="flex items-center space-x-2">
-              <Database className="h-6 w-6 text-blue-600" />
+              <Database className="w-6 h-6 text-blue-600" />
               <span className="font-semibold text-gray-900">Tables</span>
             </div>
           )}
           <button
             onClick={onToggle}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200 cursor-pointer focus-ring"
+            className="p-2 text-gray-500 rounded-lg transition-colors duration-200 cursor-pointer hover:text-gray-700 hover:bg-gray-100 focus-ring"
             type="button"
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="overflow-y-auto flex-1">
           {/* Tables Section */}
           <div className="p-4">
             {!isCollapsed && (
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex justify-between items-center mb-4">
                 <h3 className="text-sm font-medium text-gray-900">All Tables</h3>
                 <button
                   onClick={handleAddTable}
-                  className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200 cursor-pointer focus-ring"
+                  className="p-1 text-gray-400 rounded transition-colors duration-200 cursor-pointer hover:text-blue-600 hover:bg-blue-50 focus-ring"
                   title="Add new table"
                   type="button"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="w-4 h-4" />
                 </button>
               </div>
             )}
@@ -108,11 +107,11 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 <div className={`text-center py-8 ${isCollapsed ? 'px-2' : 'px-4'}`}>
                   {!isCollapsed && (
                     <>
-                      <Database className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                      <p className="text-sm text-gray-500 mb-3">No tables yet</p>
+                      <Database className="mx-auto mb-2 w-8 h-8 text-gray-300" />
+                      <p className="mb-3 text-sm text-gray-500">No tables yet</p>
                       <button
                         onClick={handleAddTable}
-                        className="w-full px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 cursor-pointer focus-ring"
+                        className="px-3 py-2 w-full text-sm text-white bg-blue-600 rounded-lg transition-colors duration-200 cursor-pointer hover:bg-blue-700 focus-ring"
                         type="button"
                       >
                         Create your first table
@@ -142,11 +141,11 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                         <div className="flex items-center space-x-2 min-w-0">
                           <Database className={`h-4 w-4 flex-shrink-0 ${activeTable?.id === table.id ? 'text-blue-600' : 'text-gray-400'}`} />
                           <div className="min-w-0">
-                            <span className="truncate text-sm font-medium block">{table.name}</span>
+                            <span className="block text-sm font-medium truncate">{table.name}</span>
                             <span className="text-xs text-gray-500">{table.fields.length} columns</span>
                           </div>
                         </div>
-                        <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                        <ChevronRight className="flex-shrink-0 w-4 h-4 text-gray-400 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
                       </>
                     )}
                   </button>
@@ -156,14 +155,14 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
             {/* Add Table Button (collapsed) */}
             {isCollapsed && tables.length > 0 && (
-              <div className="mt-4 flex justify-center">
+              <div className="flex justify-center mt-4">
                 <button
                   onClick={handleAddTable}
-                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200 cursor-pointer focus-ring"
+                  className="p-2 text-gray-400 rounded-lg transition-colors duration-200 cursor-pointer hover:text-blue-600 hover:bg-blue-50 focus-ring"
                   title="Add new table"
                   type="button"
                 >
-                  <Plus className="h-5 w-5" />
+                  <Plus className="w-5 h-5" />
                 </button>
               </div>
             )}
@@ -185,7 +184,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                   className="w-full flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded transition-colors duration-200 cursor-pointer"
                   type="button"
                 >
-                  <Settings className="h-4 w-4" />
+                  <Settings className="w-4 h-4" />
                   <span>Settings</span>
                 </button>
                 <button
@@ -193,7 +192,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                   className="w-full flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded transition-colors duration-200 cursor-pointer"
                   type="button"
                 >
-                  <HelpCircle className="h-4 w-4" />
+                  <HelpCircle className="w-4 h-4" />
                   <span>Help</span>
                 </button>
                 <button
@@ -201,7 +200,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                   className="w-full flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded transition-colors duration-200 cursor-pointer"
                   type="button"
                 >
-                  <Github className="h-4 w-4" />
+                  <Github className="w-4 h-4" />
                   <span>GitHub</span>
                 </button>
               </div>
@@ -210,19 +209,19 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             <div className="p-2 space-y-1">
               <button
                 onClick={handleSettings}
-                className="w-full p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded transition-colors duration-200 cursor-pointer focus-ring"
+                className="p-2 w-full text-gray-400 rounded transition-colors duration-200 cursor-pointer hover:text-gray-600 hover:bg-gray-50 focus-ring"
                 title="Settings"
                 type="button"
               >
-                <Settings className="h-4 w-4" />
+                <Settings className="w-4 h-4" />
               </button>
               <button
                 onClick={handleHelp}
-                className="w-full p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded transition-colors duration-200 cursor-pointer focus-ring"
+                className="p-2 w-full text-gray-400 rounded transition-colors duration-200 cursor-pointer hover:text-gray-600 hover:bg-gray-50 focus-ring"
                 title="Help"
                 type="button"
               >
-                <HelpCircle className="h-4 w-4" />
+                <HelpCircle className="w-4 h-4" />
               </button>
             </div>
           )}

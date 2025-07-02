@@ -15,6 +15,7 @@ import {
 import { useTables } from '../contexts/TableContext';
 import { Field } from '@/lib/schemas';
 import { useAppStore } from '@/lib/store';
+import { cn } from '@/lib/utils';
 
 export default function Toolbar() {
   const { activeTable } = useTables();
@@ -172,18 +173,18 @@ export default function Toolbar() {
   return (
     <>
       {notification && (
-        <div className={`fixed top-6 right-6 z-50 px-4 py-2 rounded shadow-lg text-white font-medium transition-all ${notification.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
+        <div className={cn(`fixed top-6 right-6 z-50 px-4 py-2 rounded shadow-lg text-white font-medium transition-all ${notification.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`)}>
           {notification.message}
         </div>
       )}
-      <div className="px-4 py-3 bg-white border-b border-gray-200">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-2">
+      <div className="px-2 sm:px-4 py-2 sm:py-3 bg-white border-b border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0">
+          <div className="flex flex-wrap items-center gap-2">
             {/* File Menu */}
             <div className="relative">
               <button
                 onClick={() => setIsFileMenuOpen(!isFileMenuOpen)}
-                className="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className={cn("inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500")}
               >
                 <FileText className="mr-2 w-4 h-4" />
                 File
@@ -191,18 +192,18 @@ export default function Toolbar() {
               </button>
               
               {isFileMenuOpen && (
-                <div className="absolute left-0 z-50 mt-2 w-56 bg-white rounded-md border border-gray-200 shadow-lg">
+                <div className="absolute left-0 z-50 mt-2 w-56 sm:w-56 w-full bg-white rounded-md border border-gray-200 shadow-lg">
                   <div className="py-1">
                     <button
                       onClick={handleImportCSV}
-                      className="block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100"
+                      className={cn("block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100")}
                     >
                       <Upload className="inline mr-2 w-4 h-4" />
                       Import CSV
                     </button>
                     <button
                       onClick={handleImportJSON}
-                      className="block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100"
+                      className={cn("block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100")}
                     >
                       <Upload className="inline mr-2 w-4 h-4" />
                       Import JSON
@@ -210,14 +211,14 @@ export default function Toolbar() {
                     <div className="my-1 border-t border-gray-200"></div>
                     <button
                       onClick={handleExportCSV}
-                      className="block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100"
+                      className={cn("block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100")}
                     >
                       <Download className="inline mr-2 w-4 h-4" />
                       Export CSV
                     </button>
                     <button
                       onClick={handleExportJSON}
-                      className="block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100"
+                      className={cn("block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100")}
                     >
                       <Download className="inline mr-2 w-4 h-4" />
                       Export JSON
@@ -231,7 +232,7 @@ export default function Toolbar() {
             <div className="relative">
               <button
                 onClick={() => setIsViewMenuOpen(!isViewMenuOpen)}
-                className="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className={cn("inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500")}
               >
                 <Eye className="mr-2 w-4 h-4" />
                 View Options
@@ -239,14 +240,14 @@ export default function Toolbar() {
               </button>
               
               {isViewMenuOpen && (
-                <div className="absolute left-0 z-50 mt-2 w-64 bg-white rounded-md border border-gray-200 shadow-lg">
+                <div className="absolute left-0 z-50 mt-2 w-64 sm:w-64 w-full bg-white rounded-md border border-gray-200 shadow-lg">
                   <div className="py-1">
                     <div className="px-4 py-2 text-xs font-medium tracking-wide text-gray-500 uppercase">
                       Hide Fields
                     </div>
                     {activeTable.fields.map((field: Field) => (
-                      <label key={field.id} className="flex items-center px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100">
-                        <input type="checkbox" className="mr-3 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" />
+                      <label key={field.id} className={cn("flex items-center px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100")}>
+                        <input type="checkbox" className={cn("mr-3 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500")} />
                         {field.name}
                       </label>
                     ))}
@@ -256,19 +257,19 @@ export default function Toolbar() {
                     </div>
                     <button
                       onClick={() => handleRowHeightChange('compact')}
-                      className="block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100"
+                      className={cn("block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100")}
                     >
                       Compact
                     </button>
                     <button
                       onClick={() => handleRowHeightChange('default')}
-                      className="block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100"
+                      className={cn("block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100")}
                     >
                       Default
                     </button>
                     <button
                       onClick={() => handleRowHeightChange('large')}
-                      className="block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100"
+                      className={cn("block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100")}
                     >
                       Large
                     </button>
@@ -281,7 +282,7 @@ export default function Toolbar() {
             <div className="relative">
               <button
                 onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
-                className="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className={cn("inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500")}
               >
                 <Filter className="mr-2 w-4 h-4" />
                 Filter
@@ -289,13 +290,13 @@ export default function Toolbar() {
               </button>
               
               {isFilterMenuOpen && (
-                <div className="absolute left-0 z-50 mt-2 w-80 bg-white rounded-md border border-gray-200 shadow-lg">
+                <div className="absolute left-0 z-50 mt-2 w-80 sm:w-80 w-full bg-white rounded-md border border-gray-200 shadow-lg">
                   <div className="p-4">
                     <div className="flex justify-between items-center mb-3">
                       <h3 className="text-sm font-medium text-gray-900">Add Filter</h3>
                       <button
                         onClick={() => setIsFilterMenuOpen(false)}
-                        className="text-gray-400 hover:text-gray-600"
+                        className={cn("text-gray-400 hover:text-gray-600")}
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -303,7 +304,7 @@ export default function Toolbar() {
                     <div className="space-y-3">
                       <div>
                         <label className="block mb-1 text-xs font-medium text-gray-700">Field</label>
-                        <select className="px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <select className={cn("px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500")}>
                           <option>Select a field</option>
                           {activeTable.fields.map((field: Field) => (
                             <option key={field.id} value={field.id}>{field.name}</option>
@@ -312,7 +313,7 @@ export default function Toolbar() {
                       </div>
                       <div>
                         <label className="block mb-1 text-xs font-medium text-gray-700">Operator</label>
-                        <select className="px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <select className={cn("px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500")}>
                           <option>equals</option>
                           <option>contains</option>
                           <option>greater than</option>
@@ -323,11 +324,11 @@ export default function Toolbar() {
                         <label className="block mb-1 text-xs font-medium text-gray-700">Value</label>
                         <input
                           type="text"
-                          className="px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className={cn("px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500")}
                           placeholder="Enter value"
                         />
                       </div>
-                      <button className="px-4 py-2 w-full text-sm font-medium text-white bg-blue-600 rounded-md transition-colors hover:bg-blue-700">
+                      <button className={cn("px-4 py-2 w-full text-sm font-medium text-white bg-blue-600 rounded-md transition-colors hover:bg-blue-700")}>
                         Add Filter
                       </button>
                     </div>
@@ -340,7 +341,7 @@ export default function Toolbar() {
             <div className="relative">
               <button
                 onClick={() => setIsSortMenuOpen(!isSortMenuOpen)}
-                className="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className={cn("inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500")}
               >
                 <SortAsc className="mr-2 w-4 h-4" />
                 Sort
@@ -348,13 +349,13 @@ export default function Toolbar() {
               </button>
               
               {isSortMenuOpen && (
-                <div className="absolute left-0 z-50 mt-2 w-64 bg-white rounded-md border border-gray-200 shadow-lg">
+                <div className="absolute left-0 z-50 mt-2 w-64 sm:w-64 w-full bg-white rounded-md border border-gray-200 shadow-lg">
                   <div className="p-4">
                     <div className="flex justify-between items-center mb-3">
                       <h3 className="text-sm font-medium text-gray-900">Sort Rules</h3>
                       <button
                         onClick={() => setIsSortMenuOpen(false)}
-                        className="text-gray-400 hover:text-gray-600"
+                        className={cn("text-gray-400 hover:text-gray-600")}
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -362,7 +363,7 @@ export default function Toolbar() {
                     <div className="space-y-3">
                       <div>
                         <label className="block mb-1 text-xs font-medium text-gray-700">Sort by</label>
-                        <select className="px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <select className={cn("px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500")}>
                           <option>Select a field</option>
                           {activeTable.fields.map((field: Field) => (
                             <option key={field.id} value={field.id}>{field.name}</option>
@@ -371,12 +372,12 @@ export default function Toolbar() {
                       </div>
                       <div>
                         <label className="block mb-1 text-xs font-medium text-gray-700">Order</label>
-                        <select className="px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <select className={cn("px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500")}>
                           <option value="asc">Ascending</option>
                           <option value="desc">Descending</option>
                         </select>
                       </div>
-                      <button className="px-4 py-2 w-full text-sm font-medium text-white bg-blue-600 rounded-md transition-colors hover:bg-blue-700">
+                      <button className={cn("px-4 py-2 w-full text-sm font-medium text-white bg-blue-600 rounded-md transition-colors hover:bg-blue-700")}>
                         Add Sort Rule
                       </button>
                     </div>
@@ -385,9 +386,8 @@ export default function Toolbar() {
               )}
             </div>
           </div>
-
-          <div className="flex items-center space-x-2">
-            <button className="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          <div className="flex items-center gap-2 mt-2 sm:mt-0">
+            <button className={cn("inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500")}>
               <Settings className="mr-2 w-4 h-4" />
               Settings
             </button>

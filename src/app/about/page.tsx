@@ -1,17 +1,17 @@
 'use client';
 
 import { useTheme } from '../contexts/ThemeContext';
+import { cn } from '@/lib/utils';
 
 export default function About() {
   const { theme } = useTheme();
 
   return (
     <main
-      className="flex flex-col justify-center items-center px-4 h-screen"
-      style={{
-        backgroundColor: theme === 'dark' ? '#0f172a' : '#f9fafb',
-        color: theme === 'dark' ? '#f9fafc' : '#111827',
-      }}
+      className={cn(
+        "flex flex-col justify-center items-center px-4 h-screen",
+        theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
+      )}
     >
       <h1 className="mb-4 text-4xl font-bold">About Off-Rows</h1>
       <p className="max-w-2xl text-lg text-center">

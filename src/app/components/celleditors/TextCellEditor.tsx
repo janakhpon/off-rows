@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { cn } from '@/lib/utils';
 
 interface TextCellEditorProps {
   value: string;
@@ -27,7 +28,10 @@ const TextCellEditor: React.FC<TextCellEditorProps> = ({
     <input
       ref={inputRef}
       type="text"
-      className="px-2 py-1 w-full h-full text-sm bg-transparent rounded border-none outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+      className={cn(
+        "px-2 py-1 w-full h-full text-sm bg-transparent rounded border-none outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50",
+        "dark:bg-gray-800 dark:text-gray-200"
+      )}
       value={value || ''}
       placeholder={placeholder}
       aria-label={ariaLabel || 'Edit text'}
@@ -39,11 +43,6 @@ const TextCellEditor: React.FC<TextCellEditorProps> = ({
         if (e.key === 'Escape') {
           e.currentTarget.blur();
         }
-      }}
-      style={{ 
-        minWidth: 80,
-        color: 'inherit',
-        fontSize: 'inherit'
       }}
     />
   );

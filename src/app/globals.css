@@ -915,3 +915,8 @@ code, pre {
   }
 }
 
+.rdg-custom .rdg-header-cell:first-child,
+.rdg-custom .rdg-cell:first-child {
+  border-left: 1px solid var(--border) !important;
+}
+

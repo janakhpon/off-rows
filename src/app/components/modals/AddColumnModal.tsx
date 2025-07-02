@@ -66,35 +66,35 @@ export default function AddColumnModal({ open, onClose, onAddColumn }: AddColumn
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-2 p-6 relative animate-fade-in">
+    <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-40">
+      <div className="relative p-6 mx-2 w-full max-w-md bg-white rounded-lg shadow-lg animate-fade-in">
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 p-1 text-gray-400 hover:text-gray-700 transition-colors cursor-pointer"
+          className="absolute top-3 right-3 p-1 text-gray-400 transition-colors cursor-pointer hover:text-gray-700"
           aria-label="Close"
         >
-          <X className="h-5 w-5" />
+          <X className="w-5 h-5" />
         </button>
-        <h2 className="text-lg font-semibold mb-4">Add Column</h2>
+        <h2 className="mb-4 text-lg font-semibold">Add Column</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <label className="block mb-1 text-sm font-medium text-gray-700">Name</label>
             <input
               name="name"
               value={form.name}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              className="px-3 py-2 w-full text-sm rounded border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               required
               autoFocus
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+            <label className="block mb-1 text-sm font-medium text-gray-700">Type</label>
             <select
               name="type"
               value={form.type}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              className="px-3 py-2 w-full text-sm rounded border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             >
               {FieldTypeSchema.options.map((type) => (
                 <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
@@ -103,23 +103,23 @@ export default function AddColumnModal({ open, onClose, onAddColumn }: AddColumn
           </div>
           {form.type === 'dropdown' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Options (comma separated)</label>
+              <label className="block mb-1 text-sm font-medium text-gray-700">Options (comma separated)</label>
               <input
                 name="options"
                 value={form.options.join(', ')}
                 onChange={handleOptionsChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className="px-3 py-2 w-full text-sm rounded border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           )}
           {(form.type === 'images' || form.type === 'files') && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Default Value (comma separated file names for placeholder only)</label>
+              <label className="block mb-1 text-sm font-medium text-gray-700">Default Value (comma separated file names for placeholder only)</label>
               <input
                 name="defaultValue"
                 value={Array.isArray(form.defaultValue) ? form.defaultValue.join(', ') : ''}
                 onChange={e => setForm(prev => ({ ...prev, defaultValue: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className="px-3 py-2 w-full text-sm rounded border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           )}
@@ -129,15 +129,15 @@ export default function AddColumnModal({ open, onClose, onAddColumn }: AddColumn
               name="required"
               checked={form.required}
               onChange={handleChange}
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+              className="w-4 h-4 text-blue-600 rounded border-gray-300"
             />
             <label className="text-sm text-gray-700">Required</label>
           </div>
-          {error && <div className="text-red-600 text-sm">{error}</div>}
+          {error && <div className="text-sm text-red-600">{error}</div>}
           <div className="flex justify-end">
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors cursor-pointer"
+              className="px-4 py-2 text-white bg-blue-600 rounded transition-colors cursor-pointer hover:bg-blue-700"
             >
               Add Column
             </button>

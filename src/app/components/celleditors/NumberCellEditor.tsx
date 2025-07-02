@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { cn } from '@/lib/utils';
 
 interface NumberCellEditorProps {
   value: number | '';
@@ -25,7 +26,10 @@ const NumberCellEditor: React.FC<NumberCellEditorProps> = ({
     <input
       ref={inputRef}
       type="number"
-      className="w-full h-full px-2 py-1 bg-transparent border-none outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded text-sm text-right"
+      className={cn(
+        "w-full h-full px-2 py-1 bg-transparent border-none outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded text-sm text-right",
+        "dark:bg-gray-800 dark:text-gray-200"
+      )}
       value={value || ''}
       aria-label={ariaLabel || 'Edit number'}
       onChange={e => {
@@ -39,11 +43,6 @@ const NumberCellEditor: React.FC<NumberCellEditorProps> = ({
         if (e.key === 'Escape') {
           e.currentTarget.blur();
         }
-      }}
-      style={{ 
-        minWidth: 60,
-        color: 'inherit',
-        fontSize: 'inherit'
       }}
     />
   );
