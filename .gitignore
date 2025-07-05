@@ -50,3 +50,10 @@ next-env.d.ts
 *.swp
 *.swo
 *~
+
+# Rust
+rust/target/
+rust/pkg/
+
+# WASM build output (committed for deployment)
+# static/wasm-pkg/ is committed to git for deployment
