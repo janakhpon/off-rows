@@ -761,11 +761,11 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
             </button>
           )}
           {/* Row Height Dropdown */}
-          <label className="ml-4 text-xs text-gray-500">Row height:</label>
+          <label className="ml-4 text-xs text-gray-500 dark:text-gray-300">Row height:</label>
           <select
             value={rowHeight}
             onChange={e => setRowHeight(Number(e.target.value))}
-            className="px-2 py-1 text-xs rounded border focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="px-2 py-2 text-xs rounded border cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400"
             style={{ minWidth: 100 }}
           >
             <option value={40}             style={{
@@ -843,7 +843,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
       <div className="flex items-center p-2" style={{ minHeight: 40 }}>
         <button
           onClick={handleAddRow}
-          className="flex items-center px-3 py-1 text-sm font-medium bg-white rounded-md border border-gray-200 shadow-sm hover:bg-gray-50"
+          className="flex items-center px-4 py-1 text-sm font-medium bg-white rounded-md border border-gray-200 shadow-sm cursor-pointer dark:bg-primary hover:bg-gray-50 dark:text-white"
         >
           + Add
         </button>

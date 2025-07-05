@@ -116,6 +116,15 @@ export function themeStyles(theme: 'light' | 'dark') {
   }
 }
 
+// Checkbox utility for consistent styling
+export function getCheckboxClasses() {
+  return {
+    base: 'w-4 h-4 cursor-pointer',
+    light: 'bg-white border-gray-300 hover:border-blue-500 checked:bg-blue-500 checked:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+    dark: 'bg-gray-700 border-gray-500 hover:border-blue-500 checked:bg-blue-500 checked:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+  }
+}
+
 // Convenience function for common patterns
 export function themeClass(theme: 'light' | 'dark', pattern: string) {
   const styles = themeStyles(theme)
@@ -145,6 +154,9 @@ export function themeClass(theme: 'light' | 'dark', pattern: string) {
       return styles.border.primary
     case 'hover':
       return styles.bg.hover
+    case 'checkbox':
+      const checkboxClasses = getCheckboxClasses()
+      return cn(checkboxClasses.base, theme === 'dark' ? checkboxClasses.dark : checkboxClasses.light)
     default:
       return ''
   }

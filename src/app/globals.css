@@ -721,9 +721,11 @@ code, pre {
 
 /* DataGrid checkbox styling - inherits from global styles */
 .rdg-custom .rdg-cell input[type="checkbox"] {
-  margin: 0 auto !important;
-  display: block !important;
+  margin: 0 auto;
+  display: block;
 }
+
+/* ===== WORKING CHECKBOX SYSTEM ===== */
 
 /* Global checkbox styling for both light and dark modes */
 input[type="checkbox"] {
@@ -744,7 +746,7 @@ input[type="checkbox"] {
 /* Light mode checkbox styling */
 input[type="checkbox"] {
   background-color: rgb(255 255 255) !important; /* white */
-  border-color: rgb(209 213 219) !important; /* gray-300 */
+  border-color: rgb(59 130 246) !important; /* blue-500 - primary color for visibility */
 }
 
 input[type="checkbox"]:checked {
@@ -752,16 +754,9 @@ input[type="checkbox"]:checked {
   border-color: rgb(59 130 246) !important; /* blue-500 */
 }
 
+/* Remove checkmark - just use filled color */
 input[type="checkbox"]:checked::after {
-  content: '' !important;
-  position: absolute !important;
-  left: 4px !important;
-  top: 1px !important;
-  width: 4px !important;
-  height: 8px !important;
-  border: solid white !important;
-  border-width: 0 2px 2px 0 !important;
-  transform: rotate(45deg) !important;
+  display: none !important;
 }
 
 input[type="checkbox"]:hover {
@@ -796,6 +791,14 @@ input[type="checkbox"]:focus {
   outline: none !important;
   box-shadow: 0 0 0 2px rgb(59 130 246) !important; /* blue-500 */
 }
+
+/* DataGrid checkbox styling */
+.rdg-custom .rdg-cell input[type="checkbox"] {
+  margin: 0 auto !important;
+  display: block !important;
+}
+
+/* ===== END WORKING CHECKBOX SYSTEM ===== */
 
 /* Global input styling for dark mode */
 [data-theme="dark"] input[type="text"],
@@ -1108,10 +1111,6 @@ input[type="checkbox"]:focus {
 
 /* Legacy Checkbox Styling (for backward compatibility) */
 .rdg-custom .rdg-cell input[type="checkbox"] {
-  width: 16px !important;
-  height: 16px !important;
-  accent-color: var(--primary) !important;
-  cursor: pointer;
   margin: 0 auto;
   display: block;
 }
@@ -1266,6 +1265,8 @@ input[type="checkbox"]:focus {
 [data-theme="dark"] .rdg-custom .rdg-cell input[type="checkbox"] {
   accent-color: var(--primary) !important;
 }
+
+
 
 [data-theme="dark"] .rdg-custom .rdg-cell select {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");

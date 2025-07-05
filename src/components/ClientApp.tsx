@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTables } from '@/app/contexts/TableContext';
-import { useTheme } from '@/app/contexts/ThemeContext';
 import { useAppStore } from '@/lib/store';
 import { Header, DataGrid as DataGridComponent, OfflineIndicator } from '@/components';
 import { cn } from '@/lib/utils';
@@ -23,13 +22,37 @@ const createNewTableData = (name: string) => ({
   ],
 });
 
+// Static loading component for the app
+function AppLoading() {
+  return (
+    <div className="flex flex-col h-screen bg-white dark:bg-gray-800">
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading your data...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ClientApp() {
+  const [isReady, setIsReady] = useState(false);
   const { tables, activeTable, setActiveTable } = useTables();
-  const { theme } = useTheme();
   const { addTable } = useAppStore();
   const [showCreateTable, setShowCreateTable] = useState(createEmptyBoolean());
   const [newTableName, setNewTableName] = useState(createEmptyString());
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Ensure the app is ready after hydration
+  useEffect(() => {
+    setIsReady(true);
+  }, []);
+
+  // Show loading state until ready
+  if (!isReady) {
+    return <AppLoading />;
+  }
 
   const handleCreateTable = async () => {
     if (!validateTableName(newTableName)) return;
@@ -60,16 +83,16 @@ export default function ClientApp() {
         {/* Table Tabs */}
         <div className="flex flex-col w-full">
           {/* Tab Bar */}
-          <div className="flex overflow-x-auto items-center px-4 py-2 space-x-2 border-b bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+          <div className="flex overflow-x-auto items-center px-4 py-2 space-x-2 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
             {tables.map((table) => (
               <button
                 key={table.id}
                 onClick={() => setActiveTable(table)}
                 className={cn(
-                  "px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap",
+                  "px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer",
                   activeTable?.id === table.id
-                    ? (theme === 'dark' ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-900')
-                    : (theme === 'dark' ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100')
+                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-200'
+                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                 )}
                 type="button"
               >
@@ -79,10 +102,7 @@ export default function ClientApp() {
             {/* Create Table Button */}
             <button
               onClick={() => setShowCreateTable(true)}
-              className={cn(
-                "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
-                theme === 'dark' ? 'text-blue-300 hover:bg-blue-900' : 'text-blue-700 hover:bg-blue-100'
-              )}
+              className="cursor-pointer px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900"
               type="button"
             >
               + New Table
@@ -97,18 +117,8 @@ export default function ClientApp() {
       {/* Create Table Modal */}
       {showCreateTable && (
         <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50">
-          <div
-            className={cn(
-              "p-6 mx-4 w-96 max-w-md rounded-lg",
-              theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-            )}
-          >
-            <h2
-              className={cn(
-                "mb-4 text-lg font-semibold",
-                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-              )}
-            >
+          <div className="p-6 mx-4 w-96 max-w-md bg-white rounded-lg dark:bg-gray-800">
+            <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
               Create New Table
             </h2>
             <input
@@ -116,16 +126,13 @@ export default function ClientApp() {
               value={newTableName}
               onChange={(e) => setNewTableName(e.target.value)}
               placeholder="Enter table name"
-              className={cn(
-                "p-2 w-full rounded-md border focus:ring-2 focus:border-transparent",
-                theme === 'dark' ? 'bg-gray-700 border-gray-600 text-gray-100' : 'bg-white border-gray-200 text-gray-900'
-              )}
+              className="p-2 w-full text-gray-900 bg-white rounded-md border border-gray-200 focus:ring-2 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
               onFocus={(e) => {
                 e.target.style.borderColor = '#3b82f6';
                 e.target.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.1)';
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = theme === 'dark' ? '#4b5563' : '#d1d5db';
+                e.target.style.borderColor = '';
                 e.target.style.boxShadow = 'none';
               }}
               onKeyDown={handleKeyPress}
@@ -133,10 +140,7 @@ export default function ClientApp() {
             <div className="flex justify-end mt-4 space-x-2">
               <button
                 onClick={() => setShowCreateTable(false)}
-                className={cn(
-                  "px-4 py-2 text-sm font-medium rounded-md transition-colors",
-                  theme === 'dark' ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'
-                )}
+                className="px-4 py-2 text-sm font-medium text-gray-700 rounded-md transition-colors dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                 type="button"
               >
                 Cancel

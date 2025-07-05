@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
     domains: [],
     unoptimized: true,
   },
+  output: 'standalone',
+  trailingSlash: false,
   headers: async () => {
     return [
       {
@@ -30,9 +32,6 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
-  },
-  pwa: {
-    precachePages: ['/', '/about'],
   },
 };
 

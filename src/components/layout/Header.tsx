@@ -273,17 +273,14 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
               <div className="text-right">
                 <h2 
                   className={cn(
-                    "text-sm font-medium",
-                    theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                    "text-sm font-medium text-gray-900 dark:text-gray-100"
                   )}
                 >
                   {activeTable.name}
                 </h2>
                 <p 
-                  className={cn(
-                    "text-xs",
-                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                  )}
+                  className={
+                    "text-xs text-gray-500 dark:text-gray-400"}
                 >
                   {activeTable.fields.length} columns
                 </p>

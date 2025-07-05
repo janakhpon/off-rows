@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
-import { ThemeProvider } from './contexts/ThemeContext';
-import { TableProvider } from './contexts/TableContext';
-
-import { ErrorBoundary, OfflineIndicator } from '@/components';
+import ClientProviders from '@/components/ClientProviders';
+import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
 import { inter, firaCode } from '@/lib/fonts';
 
 import './globals.css';
@@ -66,6 +64,28 @@ export const metadata: Metadata = {
   //   yahoo: 'your-yahoo-verification-code',
   // },
   category: 'productivity',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Offrows',
+  },
+  applicationName: 'Offrows',
+  manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+    other: [
+      { rel: 'mask-icon', url: '/safari-pinned-tab.svg', color: '#1E3A8A' },
+    ],
+  },
+  other: {
+    'msapplication-TileColor': '#1E3A8A',
+    'msapplication-config': '/browserconfig.xml',
+  },
 };
 
 export default function RootLayout({
@@ -75,33 +95,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`scroll-smooth ${inter.variable} ${firaCode.variable}`}>
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <meta name="theme-color" content="#1E3A8A" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#1F2937" media="(prefers-color-scheme: dark)" />
-        <meta name="color-scheme" content="light dark" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Offrows" />
-        <meta name="application-name" content="Offrows" />
-        <meta name="msapplication-TileColor" content="#1E3A8A" />
-        <meta name="msapplication-config" content="/browserconfig.xml" />
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/favicon-16x16.png" type="image/png" sizes="16x16" />
-        <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#1E3A8A" />
-      </head>
-      <body className="min-h-screen font-sans antialiased bg-background">
-        <ThemeProvider>
-          <TableProvider>
-            <ErrorBoundary>
-              <OfflineIndicator />
-              {children}
-            </ErrorBoundary>
-          </TableProvider>
-        </ThemeProvider>
+      <body className="min-h-screen font-sans antialiased bg-background" suppressHydrationWarning>
+        <ServiceWorkerRegistration />
+        <ClientProviders>
+          {children}
+        </ClientProviders>
       </body>
     </html>
   );
