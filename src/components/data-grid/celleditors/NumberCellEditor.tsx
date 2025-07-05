@@ -12,13 +12,13 @@ interface NumberCellEditorProps {
   onEditEnd?: () => void;
 }
 
-const NumberCellEditor: React.FC<NumberCellEditorProps> = ({ 
-  value, 
-  onChange, 
+const NumberCellEditor: React.FC<NumberCellEditorProps> = ({
+  value,
+  onChange,
   ariaLabel,
   isEditing = false,
   onEditStart,
-  onEditEnd
+  onEditEnd,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -60,12 +60,12 @@ const NumberCellEditor: React.FC<NumberCellEditorProps> = ({
         ref={inputRef}
         type="number"
         className={cn(
-          "px-2 py-1 w-full h-full text-sm text-right bg-transparent rounded border-none outline-none",
-          "dark:bg-gray-800 dark:text-gray-200"
+          'px-2 py-1 w-full h-full text-sm text-right bg-transparent rounded border-none outline-none',
+          'dark:bg-gray-800 dark:text-gray-200',
         )}
         value={value || ''}
         aria-label={ariaLabel || 'Edit number'}
-        onChange={e => {
+        onChange={(e) => {
           const val = e.target.value;
           onChange(val === '' ? null : Number(val));
         }}
@@ -80,9 +80,9 @@ const NumberCellEditor: React.FC<NumberCellEditorProps> = ({
   return (
     <div
       className={cn(
-        "px-2 py-1 w-full h-full text-sm text-right cursor-text select-none",
-        "hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors",
-        !value && "text-gray-400 italic"
+        'px-2 py-1 w-full h-full text-sm text-right cursor-text select-none',
+        'hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors',
+        !value && 'text-gray-400 italic',
       )}
       onClick={handleClick}
       title={value ? String(value) : 'Click to edit'}
@@ -93,4 +93,4 @@ const NumberCellEditor: React.FC<NumberCellEditorProps> = ({
 };
 
 export default NumberCellEditor;
-export type { NumberCellEditorProps }; 
+export type { NumberCellEditorProps };

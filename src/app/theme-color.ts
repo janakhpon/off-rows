@@ -3,4 +3,4 @@ const themeColors = [
   { media: '(prefers-color-scheme: dark)', color: '#1F2937' },
 ];
 
-export default themeColors; 
+export default themeColors;

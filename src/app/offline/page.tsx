@@ -11,7 +11,8 @@ export default function OfflinePage() {
           <WifiOff className="h-16 w-16 text-gray-400 mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">You&apos;re Offline</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Don&apos;t worry! Offrows works offline. You can still access your data and continue working.
+            Don&apos;t worry! Offrows works offline. You can still access your data and continue
+            working.
           </p>
         </div>
 
@@ -49,7 +50,7 @@ export default function OfflinePage() {
             <RefreshCw className="h-4 w-4 mr-2" />
             Try Again
           </button>
-          
+
           <Link
             href="/"
             className="w-full flex items-center justify-center px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
@@ -66,4 +67,4 @@ export default function OfflinePage() {
       </div>
     </div>
   );
-} 
+}

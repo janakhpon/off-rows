@@ -11,7 +11,13 @@ interface ImageCellEditorProps {
   ariaLabel?: string;
 }
 
-const ImageCellEditor: React.FC<ImageCellEditorProps> = ({ value, getFileUrl, onUpload, onPreview, ariaLabel }) => {
+const ImageCellEditor: React.FC<ImageCellEditorProps> = ({
+  value,
+  getFileUrl,
+  onUpload,
+  onPreview,
+  ariaLabel,
+}) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   return (
@@ -41,7 +47,7 @@ const ImageCellEditor: React.FC<ImageCellEditorProps> = ({ value, getFileUrl, on
         type="file"
         accept="image/*"
         style={{ display: 'none' }}
-        onChange={e => {
+        onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) onUpload(file);
         }}
@@ -50,4 +56,4 @@ const ImageCellEditor: React.FC<ImageCellEditorProps> = ({ value, getFileUrl, on
   );
 };
 
-export default ImageCellEditor; 
+export default ImageCellEditor;

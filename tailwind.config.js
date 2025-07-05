@@ -1,4 +1,4 @@
-import typography from '@tailwindcss/typography'
+import typography from '@tailwindcss/typography';
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -11,8 +11,26 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-inter)', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'sans-serif'],
-        mono: ['var(--font-fira-code)', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', 'Courier New', 'monospace'],
+        sans: [
+          'var(--font-inter)',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'Segoe UI',
+          'Roboto',
+          'Oxygen',
+          'Ubuntu',
+          'Cantarell',
+          'sans-serif',
+        ],
+        mono: [
+          'var(--font-fira-code)',
+          'Monaco',
+          'Cascadia Code',
+          'Roboto Mono',
+          'Consolas',
+          'Courier New',
+          'monospace',
+        ],
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -56,7 +74,6 @@ export default {
       },
     },
   },
-  plugins: [
-    typography,
-  ],
-} 
+  plugins: [typography],
+  //extends for more here
+};

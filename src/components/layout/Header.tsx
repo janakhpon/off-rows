@@ -21,10 +21,14 @@ function useTableExportImport(
   activeTable: Table | null,
   rows: TableRow[],
   addRow: (row: Omit<TableRow, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>,
-  setNotification: Dispatch<SetStateAction<{ message: string; type: 'success' | 'error' } | null>>
+  setNotification: Dispatch<SetStateAction<{ message: string; type: 'success' | 'error' } | null>>,
 ) {
-  const fieldIds = activeTable ? activeTable.fields.map(f => typeof f.id === 'string' ? f.id : '').filter((id): id is string => !!id) : [];
-  const fieldNames = activeTable ? activeTable.fields.map(f => f.name) : [];
+  const fieldIds = activeTable
+    ? activeTable.fields
+        .map((f) => (typeof f.id === 'string' ? f.id : ''))
+        .filter((id): id is string => !!id)
+    : [];
+  const fieldNames = activeTable ? activeTable.fields.map((f) => f.name) : [];
   const tableRows = activeTable ? rows.filter((r: TableRow) => r.tableId === activeTable.id) : [];
 
   const handleExportCSV = () => {
@@ -83,11 +87,21 @@ function useTableExportImport(
         return;
       }
       for (let i = 1; i < lines.length; ++i) {
-        const vals = lines[i].split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map((v: string) => v.replace(/^"|"$/g, ''));
-        const data: Record<string, string | number | boolean | FileValueWithId | FileValueWithId[] | null> = {};
+        const line = lines[i];
+        if (!line) continue;
+        const vals = line
+          .split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)
+          .map((v: string) => v.replace(/^"|"$/g, ''));
+        const data: Record<
+          string,
+          string | number | boolean | FileValueWithId | FileValueWithId[] | null
+        > = {};
         for (const [idx, fid] of fieldIds.entries()) {
           if (typeof fid === 'string' && idx < vals.length) {
-            data[fid] = vals[idx];
+            const val = vals[idx];
+            if (val !== undefined) {
+              data[fid] = val;
+            }
           }
         }
         await addRow({ tableId: activeTable.id!, data });
@@ -119,10 +133,19 @@ function useTableExportImport(
         return;
       }
       for (const obj of arr) {
-        const data: Record<string, string | number | boolean | FileValueWithId | FileValueWithId[] | null> = {};
+        const data: Record<
+          string,
+          string | number | boolean | FileValueWithId | FileValueWithId[] | null
+        > = {};
         for (const fid of fieldIds) {
           if (Object.prototype.hasOwnProperty.call(obj, fid)) {
-            data[fid] = obj[fid] as string | number | boolean | FileValueWithId | FileValueWithId[] | null;
+            data[fid] = obj[fid] as
+              | string
+              | number
+              | boolean
+              | FileValueWithId
+              | FileValueWithId[]
+              | null;
           }
         }
         await addRow({ tableId: activeTable.id!, data });
@@ -143,24 +166,35 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
   const [importMenuOpen, setImportMenuOpen] = useState(false);
   const exportBtnRef = useRef<HTMLButtonElement>(null);
   const importBtnRef = useRef<HTMLButtonElement>(null);
-  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
   const [showNotification, setShowNotification] = useState(false);
-  const { handleExportCSV, handleExportJSON, handleImportCSV, handleImportJSON } = useTableExportImport(activeTable, rows, addRow, setNotification);
+  const { handleExportCSV, handleExportJSON, handleImportCSV, handleImportJSON } =
+    useTableExportImport(activeTable, rows, addRow, setNotification);
 
   // Dropdown close on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (
-        exportMenuOpen && exportBtnRef.current && !exportBtnRef.current.contains(e.target as Node)
-      ) setExportMenuOpen(false);
+        exportMenuOpen &&
+        exportBtnRef.current &&
+        !exportBtnRef.current.contains(e.target as Node)
+      )
+        setExportMenuOpen(false);
       if (
-        importMenuOpen && importBtnRef.current && !importBtnRef.current.contains(e.target as Node)
-      ) setImportMenuOpen(false);
+        importMenuOpen &&
+        importBtnRef.current &&
+        !importBtnRef.current.contains(e.target as Node)
+      )
+        setImportMenuOpen(false);
     }
     if (exportMenuOpen || importMenuOpen) {
       document.addEventListener('mousedown', handleClick);
       return () => document.removeEventListener('mousedown', handleClick);
     }
+    return undefined;
   }, [exportMenuOpen, importMenuOpen]);
 
   // Show notification when set
@@ -169,8 +203,12 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
       setShowNotification(true);
       const timeout = setTimeout(() => setShowNotification(false), 2500);
       const cleanup = setTimeout(() => setNotification(null), 3000);
-      return () => { clearTimeout(timeout); clearTimeout(cleanup); };
+      return () => {
+        clearTimeout(timeout);
+        clearTimeout(cleanup);
+      };
     }
+    return undefined;
   }, [notification]);
 
   const handleAddTable = async () => {
@@ -193,10 +231,10 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
   };
 
   return (
-    <header 
+    <header
       className={cn(
-        "border-b shadow-sm sticky top-0 z-40",
-        theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        'border-b shadow-sm sticky top-0 z-40',
+        theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200',
       )}
     >
       <div className="flex justify-between items-center px-4 h-16 sm:px-6">
@@ -205,29 +243,20 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
           <button
             onClick={onToggleSidebar}
             className={cn(
-              "p-2 rounded-lg transition-colors duration-200 cursor-pointer focus-ring",
-              theme === 'dark' ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'
+              'p-2 rounded-lg transition-colors duration-200 cursor-pointer focus-ring',
+              theme === 'dark'
+                ? 'text-gray-400 hover:bg-gray-700'
+                : 'text-gray-500 hover:bg-gray-100',
             )}
             type="button"
           >
             <Menu className="w-5 h-5" />
           </button>
-          
+
           <div className="flex items-center space-x-3">
             <div className="hidden sm:block">
-              <h1 
-                className={cn(
-                  "text-xl font-bold text-gray-900 dark:text-gray-100"
-                )}
-              >
-                Offrows
-              </h1>
-              <p 
-                className={cn(
-                  "text-xs",
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                )}
-              >
+              <h1 className={cn('text-xl font-bold text-gray-900 dark:text-gray-100')}>Offrows</h1>
+              <p className={cn('text-xs', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>
                 Offline-first project tracker
               </p>
             </div>
@@ -237,10 +266,10 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
         {/* Center - Search and table info */}
         <div className="hidden flex-1 mx-4 max-w-2xl md:block">
           <div className="relative">
-            <Search 
+            <Search
               className={cn(
-                "absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4",
-                theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                'absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4',
+                theme === 'dark' ? 'text-gray-400' : 'text-gray-500',
               )}
             />
             <input
@@ -249,9 +278,9 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={cn(
-                "w-full pl-10 pr-4 py-2 text-sm border rounded-lg transition-colors duration-200",
+                'w-full pl-10 pr-4 py-2 text-sm border rounded-lg transition-colors duration-200',
                 theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200',
-                theme === 'dark' ? 'text-gray-300' : 'text-gray-900'
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-900',
               )}
               onFocus={(e) => {
                 e.target.style.borderColor = '#3b82f6';
@@ -271,17 +300,10 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
           {activeTable && (
             <div className="hidden items-center mr-4 space-x-3 sm:flex">
               <div className="text-right">
-                <h2 
-                  className={cn(
-                    "text-sm font-medium text-gray-900 dark:text-gray-100"
-                  )}
-                >
+                <h2 className={cn('text-sm font-medium text-gray-900 dark:text-gray-100')}>
                   {activeTable.name}
                 </h2>
-                <p 
-                  className={
-                    "text-xs text-gray-500 dark:text-gray-400"}
-                >
+                <p className={'text-xs text-gray-500 dark:text-gray-400'}>
                   {activeTable.fields.length} columns
                 </p>
               </div>
@@ -293,8 +315,10 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
             <button
               onClick={handleAddTable}
               className={cn(
-                "p-2 rounded-lg transition-colors duration-200 cursor-pointer focus-ring",
-                theme === 'dark' ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'
+                'p-2 rounded-lg transition-colors duration-200 cursor-pointer focus-ring',
+                theme === 'dark'
+                  ? 'text-gray-400 hover:bg-gray-700'
+                  : 'text-gray-500 hover:bg-gray-100',
               )}
               type="button"
             >
@@ -305,8 +329,10 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
               ref={exportBtnRef}
               onClick={() => setExportMenuOpen((v) => !v)}
               className={cn(
-                "p-2 rounded-lg transition-colors duration-200 cursor-pointer focus-ring relative",
-                theme === 'dark' ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'
+                'p-2 rounded-lg transition-colors duration-200 cursor-pointer focus-ring relative',
+                theme === 'dark'
+                  ? 'text-gray-400 hover:bg-gray-700'
+                  : 'text-gray-500 hover:bg-gray-100',
               )}
               type="button"
             >
@@ -316,8 +342,8 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
                   <button
                     onClick={handleExportCSV}
                     className={cn(
-                      "block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors",
-                      theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+                      'block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors',
+                      theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100',
                     )}
                   >
                     Export as CSV
@@ -325,8 +351,8 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
                   <button
                     onClick={handleExportJSON}
                     className={cn(
-                      "block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors",
-                      theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+                      'block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors',
+                      theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100',
                     )}
                   >
                     Export as JSON
@@ -338,8 +364,10 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
               ref={importBtnRef}
               onClick={() => setImportMenuOpen((v) => !v)}
               className={cn(
-                "p-2 rounded-lg transition-colors duration-200 cursor-pointer focus-ring relative",
-                theme === 'dark' ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'
+                'p-2 rounded-lg transition-colors duration-200 cursor-pointer focus-ring relative',
+                theme === 'dark'
+                  ? 'text-gray-400 hover:bg-gray-700'
+                  : 'text-gray-500 hover:bg-gray-100',
               )}
               type="button"
             >
@@ -349,8 +377,8 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
                   <button
                     onClick={handleImportCSV}
                     className={cn(
-                      "block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors",
-                      theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+                      'block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors',
+                      theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100',
                     )}
                   >
                     Import as CSV
@@ -358,8 +386,8 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
                   <button
                     onClick={handleImportJSON}
                     className={cn(
-                      "block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors",
-                      theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+                      'block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors',
+                      theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100',
                     )}
                   >
                     Import as JSON
@@ -376,10 +404,10 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
       {/* Mobile search bar */}
       <div className="px-4 pb-4 md:hidden">
         <div className="relative">
-          <Search 
+          <Search
             className={cn(
-              "absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4",
-              theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+              'absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4',
+              theme === 'dark' ? 'text-gray-400' : 'text-gray-500',
             )}
           />
           <input
@@ -388,9 +416,9 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={cn(
-              "w-full pl-10 pr-4 py-2 text-sm border rounded-lg transition-colors duration-200",
+              'w-full pl-10 pr-4 py-2 text-sm border rounded-lg transition-colors duration-200',
               theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200',
-              theme === 'dark' ? 'text-gray-300' : 'text-gray-900'
+              theme === 'dark' ? 'text-gray-300' : 'text-gray-900',
             )}
             onFocus={(e) => {
               e.target.style.borderColor = '#3b82f6';
@@ -406,15 +434,17 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
 
       {/* Render notification in Header as well */}
       {notification && (
-        <div className={cn(
-          "fixed top-6 right-6 z-50 px-4 py-2 rounded shadow-lg text-white font-medium transition-all duration-500 transform",
-          showNotification ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2",
-          notification.type === 'success' ? 'bg-green-600' : 'bg-red-600'
-        )}
-          style={{ pointerEvents: showNotification ? 'auto' : 'none' }}>
+        <div
+          className={cn(
+            'fixed top-6 right-6 z-50 px-4 py-2 rounded shadow-lg text-white font-medium transition-all duration-500 transform',
+            showNotification ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2',
+            notification.type === 'success' ? 'bg-green-600' : 'bg-red-600',
+          )}
+          style={{ pointerEvents: showNotification ? 'auto' : 'none' }}
+        >
           {notification.message}
         </div>
       )}
     </header>
   );
-} 
+}

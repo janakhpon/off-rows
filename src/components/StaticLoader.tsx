@@ -18,9 +18,5 @@ function DefaultStaticLoader() {
 }
 
 export default function StaticLoader({ children, fallback }: StaticLoaderProps) {
-  return (
-    <Suspense fallback={fallback || <DefaultStaticLoader />}>
-      {children}
-    </Suspense>
-  );
-} 
+  return <Suspense fallback={fallback || <DefaultStaticLoader />}>{children}</Suspense>;
+}

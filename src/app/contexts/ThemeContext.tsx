@@ -21,25 +21,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Mark that we're on the client
     setIsClient(true);
-    
+
     // Get theme from localStorage or default to light
     const savedTheme = localStorage.getItem('theme') as Theme;
     if (savedTheme) {
       setThemeState(savedTheme);
     } else {
       // Check system preference
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light';
       setThemeState(systemTheme);
     }
   }, []);
 
   useEffect(() => {
     if (!isClient) return; // Don't run on server
-    
+
     // Update data-theme attribute and localStorage
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
-    
+
     // Also add/remove dark class for Tailwind compatibility
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -53,7 +55,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   const toggleTheme = () => {
-    setThemeState(prev => prev === 'light' ? 'dark' : 'light');
+    setThemeState((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
   return (
@@ -69,4 +71,4 @@ export function useTheme() {
     throw new Error('useTheme must be used within a ThemeProvider');
   }
   return context;
-} 
+}

@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 
@@ -70,7 +70,8 @@ const ErrorBoundary: React.FC<React.PropsWithChildren<object>> = ({ children }) 
         <div className="flex flex-col items-center p-8 w-full max-w-md bg-white rounded-lg shadow-lg transition-all duration-300 dark:bg-gray-900">
           <h2 className="mb-2 text-xl font-bold text-red-600">Something went wrong</h2>
           <p className="mb-4 text-center text-gray-700 dark:text-gray-200">
-            An unexpected error occurred. Please try reloading the page.<br/>
+            An unexpected error occurred. Please try reloading the page.
+            <br />
             <span className="text-xs text-gray-400">{errorState.error?.message}</span>
           </p>
           <button
@@ -88,4 +89,4 @@ const ErrorBoundary: React.FC<React.PropsWithChildren<object>> = ({ children }) 
   return <>{children}</>;
 };
 
-export default ErrorBoundary; 
+export default ErrorBoundary;

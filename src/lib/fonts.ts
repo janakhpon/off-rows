@@ -1,4 +1,4 @@
-import { Inter, Fira_Code } from 'next/font/google'
+import { Inter, Fira_Code } from 'next/font/google';
 
 // Inter font configuration for the main UI
 export const inter = Inter({
@@ -7,7 +7,7 @@ export const inter = Inter({
   variable: '--font-inter',
   weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
   style: ['normal', 'italic'],
-})
+});
 
 // Fira Code font configuration for code elements
 export const firaCode = Fira_Code({
@@ -15,7 +15,7 @@ export const firaCode = Fira_Code({
   display: 'swap',
   variable: '--font-fira-code',
   weight: ['300', '400', '500', '600', '700'],
-})
+});
 
 // Font class names for use in components
 export const fontClasses = {
@@ -23,4 +23,4 @@ export const fontClasses = {
   mono: firaCode.className,
   inter: inter.variable,
   firaCode: firaCode.variable,
-} 
+};

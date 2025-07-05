@@ -10,7 +10,7 @@ interface ThemeAwareProps {
   className?: string;
 }
 
-export function ThemeAware({ children, variant = 'text', className }: ThemeAwareProps) {
+export function ThemeAware({ children, variant = 'text', className = '' }: ThemeAwareProps) {
   const { theme } = useTheme();
   const styles = themeStyles(theme);
 
@@ -30,26 +30,62 @@ export function ThemeAware({ children, variant = 'text', className }: ThemeAware
     }
   };
 
-  return (
-    <div className={cn(getVariantClasses(), className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn(getVariantClasses(), className)}>{children}</div>;
 }
 
 // Convenience components for common patterns
-export function ThemeCard({ children, className }: { children: ReactNode; className?: string }) {
-  return <ThemeAware variant="card" className={className}>{children}</ThemeAware>;
+export function ThemeCard({
+  children,
+  className = '',
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <ThemeAware variant="card" className={className}>
+      {children}
+    </ThemeAware>
+  );
 }
 
-export function ThemeButton({ children, className }: { children: ReactNode; className?: string }) {
-  return <ThemeAware variant="button" className={className}>{children}</ThemeAware>;
+export function ThemeButton({
+  children,
+  className = '',
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <ThemeAware variant="button" className={className}>
+      {children}
+    </ThemeAware>
+  );
 }
 
-export function ThemeInput({ children, className }: { children: ReactNode; className?: string }) {
-  return <ThemeAware variant="input" className={className}>{children}</ThemeAware>;
+export function ThemeInput({
+  children,
+  className = '',
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <ThemeAware variant="input" className={className}>
+      {children}
+    </ThemeAware>
+  );
 }
 
-export function ThemeText({ children, className }: { children: ReactNode; className?: string }) {
-  return <ThemeAware variant="text" className={className}>{children}</ThemeAware>;
-} 
+export function ThemeText({
+  children,
+  className = '',
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <ThemeAware variant="text" className={className}>
+      {children}
+    </ThemeAware>
+  );
+}

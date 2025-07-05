@@ -10,11 +10,11 @@ interface DropdownCellEditorProps {
   ariaLabel?: string;
 }
 
-const DropdownCellEditor: React.FC<DropdownCellEditorProps> = ({ 
-  value, 
-  options, 
-  onChange, 
-  ariaLabel 
+const DropdownCellEditor: React.FC<DropdownCellEditorProps> = ({
+  value,
+  options,
+  onChange,
+  ariaLabel,
 }) => {
   const selectRef = useRef<HTMLSelectElement>(null);
 
@@ -29,13 +29,13 @@ const DropdownCellEditor: React.FC<DropdownCellEditorProps> = ({
     <select
       ref={selectRef}
       className={cn(
-        "w-full h-full px-2 py-1 bg-transparent border-none outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded text-sm cursor-pointer",
-        "dark:bg-gray-800 dark:text-gray-200"
+        'w-full h-full px-2 py-1 bg-transparent border-none outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded text-sm cursor-pointer',
+        'dark:bg-gray-800 dark:text-gray-200',
       )}
       value={value || ''}
       aria-label={ariaLabel || 'Select option'}
-      onChange={e => onChange(e.target.value)}
-      onKeyDown={e => {
+      onChange={(e) => onChange(e.target.value)}
+      onKeyDown={(e) => {
         if (e.key === 'Enter') {
           e.currentTarget.blur();
         }
@@ -55,4 +55,4 @@ const DropdownCellEditor: React.FC<DropdownCellEditorProps> = ({
 };
 
 export default DropdownCellEditor;
-export type { DropdownCellEditorProps }; 
+export type { DropdownCellEditorProps };

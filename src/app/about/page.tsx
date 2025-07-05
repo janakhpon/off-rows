@@ -3,7 +3,8 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'About - Offrows',
-  description: 'Learn more about Offrows, the modern offline-first spreadsheet and database application.',
+  description:
+    'Learn more about Offrows, the modern offline-first spreadsheet and database application.',
 };
 
 export default function AboutPage() {
@@ -21,7 +22,8 @@ export default function AboutPage() {
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
             <h2 className="text-2xl font-semibold mb-4">Offline-First</h2>
             <p className="text-gray-600 dark:text-gray-400">
-              Work seamlessly without an internet connection. All your data is stored locally and syncs when you&apos;re back online.
+              Work seamlessly without an internet connection. All your data is stored locally and
+              syncs when you&apos;re back online.
             </p>
           </div>
 
@@ -35,7 +37,8 @@ export default function AboutPage() {
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
             <h2 className="text-2xl font-semibold mb-4">File Support</h2>
             <p className="text-gray-600 dark:text-gray-400">
-              Upload and manage files, images, and documents directly in your spreadsheets and databases.
+              Upload and manage files, images, and documents directly in your spreadsheets and
+              databases.
             </p>
           </div>
 
@@ -54,28 +57,36 @@ export default function AboutPage() {
               <div className="w-6 h-6 bg-blue-600 rounded-full flex-shrink-0 mt-1"></div>
               <div>
                 <h3 className="font-semibold">Privacy First</h3>
-                <p className="text-gray-600 dark:text-gray-400">Your data stays on your device. No cloud storage required.</p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Your data stays on your device. No cloud storage required.
+                </p>
               </div>
             </div>
             <div className="flex items-start space-x-3">
               <div className="w-6 h-6 bg-blue-600 rounded-full flex-shrink-0 mt-1"></div>
               <div>
                 <h3 className="font-semibold">Always Available</h3>
-                <p className="text-gray-600 dark:text-gray-400">Work anywhere, anytime, even without internet access.</p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Work anywhere, anytime, even without internet access.
+                </p>
               </div>
             </div>
             <div className="flex items-start space-x-3">
               <div className="w-6 h-6 bg-blue-600 rounded-full flex-shrink-0 mt-1"></div>
               <div>
                 <h3 className="font-semibold">Powerful Features</h3>
-                <p className="text-gray-600 dark:text-gray-400">Advanced filtering, sorting, and data manipulation capabilities.</p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Advanced filtering, sorting, and data manipulation capabilities.
+                </p>
               </div>
             </div>
             <div className="flex items-start space-x-3">
               <div className="w-6 h-6 bg-blue-600 rounded-full flex-shrink-0 mt-1"></div>
               <div>
                 <h3 className="font-semibold">Open Source</h3>
-                <p className="text-gray-600 dark:text-gray-400">Transparent, customizable, and community-driven development.</p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Transparent, customizable, and community-driven development.
+                </p>
               </div>
             </div>
           </div>
@@ -92,4 +103,4 @@ export default function AboutPage() {
       </div>
     </div>
   );
-} 
+}

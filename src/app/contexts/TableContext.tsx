@@ -15,14 +15,7 @@ interface TableContextType {
 const TableContext = createContext<TableContextType | undefined>(undefined);
 
 export function TableProvider({ children }: { children: ReactNode }) {
-  const {
-    tables,
-    activeTable,
-    setActiveTable,
-    loading,
-    refreshTables,
-    initialize,
-  } = useAppStore();
+  const { tables, activeTable, setActiveTable, loading, refreshTables, initialize } = useAppStore();
 
   useEffect(() => {
     initialize();
@@ -36,11 +29,7 @@ export function TableProvider({ children }: { children: ReactNode }) {
     refreshTables,
   };
 
-  return (
-    <TableContext.Provider value={value}>
-      {children}
-    </TableContext.Provider>
-  );
+  return <TableContext.Provider value={value}>{children}</TableContext.Provider>;
 }
 
 export function useTables() {
@@ -49,4 +38,4 @@ export function useTables() {
     throw new Error('useTables must be used within a TableProvider');
   }
   return context;
-} 
+}

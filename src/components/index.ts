@@ -33,4 +33,4 @@ export { default as ClientApp } from './ClientApp';
 export { default as ErrorBoundary } from './ErrorBoundary';
 export { default as ClientProviders } from './ClientProviders';
 export { default as StaticLoader } from './StaticLoader';
-export { default as ServiceWorkerRegistration } from './ServiceWorkerRegistration'; 
+export { default as ServiceWorkerRegistration } from './ServiceWorkerRegistration';

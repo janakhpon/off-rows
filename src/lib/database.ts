@@ -1,11 +1,11 @@
 import Dexie from 'dexie';
-import { 
-  Table, 
-  TableRow, 
+import {
+  Table,
+  TableRow,
   ViewSettings,
   TableSchema as TableSchemaType,
   TableRowSchema as TableRowSchemaType,
-  ViewSettingsSchema as ViewSettingsSchemaType
+  ViewSettingsSchema as ViewSettingsSchemaType,
 } from './schemas';
 
 // Create database instance
@@ -22,7 +22,7 @@ db.version(4).stores({
 // Initialize with sample data if database is empty
 export async function initializeDatabase() {
   const tableCount = await db.table('tables').count();
-  
+
   if (tableCount === 0) {
     const sampleTables: Omit<Table, 'id' | 'createdAt' | 'updatedAt'>[] = [
       {
@@ -30,9 +30,21 @@ export async function initializeDatabase() {
         description: 'Track project tasks and progress',
         fields: [
           { id: 'taskName', name: 'Task Name', type: 'text', required: true },
-          { id: 'status', name: 'Status', type: 'dropdown', options: ['In Progress', 'Completed', 'Pending', 'Blocked'], required: true },
+          {
+            id: 'status',
+            name: 'Status',
+            type: 'dropdown',
+            options: ['In Progress', 'Completed', 'Pending', 'Blocked'],
+            required: true,
+          },
           { id: 'dueDate', name: 'Due Date', type: 'date' },
-          { id: 'priority', name: 'Priority', type: 'dropdown', options: ['High', 'Medium', 'Low'], required: true },
+          {
+            id: 'priority',
+            name: 'Priority',
+            type: 'dropdown',
+            options: ['High', 'Medium', 'Low'],
+            required: true,
+          },
           { id: 'assignee', name: 'Assignee', type: 'text' },
           { id: 'progress', name: 'Progress', type: 'number', defaultValue: 0 },
           { id: 'completed', name: 'Completed', type: 'boolean', defaultValue: false },
@@ -45,7 +57,13 @@ export async function initializeDatabase() {
         fields: [
           { id: 'name', name: 'Name', type: 'text', required: true },
           { id: 'email', name: 'Email', type: 'text', required: true },
-          { id: 'role', name: 'Role', type: 'dropdown', options: ['Admin', 'User', 'Guest'], required: true },
+          {
+            id: 'role',
+            name: 'Role',
+            type: 'dropdown',
+            options: ['Admin', 'User', 'Guest'],
+            required: true,
+          },
           { id: 'active', name: 'Active', type: 'boolean', defaultValue: true },
           { id: 'lastLogin', name: 'Last Login', type: 'date' },
           { id: 'avatar', name: 'Avatar', type: 'image' },
@@ -56,7 +74,13 @@ export async function initializeDatabase() {
         description: 'Track inventory items and stock levels',
         fields: [
           { id: 'itemName', name: 'Item Name', type: 'text', required: true },
-          { id: 'category', name: 'Category', type: 'dropdown', options: ['Electronics', 'Clothing', 'Books', 'Other'], required: true },
+          {
+            id: 'category',
+            name: 'Category',
+            type: 'dropdown',
+            options: ['Electronics', 'Clothing', 'Books', 'Other'],
+            required: true,
+          },
           { id: 'quantity', name: 'Quantity', type: 'number', defaultValue: 0 },
           { id: 'price', name: 'Price', type: 'number', defaultValue: 0 },
           { id: 'inStock', name: 'In Stock', type: 'boolean', defaultValue: true },
@@ -164,7 +188,9 @@ export async function initializeDatabase() {
     await db.table('rows').bulkAdd(sampleRows);
 
     // Create default views for each table
-    const defaultViews: Omit<ViewSettings, 'id' | 'createdAt' | 'updatedAt'>[] = (tableIds as number[]).map((tableId: number) => ({
+    const defaultViews: Omit<ViewSettings, 'id' | 'createdAt' | 'updatedAt'>[] = (
+      tableIds as number[]
+    ).map((tableId: number) => ({
       tableId,
       name: 'Default View',
       hiddenFields: [],
@@ -206,12 +232,12 @@ const parseDates = <T extends { createdAt: string | Date; updatedAt: string | Da
 // Table operations
 export const tableOperations = {
   async getAll(): Promise<Table[]> {
-    const tables = await db.table('tables').toArray() as Table[];
+    const tables = (await db.table('tables').toArray()) as Table[];
     return tables.map(parseDates);
   },
 
   async getById(id: number): Promise<Table | undefined> {
-    const table = await db.table('tables').get(id) as Table | undefined;
+    const table = (await db.table('tables').get(id)) as Table | undefined;
     return table ? parseDates(table) : undefined;
   },
 
@@ -219,7 +245,7 @@ export const tableOperations = {
     // Validate with Zod
     const validatedTable = TableSchemaType.parse(addTimestamps(table));
 
-    const tableId = await db.table('tables').add(validatedTable) as number;
+    const tableId = (await db.table('tables').add(validatedTable)) as number;
 
     // Create default view for new table
     const defaultView = addTimestamps({
@@ -259,26 +285,31 @@ export const tableOperations = {
 // Row operations
 export const rowOperations = {
   async getByTableId(tableId: number): Promise<TableRow[]> {
-    const rows = await db.table('rows').where('tableId').equals(tableId).toArray() as TableRow[];
+    const rows = (await db.table('rows').where('tableId').equals(tableId).toArray()) as TableRow[];
     // Always sort by 'order' (fallback to id)
-    return rows
-      .map(parseDates)
-      .sort((a, b) => (a.order ?? a.id ?? 0) - (b.order ?? b.id ?? 0));
+    return rows.map(parseDates).sort((a, b) => (a.order ?? a.id ?? 0) - (b.order ?? b.id ?? 0));
   },
 
   async getById(id: number): Promise<TableRow | undefined> {
-    const row = await db.table('rows').get(id) as TableRow | undefined;
+    const row = (await db.table('rows').get(id)) as TableRow | undefined;
     return row ? parseDates(row) : undefined;
   },
 
   async add(row: Omit<TableRow, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
     // Find max order for this table
-    const maxOrder = await db.table('rows').where('tableId').equals(row.tableId).toArray().then(rs => rs.reduce((max, r) => Math.max(max, r.order ?? 0), 0));
-    const validatedRow = TableRowSchemaType.parse(addTimestamps({
-      ...row,
-      order: maxOrder + 1,
-    }));
-    return await db.table('rows').add(validatedRow) as number;
+    const maxOrder = await db
+      .table('rows')
+      .where('tableId')
+      .equals(row.tableId)
+      .toArray()
+      .then((rs) => rs.reduce((max, r) => Math.max(max, r.order ?? 0), 0));
+    const validatedRow = TableRowSchemaType.parse(
+      addTimestamps({
+        ...row,
+        order: maxOrder + 1,
+      }),
+    );
+    return (await db.table('rows').add(validatedRow)) as number;
   },
 
   async update(id: number, updates: Partial<Omit<TableRow, 'id' | 'createdAt'>>): Promise<void> {
@@ -297,17 +328,26 @@ export const rowOperations = {
 // View operations
 export const viewOperations = {
   async getByTableId(tableId: number): Promise<ViewSettings[]> {
-    const views = await db.table('views').where('tableId').equals(tableId).toArray() as ViewSettings[];
+    const views = (await db
+      .table('views')
+      .where('tableId')
+      .equals(tableId)
+      .toArray()) as ViewSettings[];
     return views.map(parseDates);
   },
 
   async getDefaultView(tableId: number): Promise<ViewSettings | undefined> {
-    const view = await db.table('views').where('tableId').equals(tableId).filter(view => view.isDefault === true).first() as ViewSettings | undefined;
+    const view = (await db
+      .table('views')
+      .where('tableId')
+      .equals(tableId)
+      .filter((view) => view.isDefault === true)
+      .first()) as ViewSettings | undefined;
     return view ? parseDates(view) : undefined;
   },
 
   async getById(id: number): Promise<ViewSettings | undefined> {
-    const view = await db.table('views').get(id) as ViewSettings | undefined;
+    const view = (await db.table('views').get(id)) as ViewSettings | undefined;
     return view ? parseDates(view) : undefined;
   },
 
@@ -315,10 +355,13 @@ export const viewOperations = {
     // Validate with Zod
     const validatedView = ViewSettingsSchemaType.parse(addTimestamps(view));
 
-    return await db.table('views').add(validatedView) as number;
+    return (await db.table('views').add(validatedView)) as number;
   },
 
-  async update(id: number, updates: Partial<Omit<ViewSettings, 'id' | 'createdAt'>>): Promise<void> {
+  async update(
+    id: number,
+    updates: Partial<Omit<ViewSettings, 'id' | 'createdAt'>>,
+  ): Promise<void> {
     await db.table('views').update(id, updateTimestamp(updates));
   },
 
@@ -345,4 +388,4 @@ export const fileOperations = {
   async deleteFile(id: number): Promise<void> {
     await db.table('files').delete(id);
   },
-}; 
+};

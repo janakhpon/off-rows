@@ -13,14 +13,14 @@ interface TextCellEditorProps {
   onEditEnd?: () => void;
 }
 
-const TextCellEditor: React.FC<TextCellEditorProps> = ({ 
-  value, 
-  onChange, 
-  placeholder = 'Type...', 
+const TextCellEditor: React.FC<TextCellEditorProps> = ({
+  value,
+  onChange,
+  placeholder = 'Type...',
   ariaLabel,
   isEditing = false,
   onEditStart,
-  onEditEnd
+  onEditEnd,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -62,13 +62,13 @@ const TextCellEditor: React.FC<TextCellEditorProps> = ({
         ref={inputRef}
         type="text"
         className={cn(
-          "px-2 py-1 w-full h-full text-sm bg-transparent rounded border-none outline-none",
-          "dark:bg-gray-800 dark:text-gray-100"
+          'px-2 py-1 w-full h-full text-sm bg-transparent rounded border-none outline-none',
+          'dark:bg-gray-800 dark:text-gray-100',
         )}
         value={value || ''}
         placeholder={placeholder}
         aria-label={ariaLabel || 'Edit text'}
-        onChange={e => onChange(e.target.value)}
+        onChange={(e) => onChange(e.target.value)}
         onFocus={() => setIsFocused(true)}
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
@@ -80,9 +80,9 @@ const TextCellEditor: React.FC<TextCellEditorProps> = ({
   return (
     <div
       className={cn(
-        "px-2 py-1 w-full h-full text-sm cursor-text select-none",
-        "hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors",
-        !value && "text-gray-400 italic"
+        'px-2 py-1 w-full h-full text-sm cursor-text select-none',
+        'hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors',
+        !value && 'text-gray-400 italic',
       )}
       onClick={handleClick}
       title={value || placeholder}
@@ -92,4 +92,4 @@ const TextCellEditor: React.FC<TextCellEditorProps> = ({
   );
 };
 
-export default TextCellEditor; 
+export default TextCellEditor;

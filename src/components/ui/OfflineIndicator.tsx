@@ -32,8 +32,9 @@ export default function OfflineIndicator() {
     <div className="fixed top-4 right-4 z-50 bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-3 py-2 rounded-md shadow-lg flex items-center space-x-2">
       <WifiOff className="h-4 w-4" />
       <span className="text-sm font-medium">
-        You are currently offline. Changes will be saved locally and synced when you&apos;re back online.
+        You are currently offline. Changes will be saved locally and synced when you&apos;re back
+        online.
       </span>
     </div>
   );
-} 
+}

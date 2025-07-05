@@ -12,13 +12,13 @@ interface DateCellEditorProps {
   onEditEnd?: () => void;
 }
 
-const DateCellEditor: React.FC<DateCellEditorProps> = ({ 
-  value, 
-  onChange, 
+const DateCellEditor: React.FC<DateCellEditorProps> = ({
+  value,
+  onChange,
   ariaLabel,
   isEditing = false,
   onEditStart,
-  onEditEnd
+  onEditEnd,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -36,7 +36,8 @@ const DateCellEditor: React.FC<DateCellEditorProps> = ({
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return '';
-      return date.toISOString().split('T')[0];
+      const isoString = date.toISOString().split('T')[0];
+      return isoString || '';
     } catch {
       return '';
     }
@@ -83,19 +84,19 @@ const DateCellEditor: React.FC<DateCellEditorProps> = ({
         ref={inputRef}
         type="date"
         className={cn(
-          "px-2 py-1 w-full h-full text-sm text-center bg-transparent rounded border-none outline-none",
-          "dark:bg-gray-800 dark:text-gray-200"
+          'px-2 py-1 w-full h-full text-sm text-center bg-transparent rounded border-none outline-none',
+          'dark:bg-gray-800 dark:text-gray-200',
         )}
         value={formatDateForInput(value)}
         aria-label={ariaLabel || 'Edit date'}
-        onChange={e => onChange(e.target.value)}
+        onChange={(e) => onChange(e.target.value)}
         onFocus={() => setIsFocused(true)}
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
-        style={{ 
+        style={{
           minWidth: 100,
           color: 'inherit',
-          fontSize: 'inherit'
+          fontSize: 'inherit',
         }}
       />
     );
@@ -105,9 +106,9 @@ const DateCellEditor: React.FC<DateCellEditorProps> = ({
   return (
     <div
       className={cn(
-        "px-2 py-1 w-full h-full text-sm text-center cursor-text select-none",
-        "hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors",
-        !value && "text-gray-400 italic"
+        'px-2 py-1 w-full h-full text-sm text-center cursor-text select-none',
+        'hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors',
+        !value && 'text-gray-400 italic',
       )}
       onClick={handleClick}
       title={value ? formatDateForDisplay(value) : 'Click to edit'}
@@ -118,4 +119,4 @@ const DateCellEditor: React.FC<DateCellEditorProps> = ({
 };
 
 export default DateCellEditor;
-export type { DateCellEditorProps }; 
+export type { DateCellEditorProps };

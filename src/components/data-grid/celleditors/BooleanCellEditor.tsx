@@ -2,18 +2,13 @@
 
 import React, { useRef, useEffect } from 'react';
 
-
 interface BooleanCellEditorProps {
   value: boolean;
   onChange: (value: boolean) => void;
   ariaLabel?: string;
 }
 
-const BooleanCellEditor: React.FC<BooleanCellEditorProps> = ({ 
-  value, 
-  onChange, 
-  ariaLabel 
-}) => {
+const BooleanCellEditor: React.FC<BooleanCellEditorProps> = ({ value, onChange, ariaLabel }) => {
   const checkboxRef = useRef<HTMLInputElement>(null);
 
   // Auto-focus on mount
@@ -31,8 +26,8 @@ const BooleanCellEditor: React.FC<BooleanCellEditorProps> = ({
         checked={value || false}
         aria-label={ariaLabel || 'Toggle value'}
         className="w-4 h-4 cursor-pointer transition-all duration-150"
-        onChange={e => onChange(e.target.checked)}
-        onKeyDown={e => {
+        onChange={(e) => onChange(e.target.checked)}
+        onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             onChange(!value);
@@ -43,11 +38,11 @@ const BooleanCellEditor: React.FC<BooleanCellEditorProps> = ({
         }}
         style={{
           accentColor: 'var(--primary)',
-          color: 'inherit'
+          color: 'inherit',
         }}
       />
     </div>
   );
 };
 
-export default BooleanCellEditor; 
+export default BooleanCellEditor;

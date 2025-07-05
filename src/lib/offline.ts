@@ -1,11 +1,7 @@
 // Offline utilities for Offrows
 
 // Routes that should be precached for offline access
-export const OFFLINE_ROUTES = [
-  '/',
-  '/about',
-  '/offline',
-];
+export const OFFLINE_ROUTES = ['/', '/about', '/offline'];
 
 // Static assets that should be precached
 export const OFFLINE_ASSETS = [
@@ -40,7 +36,7 @@ export function isOnline(): boolean {
 // Register offline/online event listeners
 export function registerOnlineStatusListener(
   onOnline: () => void,
-  onOffline: () => void
+  onOffline: () => void,
 ): () => void {
   if (typeof window === 'undefined') return () => {};
 
@@ -64,31 +60,35 @@ export async function precacheRoute(route: string): Promise<void> {
   try {
     // Try multiple cache strategies
     const cacheNames = await caches.keys();
-    
+
     // Look for next-pwa generated caches
-    const pagesCache = cacheNames.find(name => name.includes('pages') || name.includes('next-pwa'));
-    const staticCache = cacheNames.find(name => name.includes('static') || name.includes('assets'));
-    
+    const pagesCache = cacheNames.find(
+      (name) => name.includes('pages') || name.includes('next-pwa'),
+    );
+    const staticCache = cacheNames.find(
+      (name) => name.includes('static') || name.includes('assets'),
+    );
+
     if (pagesCache) {
       const cache = await caches.open(pagesCache);
       await cache.add(route);
       console.log(`Precached route in pages cache: ${route}`);
     }
-    
+
     // Also try to cache in static cache for better offline support
     if (staticCache && !route.startsWith('/_next/')) {
       const cache = await caches.open(staticCache);
       await cache.add(route);
       console.log(`Precached route in static cache: ${route}`);
     }
-    
+
     // If no specific cache found, try the default cache
     if (!pagesCache && !staticCache && cacheNames.length > 0) {
-      const defaultCache = await caches.open(cacheNames[0]);
+      const defaultCache = await caches.open(cacheNames[0] || 'default');
       await defaultCache.add(route);
       console.log(`Precached route in default cache: ${route}`);
     }
-    
+
     if (!pagesCache && !staticCache && cacheNames.length === 0) {
       console.warn('No caches found for route precaching');
     }
@@ -99,20 +99,20 @@ export async function precacheRoute(route: string): Promise<void> {
 
 // Precache multiple routes
 export async function precacheRoutes(routes: string[]): Promise<void> {
-  await Promise.all(routes.map(route => precacheRoute(route)));
+  await Promise.all(routes.map((route) => precacheRoute(route)));
 }
 
 // Precache all offline routes and assets
 export async function precacheAll(): Promise<void> {
   console.log('Starting route precaching...');
-  
+
   try {
     // Precache routes
     await precacheRoutes(OFFLINE_ROUTES);
-    
+
     // Precache static assets
     await precacheRoutes(OFFLINE_ASSETS);
-    
+
     console.log('Route precaching completed successfully');
   } catch (error) {
     console.error('Route precaching failed:', error);
@@ -125,9 +125,9 @@ export async function isRouteCached(route: string): Promise<boolean> {
 
   try {
     const cacheNames = await caches.keys();
-    
+
     // Check our custom cache first
-    const offrowsCache = cacheNames.find(name => name === 'offrows-routes-cache');
+    const offrowsCache = cacheNames.find((name) => name === 'offrows-routes-cache');
     if (offrowsCache) {
       const cache = await caches.open(offrowsCache);
       const response = await cache.match(route);
@@ -135,9 +135,11 @@ export async function isRouteCached(route: string): Promise<boolean> {
         return true;
       }
     }
-    
+
     // Check next-pwa generated caches
-    const pagesCache = cacheNames.find(name => name.includes('pages') || name.includes('next-pwa'));
+    const pagesCache = cacheNames.find(
+      (name) => name.includes('pages') || name.includes('next-pwa'),
+    );
     if (pagesCache) {
       const cache = await caches.open(pagesCache);
       const response = await cache.match(route);
@@ -145,9 +147,11 @@ export async function isRouteCached(route: string): Promise<boolean> {
         return true;
       }
     }
-    
+
     // Check static cache
-    const staticCache = cacheNames.find(name => name.includes('static') || name.includes('assets'));
+    const staticCache = cacheNames.find(
+      (name) => name.includes('static') || name.includes('assets'),
+    );
     if (staticCache) {
       const cache = await caches.open(staticCache);
       const response = await cache.match(route);
@@ -155,7 +159,7 @@ export async function isRouteCached(route: string): Promise<boolean> {
         return true;
       }
     }
-    
+
     return false;
   } catch (error) {
     console.error(`Failed to check if route ${route} is cached:`, error);
@@ -169,9 +173,9 @@ export async function getCachedRoute(route: string): Promise<Response | null> {
 
   try {
     const cacheNames = await caches.keys();
-    
+
     // Check our custom cache first
-    const offrowsCache = cacheNames.find(name => name === 'offrows-routes-cache');
+    const offrowsCache = cacheNames.find((name) => name === 'offrows-routes-cache');
     if (offrowsCache) {
       const cache = await caches.open(offrowsCache);
       const response = await cache.match(route);
@@ -179,9 +183,11 @@ export async function getCachedRoute(route: string): Promise<Response | null> {
         return response;
       }
     }
-    
+
     // Check next-pwa generated caches
-    const pagesCache = cacheNames.find(name => name.includes('pages') || name.includes('next-pwa'));
+    const pagesCache = cacheNames.find(
+      (name) => name.includes('pages') || name.includes('next-pwa'),
+    );
     if (pagesCache) {
       const cache = await caches.open(pagesCache);
       const response = await cache.match(route);
@@ -189,9 +195,11 @@ export async function getCachedRoute(route: string): Promise<Response | null> {
         return response;
       }
     }
-    
+
     // Check static cache
-    const staticCache = cacheNames.find(name => name.includes('static') || name.includes('assets'));
+    const staticCache = cacheNames.find(
+      (name) => name.includes('static') || name.includes('assets'),
+    );
     if (staticCache) {
       const cache = await caches.open(staticCache);
       const response = await cache.match(route);
@@ -199,7 +207,7 @@ export async function getCachedRoute(route: string): Promise<Response | null> {
         return response;
       }
     }
-    
+
     return null;
   } catch (error) {
     console.error(`Failed to get cached route ${route}:`, error);
@@ -213,9 +221,7 @@ export async function clearAllCaches(): Promise<void> {
 
   try {
     const cacheNames = await caches.keys();
-    await Promise.all(
-      cacheNames.map(cacheName => caches.delete(cacheName))
-    );
+    await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
     console.log('All caches cleared');
   } catch (error) {
     console.error('Failed to clear caches:', error);
@@ -233,7 +239,7 @@ export async function getCacheUsage(): Promise<{ name: string; size: number }[]>
         const cache = await caches.open(name);
         const keys = await cache.keys();
         return { name, size: keys.length };
-      })
+      }),
     );
     return usage;
   } catch (error) {
@@ -306,13 +312,9 @@ export async function forceUpdateServiceWorker(): Promise<void> {
 // Check if the app is installable (PWA criteria)
 export function isInstallable(): boolean {
   if (typeof window === 'undefined') return false;
-  
+
   // Check if the app meets PWA criteria
-  return (
-    'serviceWorker' in navigator &&
-    'PushManager' in window &&
-    'Notification' in window
-  );
+  return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 }
 
 // Request notification permission
@@ -338,17 +340,17 @@ export async function forcePrecacheRoute(route: string): Promise<void> {
     // Create a custom cache for our routes
     const cacheName = 'offrows-routes-cache';
     const cache = await caches.open(cacheName);
-    
+
     // Fetch the route and cache it
     const response = await fetch(route, {
       method: 'GET',
       headers: {
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.5',
         'Cache-Control': 'no-cache',
       },
     });
-    
+
     if (response.ok) {
       await cache.put(route, response.clone());
       console.log(`Force precached route: ${route}`);
@@ -362,5 +364,5 @@ export async function forcePrecacheRoute(route: string): Promise<void> {
 
 // Force precache multiple routes
 export async function forcePrecacheRoutes(routes: string[]): Promise<void> {
-  await Promise.all(routes.map(route => forcePrecacheRoute(route)));
-} 
+  await Promise.all(routes.map((route) => forcePrecacheRoute(route)));
+}

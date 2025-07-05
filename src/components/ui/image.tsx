@@ -14,28 +14,14 @@ interface ImageProps extends Omit<NextImageProps, 'src'> {
 const Image: React.FC<ImageProps> = ({ src, alt, className, ...props }) => {
   // Check if it's a blob URL (starts with blob:)
   const isBlobUrl = src.startsWith('blob:');
-  
+
   if (isBlobUrl) {
     // Use regular img tag for blob URLs (from IndexedDB)
-    return (
-      <img
-        src={src}
-        alt={alt}
-        className={className}
-        {...props}
-      />
-    );
+    return <img src={src} alt={alt} className={className} {...props} />;
   }
-  
+
   // Use Next.js Image for external URLs
-  return (
-    <NextImage
-      src={src}
-      alt={alt}
-      className={className}
-      {...props}
-    />
-  );
+  return <NextImage src={src} alt={alt} className={className} {...props} />;
 };
 
-export default Image; 
+export default Image;

@@ -47,25 +47,27 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   };
 
   const handleGithub = () => {
-    window.open('https://github.com/your-repo/offrows', '_blank');
+    window.open('https://github.com/janakhpon/off-rows', '_blank');
   };
 
   return (
     <>
       {/* Mobile overlay */}
       {!isCollapsed && (
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden modal-backdrop"
           onClick={onToggle}
         />
       )}
 
       {/* Sidebar */}
-      <div className={`
+      <div
+        className={`
         fixed md:relative z-50 h-full bg-white border-r border-gray-200 shadow-sm transition-all duration-300 ease-in-out
         ${isCollapsed ? 'w-16 md:w-16' : 'w-64'}
         ${isCollapsed ? '-translate-x-full md:translate-x-0' : 'translate-x-0'}
-      `}>
+      `}
+      >
         {/* Header */}
         <div className="flex justify-between items-center p-4 bg-gray-50 border-b border-gray-200">
           {!isCollapsed && (
@@ -126,23 +128,30 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                     onClick={() => handleTableClick(table)}
                     className={`
                       w-full text-left p-2 rounded-lg transition-all duration-200 cursor-pointer group
-                      ${activeTable?.id === table.id
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
-                        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 border border-transparent'
+                      ${
+                        activeTable?.id === table.id
+                          ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
+                          : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                       }
                       ${isCollapsed ? 'flex justify-center' : 'flex items-center justify-between'}
                     `}
                     type="button"
                   >
                     {isCollapsed ? (
-                      <Database className={`h-5 w-5 ${activeTable?.id === table.id ? 'text-blue-600' : 'text-gray-400'}`} />
+                      <Database
+                        className={`h-5 w-5 ${activeTable?.id === table.id ? 'text-blue-600' : 'text-gray-400'}`}
+                      />
                     ) : (
                       <>
                         <div className="flex items-center space-x-2 min-w-0">
-                          <Database className={`h-4 w-4 flex-shrink-0 ${activeTable?.id === table.id ? 'text-blue-600' : 'text-gray-400'}`} />
+                          <Database
+                            className={`h-4 w-4 flex-shrink-0 ${activeTable?.id === table.id ? 'text-blue-600' : 'text-gray-400'}`}
+                          />
                           <div className="min-w-0">
                             <span className="block text-sm font-medium truncate">{table.name}</span>
-                            <span className="text-xs text-gray-500">{table.fields.length} columns</span>
+                            <span className="text-xs text-gray-500">
+                              {table.fields.length} columns
+                            </span>
                           </div>
                         </div>
                         <ChevronRight className="flex-shrink-0 w-4 h-4 text-gray-400 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
@@ -176,7 +185,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               <div className="text-xs text-gray-500">
                 {tables.length} table{tables.length !== 1 ? 's' : ''}
               </div>
-              
+
               {/* Footer actions */}
               <div className="space-y-1">
                 <button
@@ -229,4 +238,4 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       </div>
     </>
   );
-} 
+}

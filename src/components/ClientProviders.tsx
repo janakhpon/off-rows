@@ -40,11 +40,9 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
       <ThemeProvider>
         <TableProvider>
           <OfflineIndicator />
-          <Suspense fallback={<StaticLoading />}>
-            {children}
-          </Suspense>
+          <Suspense fallback={<StaticLoading />}>{children}</Suspense>
         </TableProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );
-} 
+}

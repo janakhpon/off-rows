@@ -1,8 +1,8 @@
 /* Fonts are now loaded via Next.js font optimization in src/lib/fonts.ts */
-@import "tailwindcss/preflight";
-@import "tailwindcss/utilities";
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss/preflight';
+@import 'tailwindcss/utilities';
+@import 'tailwindcss';
+@import 'tw-animate-css';
 @import 'react-data-grid/lib/styles.css';
 
 @custom-variant dark (&:is(.dark *));
@@ -58,7 +58,7 @@
   --airtable-badge-yellow-fg: #b38600;
 }
 
-[data-theme="dark"] {
+[data-theme='dark'] {
   /* Dark theme colors */
   --background: #0f172a;
   --foreground: #f8fafc;
@@ -170,13 +170,25 @@
 body {
   color: hsl(var(--foreground));
   background: hsl(var(--background));
-  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  font-family:
+    var(--font-inter),
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Roboto',
+    'Oxygen',
+    'Ubuntu',
+    'Cantarell',
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-code, pre {
-  font-family: var(--font-fira-code), 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', 'Courier New', monospace;
+code,
+pre {
+  font-family:
+    var(--font-fira-code), 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', 'Courier New',
+    monospace;
 }
 
 /* PWA and offline styles */
@@ -199,30 +211,30 @@ code, pre {
 }
 
 /* Theme-based dark mode support */
-[data-theme="dark"] {
+[data-theme='dark'] {
   color-scheme: dark;
 }
 
-[data-theme="light"] {
+[data-theme='light'] {
   color-scheme: light;
 }
 
 /* Ensure proper contrast for text in both themes */
-[data-theme="dark"] .text-gray-900 {
+[data-theme='dark'] .text-gray-900 {
   color: rgb(243 244 246) !important; /* gray-100 */
 }
 
-[data-theme="light"] .text-gray-100 {
+[data-theme='light'] .text-gray-100 {
   color: rgb(17 24 39) !important; /* gray-900 */
 }
 
 /* Force dark mode text visibility */
-[data-theme="dark"] .text-gray-900,
+[data-theme='dark'] .text-gray-900,
 .dark .text-gray-900 {
   color: rgb(243 244 246) !important;
 }
 
-[data-theme="dark"] .text-gray-100,
+[data-theme='dark'] .text-gray-100,
 .dark .text-gray-100 {
   color: rgb(17 24 39) !important;
 }
@@ -397,11 +409,15 @@ code, pre {
 
 /* Card shadows */
 .card-shadow {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .card-shadow-lg {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 /* Loading spinner */
@@ -492,7 +508,8 @@ code, pre {
 
 /* Pulse animation for loading states */
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -506,7 +523,10 @@ code, pre {
 
 /* Smooth theme transitions */
 * {
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
 }
 
 /* --- DataGrid Custom Theme & Cell Styles --- */
@@ -547,7 +567,9 @@ code, pre {
   border: 1px solid var(--border) !important;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
 /* Header Row Styling */
@@ -673,22 +695,22 @@ code, pre {
 /* This approach is cleaner, more maintainable, and follows Tailwind best practices */
 
 /* Number Input Styling */
-.rdg-custom .rdg-cell input[type="number"] {
+.rdg-custom .rdg-cell input[type='number'] {
   -moz-appearance: textfield; /* Firefox */
 }
 
-.rdg-custom .rdg-cell input[type="number"]::-webkit-outer-spin-button,
-.rdg-custom .rdg-cell input[type="number"]::-webkit-inner-spin-button {
+.rdg-custom .rdg-cell input[type='number']::-webkit-outer-spin-button,
+.rdg-custom .rdg-cell input[type='number']::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
 /* Date Input Styling */
-.rdg-custom .rdg-cell input[type="date"] {
+.rdg-custom .rdg-cell input[type='date'] {
   position: relative;
 }
 
-.rdg-custom .rdg-cell input[type="date"]::-webkit-calendar-picker-indicator {
+.rdg-custom .rdg-cell input[type='date']::-webkit-calendar-picker-indicator {
   background: transparent;
   bottom: 0;
   color: transparent;
@@ -701,26 +723,26 @@ code, pre {
   width: auto;
 }
 
-.rdg-custom .rdg-cell input[type="date"]::-webkit-datetime-edit {
+.rdg-custom .rdg-cell input[type='date']::-webkit-datetime-edit {
   padding: 0;
 }
 
-.rdg-custom .rdg-cell input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+.rdg-custom .rdg-cell input[type='date']::-webkit-datetime-edit-fields-wrapper {
   padding: 0;
 }
 
-.rdg-custom .rdg-cell input[type="date"]::-webkit-datetime-edit-text {
+.rdg-custom .rdg-cell input[type='date']::-webkit-datetime-edit-text {
   padding: 0 2px;
 }
 
-.rdg-custom .rdg-cell input[type="date"]::-webkit-datetime-edit-month-field,
-.rdg-custom .rdg-cell input[type="date"]::-webkit-datetime-edit-day-field,
-.rdg-custom .rdg-cell input[type="date"]::-webkit-datetime-edit-year-field {
+.rdg-custom .rdg-cell input[type='date']::-webkit-datetime-edit-month-field,
+.rdg-custom .rdg-cell input[type='date']::-webkit-datetime-edit-day-field,
+.rdg-custom .rdg-cell input[type='date']::-webkit-datetime-edit-year-field {
   padding: 0;
 }
 
 /* DataGrid checkbox styling - inherits from global styles */
-.rdg-custom .rdg-cell input[type="checkbox"] {
+.rdg-custom .rdg-cell input[type='checkbox'] {
   margin: 0 auto;
   display: block;
 }
@@ -728,7 +750,7 @@ code, pre {
 /* ===== WORKING CHECKBOX SYSTEM ===== */
 
 /* Global checkbox styling for both light and dark modes */
-input[type="checkbox"] {
+input[type='checkbox'] {
   appearance: none !important;
   -webkit-appearance: none !important;
   -moz-appearance: none !important;
@@ -744,56 +766,56 @@ input[type="checkbox"] {
 }
 
 /* Light mode checkbox styling */
-input[type="checkbox"] {
+input[type='checkbox'] {
   background-color: rgb(255 255 255) !important; /* white */
   border-color: rgb(59 130 246) !important; /* blue-500 - primary color for visibility */
 }
 
-input[type="checkbox"]:checked {
+input[type='checkbox']:checked {
   background-color: rgb(59 130 246) !important; /* blue-500 */
   border-color: rgb(59 130 246) !important; /* blue-500 */
 }
 
 /* Remove checkmark - just use filled color */
-input[type="checkbox"]:checked::after {
+input[type='checkbox']:checked::after {
   display: none !important;
 }
 
-input[type="checkbox"]:hover {
+input[type='checkbox']:hover {
   border-color: rgb(59 130 246) !important; /* blue-500 */
 }
 
-input[type="checkbox"]:focus {
+input[type='checkbox']:focus {
   outline: none !important;
   box-shadow: 0 0 0 2px rgb(59 130 246) !important; /* blue-500 */
 }
 
 /* Dark mode checkbox styling */
-[data-theme="dark"] input[type="checkbox"],
-.dark input[type="checkbox"] {
+[data-theme='dark'] input[type='checkbox'],
+.dark input[type='checkbox'] {
   background-color: rgb(31 41 55) !important; /* gray-800 */
   border-color: rgb(75 85 99) !important; /* gray-600 */
 }
 
-[data-theme="dark"] input[type="checkbox"]:checked,
-.dark input[type="checkbox"]:checked {
+[data-theme='dark'] input[type='checkbox']:checked,
+.dark input[type='checkbox']:checked {
   background-color: rgb(59 130 246) !important; /* blue-500 */
   border-color: rgb(59 130 246) !important; /* blue-500 */
 }
 
-[data-theme="dark"] input[type="checkbox"]:hover,
-.dark input[type="checkbox"]:hover {
+[data-theme='dark'] input[type='checkbox']:hover,
+.dark input[type='checkbox']:hover {
   border-color: rgb(59 130 246) !important; /* blue-500 */
 }
 
-[data-theme="dark"] input[type="checkbox"]:focus,
-.dark input[type="checkbox"]:focus {
+[data-theme='dark'] input[type='checkbox']:focus,
+.dark input[type='checkbox']:focus {
   outline: none !important;
   box-shadow: 0 0 0 2px rgb(59 130 246) !important; /* blue-500 */
 }
 
 /* DataGrid checkbox styling */
-.rdg-custom .rdg-cell input[type="checkbox"] {
+.rdg-custom .rdg-cell input[type='checkbox'] {
   margin: 0 auto !important;
   display: block !important;
 }
@@ -801,32 +823,32 @@ input[type="checkbox"]:focus {
 /* ===== END WORKING CHECKBOX SYSTEM ===== */
 
 /* Global input styling for dark mode */
-[data-theme="dark"] input[type="text"],
-[data-theme="dark"] input[type="email"],
-[data-theme="dark"] input[type="password"],
-[data-theme="dark"] input[type="search"],
-[data-theme="dark"] input[type="url"],
-[data-theme="dark"] input[type="tel"],
-[data-theme="dark"] input[type="number"],
-[data-theme="dark"] input[type="date"],
-[data-theme="dark"] input[type="time"],
-[data-theme="dark"] input[type="datetime-local"],
-[data-theme="dark"] input[type="month"],
-[data-theme="dark"] input[type="week"],
-[data-theme="dark"] select,
-[data-theme="dark"] textarea,
-.dark input[type="text"],
-.dark input[type="email"],
-.dark input[type="password"],
-.dark input[type="search"],
-.dark input[type="url"],
-.dark input[type="tel"],
-.dark input[type="number"],
-.dark input[type="date"],
-.dark input[type="time"],
-.dark input[type="datetime-local"],
-.dark input[type="month"],
-.dark input[type="week"],
+[data-theme='dark'] input[type='text'],
+[data-theme='dark'] input[type='email'],
+[data-theme='dark'] input[type='password'],
+[data-theme='dark'] input[type='search'],
+[data-theme='dark'] input[type='url'],
+[data-theme='dark'] input[type='tel'],
+[data-theme='dark'] input[type='number'],
+[data-theme='dark'] input[type='date'],
+[data-theme='dark'] input[type='time'],
+[data-theme='dark'] input[type='datetime-local'],
+[data-theme='dark'] input[type='month'],
+[data-theme='dark'] input[type='week'],
+[data-theme='dark'] select,
+[data-theme='dark'] textarea,
+.dark input[type='text'],
+.dark input[type='email'],
+.dark input[type='password'],
+.dark input[type='search'],
+.dark input[type='url'],
+.dark input[type='tel'],
+.dark input[type='number'],
+.dark input[type='date'],
+.dark input[type='time'],
+.dark input[type='datetime-local'],
+.dark input[type='month'],
+.dark input[type='week'],
 .dark select,
 .dark textarea {
   background-color: rgb(31 41 55) !important; /* gray-800 */
@@ -834,21 +856,19 @@ input[type="checkbox"]:focus {
   color: rgb(243 244 246) !important; /* gray-100 */
 }
 
-[data-theme="dark"] input::placeholder,
-[data-theme="dark"] textarea::placeholder,
+[data-theme='dark'] input::placeholder,
+[data-theme='dark'] textarea::placeholder,
 .dark input::placeholder,
 .dark textarea::placeholder {
   color: rgb(156 163 175) !important; /* gray-400 */
 }
 
 /* Global select option styling for dark mode */
-[data-theme="dark"] select option,
+[data-theme='dark'] select option,
 .dark select option {
   background-color: rgb(31 41 55) !important; /* gray-800 */
   color: rgb(243 244 246) !important; /* gray-100 */
 }
-
-
 
 /* Select Dropdown Styling */
 .rdg-custom .rdg-cell select {
@@ -875,22 +895,22 @@ input[type="checkbox"]:focus {
 }
 
 /* Text Input Styling */
-.rdg-custom .rdg-cell input[type="text"],
-.rdg-custom .rdg-cell input[type="email"],
-.rdg-custom .rdg-cell input[type="password"],
-.rdg-custom .rdg-cell input[type="search"],
-.rdg-custom .rdg-cell input[type="url"],
-.rdg-custom .rdg-cell input[type="tel"] {
+.rdg-custom .rdg-cell input[type='text'],
+.rdg-custom .rdg-cell input[type='email'],
+.rdg-custom .rdg-cell input[type='password'],
+.rdg-custom .rdg-cell input[type='search'],
+.rdg-custom .rdg-cell input[type='url'],
+.rdg-custom .rdg-cell input[type='tel'] {
   border-radius: 4px;
   transition: all 0.2s ease;
 }
 
-.rdg-custom .rdg-cell input[type="text"]:hover,
-.rdg-custom .rdg-cell input[type="email"]:hover,
-.rdg-custom .rdg-cell input[type="password"]:hover,
-.rdg-custom .rdg-cell input[type="search"]:hover,
-.rdg-custom .rdg-cell input[type="url"]:hover,
-.rdg-custom .rdg-cell input[type="tel"]:hover {
+.rdg-custom .rdg-cell input[type='text']:hover,
+.rdg-custom .rdg-cell input[type='email']:hover,
+.rdg-custom .rdg-cell input[type='password']:hover,
+.rdg-custom .rdg-cell input[type='search']:hover,
+.rdg-custom .rdg-cell input[type='url']:hover,
+.rdg-custom .rdg-cell input[type='tel']:hover {
   background-color: var(--accent);
 }
 
@@ -922,11 +942,11 @@ input[type="checkbox"]:focus {
 }
 
 /* File Input Styling */
-.rdg-custom .rdg-cell input[type="file"] {
+.rdg-custom .rdg-cell input[type='file'] {
   cursor: pointer;
 }
 
-.rdg-custom .rdg-cell input[type="file"]::-webkit-file-upload-button {
+.rdg-custom .rdg-cell input[type='file']::-webkit-file-upload-button {
   background: var(--primary);
   color: white;
   border: none;
@@ -936,13 +956,13 @@ input[type="checkbox"]:focus {
   margin-right: 8px;
 }
 
-.rdg-custom .rdg-cell input[type="file"]::-webkit-file-upload-button:hover {
+.rdg-custom .rdg-cell input[type='file']::-webkit-file-upload-button:hover {
   background: var(--primary);
   opacity: 0.9;
 }
 
 /* Range Input Styling */
-.rdg-custom .rdg-cell input[type="range"] {
+.rdg-custom .rdg-cell input[type='range'] {
   -webkit-appearance: none;
   appearance: none;
   height: 6px;
@@ -952,7 +972,7 @@ input[type="checkbox"]:focus {
   cursor: pointer;
 }
 
-.rdg-custom .rdg-cell input[type="range"]::-webkit-slider-thumb {
+.rdg-custom .rdg-cell input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 16px;
@@ -962,7 +982,7 @@ input[type="checkbox"]:focus {
   cursor: pointer;
 }
 
-.rdg-custom .rdg-cell input[type="range"]::-moz-range-thumb {
+.rdg-custom .rdg-cell input[type='range']::-moz-range-thumb {
   width: 16px;
   height: 16px;
   border-radius: 50%;
@@ -972,7 +992,7 @@ input[type="checkbox"]:focus {
 }
 
 /* Color Input Styling */
-.rdg-custom .rdg-cell input[type="color"] {
+.rdg-custom .rdg-cell input[type='color'] {
   -webkit-appearance: none;
   appearance: none;
   width: 32px;
@@ -983,76 +1003,76 @@ input[type="checkbox"]:focus {
   padding: 0;
 }
 
-.rdg-custom .rdg-cell input[type="color"]::-webkit-color-swatch-wrapper {
+.rdg-custom .rdg-cell input[type='color']::-webkit-color-swatch-wrapper {
   padding: 0;
 }
 
-.rdg-custom .rdg-cell input[type="color"]::-webkit-color-swatch {
+.rdg-custom .rdg-cell input[type='color']::-webkit-color-swatch {
   border: none;
   border-radius: 4px;
 }
 
 /* Time Input Styling */
-.rdg-custom .rdg-cell input[type="time"] {
+.rdg-custom .rdg-cell input[type='time'] {
   cursor: pointer;
 }
 
-.rdg-custom .rdg-cell input[type="time"]::-webkit-calendar-picker-indicator {
+.rdg-custom .rdg-cell input[type='time']::-webkit-calendar-picker-indicator {
   background: transparent;
   cursor: pointer;
 }
 
 /* Datetime-local Input Styling */
-.rdg-custom .rdg-cell input[type="datetime-local"] {
+.rdg-custom .rdg-cell input[type='datetime-local'] {
   cursor: pointer;
 }
 
-.rdg-custom .rdg-cell input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+.rdg-custom .rdg-cell input[type='datetime-local']::-webkit-calendar-picker-indicator {
   background: transparent;
   cursor: pointer;
 }
 
 /* Month Input Styling */
-.rdg-custom .rdg-cell input[type="month"] {
+.rdg-custom .rdg-cell input[type='month'] {
   cursor: pointer;
 }
 
-.rdg-custom .rdg-cell input[type="month"]::-webkit-calendar-picker-indicator {
+.rdg-custom .rdg-cell input[type='month']::-webkit-calendar-picker-indicator {
   background: transparent;
   cursor: pointer;
 }
 
 /* Week Input Styling */
-.rdg-custom .rdg-cell input[type="week"] {
+.rdg-custom .rdg-cell input[type='week'] {
   cursor: pointer;
 }
 
-.rdg-custom .rdg-cell input[type="week"]::-webkit-calendar-picker-indicator {
+.rdg-custom .rdg-cell input[type='week']::-webkit-calendar-picker-indicator {
   background: transparent;
   cursor: pointer;
 }
 
 /* URL Input Styling */
-.rdg-custom .rdg-cell input[type="url"] {
+.rdg-custom .rdg-cell input[type='url'] {
   cursor: text;
 }
 
 /* Email Input Styling */
-.rdg-custom .rdg-cell input[type="email"] {
+.rdg-custom .rdg-cell input[type='email'] {
   cursor: text;
 }
 
 /* Tel Input Styling */
-.rdg-custom .rdg-cell input[type="tel"] {
+.rdg-custom .rdg-cell input[type='tel'] {
   cursor: text;
 }
 
 /* Search Input Styling */
-.rdg-custom .rdg-cell input[type="search"] {
+.rdg-custom .rdg-cell input[type='search'] {
   cursor: text;
 }
 
-.rdg-custom .rdg-cell input[type="search"]::-webkit-search-cancel-button {
+.rdg-custom .rdg-cell input[type='search']::-webkit-search-cancel-button {
   -webkit-appearance: none;
   appearance: none;
   height: 16px;
@@ -1063,12 +1083,12 @@ input[type="checkbox"]:focus {
 }
 
 /* Password Input Styling */
-.rdg-custom .rdg-cell input[type="password"] {
+.rdg-custom .rdg-cell input[type='password'] {
   cursor: text;
 }
 
 /* Radio Button Styling */
-.rdg-custom .rdg-cell input[type="radio"] {
+.rdg-custom .rdg-cell input[type='radio'] {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -1084,12 +1104,12 @@ input[type="checkbox"]:focus {
   display: block;
 }
 
-.rdg-custom .rdg-cell input[type="radio"]:checked {
+.rdg-custom .rdg-cell input[type='radio']:checked {
   background-color: var(--primary);
   border-color: var(--primary);
 }
 
-.rdg-custom .rdg-cell input[type="radio"]:checked::after {
+.rdg-custom .rdg-cell input[type='radio']:checked::after {
   content: '';
   position: absolute;
   left: 4px;
@@ -1100,17 +1120,17 @@ input[type="checkbox"]:focus {
   background: white;
 }
 
-.rdg-custom .rdg-cell input[type="radio"]:hover {
+.rdg-custom .rdg-cell input[type='radio']:hover {
   border-color: var(--primary);
 }
 
-.rdg-custom .rdg-cell input[type="radio"]:focus {
+.rdg-custom .rdg-cell input[type='radio']:focus {
   outline: none;
   box-shadow: 0 0 0 2px var(--primary);
 }
 
 /* Legacy Checkbox Styling (for backward compatibility) */
-.rdg-custom .rdg-cell input[type="checkbox"] {
+.rdg-custom .rdg-cell input[type='checkbox'] {
   margin: 0 auto;
   display: block;
 }
@@ -1126,13 +1146,13 @@ input[type="checkbox"]:focus {
 }
 
 /* Date Input Styling */
-.rdg-custom .rdg-cell input[type="date"] {
+.rdg-custom .rdg-cell input[type='date'] {
   cursor: pointer;
   text-align: center;
 }
 
 /* Number Input Styling */
-.rdg-custom .rdg-cell input[type="number"] {
+.rdg-custom .rdg-cell input[type='number'] {
   text-align: right;
   padding-right: 8px !important;
 }
@@ -1248,27 +1268,25 @@ input[type="checkbox"]:focus {
 }
 
 /* Dark Theme Enhancements */
-[data-theme="dark"] .rdg-custom .rdg,
-[data-theme="dark"] .rdg-custom .rdg-header-row,
-[data-theme="dark"] .rdg-custom .rdg-row,
-[data-theme="dark"] .rdg-custom .rdg-cell {
+[data-theme='dark'] .rdg-custom .rdg,
+[data-theme='dark'] .rdg-custom .rdg-header-row,
+[data-theme='dark'] .rdg-custom .rdg-row,
+[data-theme='dark'] .rdg-custom .rdg-cell {
   background-color: var(--background) !important;
   color: var(--foreground) !important;
   border-color: var(--border) !important;
 }
 
-[data-theme="dark"] .rdg-custom .rdg-header-cell {
+[data-theme='dark'] .rdg-custom .rdg-header-cell {
   background-color: var(--airtable-header-bg) !important;
   color: var(--airtable-header-fg) !important;
 }
 
-[data-theme="dark"] .rdg-custom .rdg-cell input[type="checkbox"] {
+[data-theme='dark'] .rdg-custom .rdg-cell input[type='checkbox'] {
   accent-color: var(--primary) !important;
 }
 
-
-
-[data-theme="dark"] .rdg-custom .rdg-cell select {
+[data-theme='dark'] .rdg-custom .rdg-cell select {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
 }
 
@@ -1279,12 +1297,12 @@ input[type="checkbox"]:focus {
     padding: 6px 4px !important;
     font-size: 0.75rem;
   }
-  
+
   .rdg-custom .rdg-cell .cell-img {
     max-height: 32px;
   }
-  
-  .rdg-custom .rdg-cell input[type="checkbox"] {
+
+  .rdg-custom .rdg-cell input[type='checkbox'] {
     width: 14px !important;
     height: 14px !important;
   }
@@ -1319,7 +1337,7 @@ input[type="checkbox"]:focus {
   position: sticky;
   top: 0;
   z-index: 2;
-  box-shadow: 0 2px 6px 0 rgba(0,0,0,0.04);
+  box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.04);
 }
 
 .rdg-custom .rdg-header-cell {
@@ -1354,7 +1372,7 @@ input[type="checkbox"]:focus {
   font-weight: 600;
   background: var(--airtable-badge-bg);
   color: var(--airtable-badge-fg);
-  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.04);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
   margin-right: 2px;
 }
 
@@ -1371,24 +1389,26 @@ input[type="checkbox"]:focus {
   color: var(--airtable-badge-blue-fg);
 }
 
-.rdg-custom .rdg-cell .cell-img, .rdg-custom .rdg-cell .cell-avatar {
+.rdg-custom .rdg-cell .cell-img,
+.rdg-custom .rdg-cell .cell-avatar {
   border-radius: 50%;
   border: 2px solid var(--border);
   width: 32px;
   height: 32px;
   object-fit: cover;
-  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.06);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   display: inline-block;
 }
 
-.rdg-custom .rdg-cell .cell-img:hover, .rdg-custom .rdg-cell .cell-avatar:hover {
-  box-shadow: 0 2px 8px 0 rgba(59,130,246,0.15);
+.rdg-custom .rdg-cell .cell-img:hover,
+.rdg-custom .rdg-cell .cell-avatar:hover {
+  box-shadow: 0 2px 8px 0 rgba(59, 130, 246, 0.15);
   cursor: pointer;
 }
 
 .rdg-custom .rdg-row:hover {
   background-color: var(--airtable-row-hover) !important;
-  box-shadow: 0 2px 8px 0 rgba(59,130,246,0.06);
+  box-shadow: 0 2px 8px 0 rgba(59, 130, 246, 0.06);
 }
 
 .rdg-custom .rdg-row.selected {
@@ -1412,7 +1432,8 @@ input[type="checkbox"]:focus {
   .rdg-custom .rdg-cell .cell-crew {
     max-width: 120px;
   }
-  .rdg-custom .rdg-cell .cell-img, .rdg-custom .rdg-cell .cell-avatar {
+  .rdg-custom .rdg-cell .cell-img,
+  .rdg-custom .rdg-cell .cell-avatar {
     width: 24px;
     height: 24px;
   }
@@ -1422,4 +1443,3 @@ input[type="checkbox"]:focus {
 .rdg-custom .rdg-cell:first-child {
   border-left: 1px solid var(--border) !important;
 }
-

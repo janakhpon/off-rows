@@ -1,7 +1,17 @@
 import { z } from 'zod';
 
 // Field type schema
-export const FieldTypeSchema = z.enum(['text', 'number', 'boolean', 'date', 'dropdown', 'image', 'file', 'images', 'files']);
+export const FieldTypeSchema = z.enum([
+  'text',
+  'number',
+  'boolean',
+  'date',
+  'dropdown',
+  'image',
+  'file',
+  'images',
+  'files',
+]);
 
 // File/Image value schema
 export const FileValueSchema = z.object({
@@ -19,14 +29,16 @@ export const FieldSchema = z.object({
   type: FieldTypeSchema,
   required: z.boolean().optional(),
   options: z.array(z.string()).optional(), // For dropdown type
-  defaultValue: z.union([
-    z.string(),
-    z.number(),
-    z.boolean(),
-    z.null(),
-    FileValueSchema,
-    z.array(FileValueSchema) // For images/files
-  ]).optional(),
+  defaultValue: z
+    .union([
+      z.string(),
+      z.number(),
+      z.boolean(),
+      z.null(),
+      FileValueSchema,
+      z.array(FileValueSchema), // For images/files
+    ])
+    .optional(),
 });
 
 // Table schema
@@ -45,14 +57,17 @@ export const TableSchema = z.object({
 export const TableRowSchema = z.object({
   id: z.number().optional(),
   tableId: z.number(),
-  data: z.record(z.string(), z.union([
+  data: z.record(
     z.string(),
-    z.number(),
-    z.boolean(),
-    z.null(),
-    FileValueSchema, // For file/image
-    z.array(FileValueSchema) // For images/files
-  ])),
+    z.union([
+      z.string(),
+      z.number(),
+      z.boolean(),
+      z.null(),
+      FileValueSchema, // For file/image
+      z.array(FileValueSchema), // For images/files
+    ]),
+  ),
   order: z.number().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -96,7 +111,10 @@ export const ViewSettingsSchema = z.object({
 
 // New table form schema
 export const NewTableFormSchema = z.object({
-  name: z.string().min(1, 'Table name is required').max(100, 'Table name must be less than 100 characters'),
+  name: z
+    .string()
+    .min(1, 'Table name is required')
+    .max(100, 'Table name must be less than 100 characters'),
   description: z.string().optional(),
   fields: z.array(FieldSchema).min(1, 'At least one field is required'),
 });
@@ -116,4 +134,4 @@ export type SortRule = z.infer<typeof SortRuleSchema>;
 export type ColorRule = z.infer<typeof ColorRuleSchema>;
 export type ViewSettings = z.infer<typeof ViewSettingsSchema>;
 export type NewTableForm = z.infer<typeof NewTableFormSchema>;
-export type NewRowForm = z.infer<typeof NewRowFormSchema>; 
+export type NewRowForm = z.infer<typeof NewRowFormSchema>;

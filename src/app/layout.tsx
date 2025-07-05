@@ -8,8 +8,17 @@ import 'react-data-grid/lib/styles.css';
 
 export const metadata: Metadata = {
   title: 'Offrows - Modern Offline-First Spreadsheet & Database App',
-  description: 'Create, manage, and collaborate on spreadsheets and databases offline. A powerful alternative to Airtable and Google Sheets with file uploads, real-time editing, and dark mode support.',
-  keywords: ['spreadsheet', 'database', 'offline', 'airtable alternative', 'google sheets alternative', 'project management', 'data management'],
+  description:
+    'Create, manage, and collaborate on spreadsheets and databases offline. A powerful alternative to Airtable and Google Sheets with file uploads, real-time editing, and dark mode support.',
+  keywords: [
+    'spreadsheet',
+    'database',
+    'offline',
+    'airtable alternative',
+    'google sheets alternative',
+    'project management',
+    'data management',
+  ],
   authors: [{ name: 'Offrows Team' }],
   creator: 'Offrows',
   publisher: 'Offrows',
@@ -28,7 +37,8 @@ export const metadata: Metadata = {
     url: 'https://off-rows.vercel.app',
     siteName: 'Offrows',
     title: 'Offrows - Modern Offline-First Spreadsheet & Database App',
-    description: 'Create, manage, and collaborate on spreadsheets and databases offline. A powerful alternative to Airtable and Google Sheets with file uploads, real-time editing, and dark mode support.',
+    description:
+      'Create, manage, and collaborate on spreadsheets and databases offline. A powerful alternative to Airtable and Google Sheets with file uploads, real-time editing, and dark mode support.',
     images: [
       {
         url: '/preview.png',
@@ -44,7 +54,8 @@ export const metadata: Metadata = {
     site: '@offrows',
     creator: '@offrows',
     title: 'Offrows - Modern Offline-First Spreadsheet & Database App',
-    description: 'Create, manage, and collaborate on spreadsheets and databases offline. A powerful alternative to Airtable and Google Sheets.',
+    description:
+      'Create, manage, and collaborate on spreadsheets and databases offline. A powerful alternative to Airtable and Google Sheets.',
     images: ['/preview.png'],
   },
   robots: {
@@ -78,9 +89,7 @@ export const metadata: Metadata = {
       { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
     ],
     apple: '/apple-touch-icon.png',
-    other: [
-      { rel: 'mask-icon', url: '/safari-pinned-tab.svg', color: '#1E3A8A' },
-    ],
+    other: [{ rel: 'mask-icon', url: '/safari-pinned-tab.svg', color: '#1E3A8A' }],
   },
   other: {
     'msapplication-TileColor': '#1E3A8A',
@@ -88,18 +97,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`scroll-smooth ${inter.variable} ${firaCode.variable}`}>
       <body className="min-h-screen font-sans antialiased bg-background" suppressHydrationWarning>
         <ServiceWorkerRegistration />
-        <ClientProviders>
-          {children}
-        </ClientProviders>
+        <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
   );

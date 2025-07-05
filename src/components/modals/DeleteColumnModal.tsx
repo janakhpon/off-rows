@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { Trash2, AlertTriangle } from 'lucide-react';
 interface DeleteColumnModalProps {
@@ -8,7 +8,12 @@ interface DeleteColumnModalProps {
   columnName: string;
 }
 
-export default function DeleteColumnModal({ open, onClose, onConfirm, columnName }: DeleteColumnModalProps) {
+export default function DeleteColumnModal({
+  open,
+  onClose,
+  onConfirm,
+  columnName,
+}: DeleteColumnModalProps) {
   if (!open) return null;
 
   return (
@@ -25,11 +30,12 @@ export default function DeleteColumnModal({ open, onClose, onConfirm, columnName
             <p className="text-sm text-gray-500">This action cannot be undone.</p>
           </div>
         </div>
-        
+
         <div className="mb-6">
           <p className="text-sm text-gray-700">
-            Are you sure you want to delete the column <span className="font-medium text-gray-900">&ldquo;{columnName}&rdquo;</span>? 
-            This will permanently remove the column and all its data from this table.
+            Are you sure you want to delete the column{' '}
+            <span className="font-medium text-gray-900">&ldquo;{columnName}&rdquo;</span>? This will
+            permanently remove the column and all its data from this table.
           </p>
         </div>
 
@@ -53,4 +59,4 @@ export default function DeleteColumnModal({ open, onClose, onConfirm, columnName
       </div>
     </div>
   );
-} 
+}

@@ -1,7 +1,13 @@
 'use client';
 
 import { useEffect } from 'react';
-import { precacheAll, forcePrecacheRoutes, isServiceWorkerRegistered, registerServiceWorker, OFFLINE_ROUTES } from '@/lib/offline';
+import {
+  precacheAll,
+  forcePrecacheRoutes,
+  isServiceWorkerRegistered,
+  registerServiceWorker,
+  OFFLINE_ROUTES,
+} from '@/lib/offline';
 
 export default function ServiceWorkerRegistration() {
   useEffect(() => {
@@ -11,16 +17,16 @@ export default function ServiceWorkerRegistration() {
           // Immediately force precache all routes when the app loads
           console.log('Force precaching routes on app load...');
           await forcePrecacheRoutes(OFFLINE_ROUTES);
-          
+
           // Check if service worker is already registered
           const isRegistered = await isServiceWorkerRegistered();
-          
+
           if (!isRegistered) {
             // Register service worker
             const registration = await registerServiceWorker();
             if (registration) {
               console.log('Service Worker registered successfully:', registration);
-              
+
               // Also use regular precaching as backup
               await precacheAll();
             }
@@ -29,7 +35,7 @@ export default function ServiceWorkerRegistration() {
             // Use regular precaching as backup
             await precacheAll();
           }
-          
+
           // Check for updates
           const registration = await navigator.serviceWorker.getRegistration();
           if (registration) {
@@ -40,7 +46,7 @@ export default function ServiceWorkerRegistration() {
                   if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                     // New content is available
                     console.log('New content is available; please refresh.');
-                    
+
                     // Show a notification to the user
                     if ('Notification' in window && Notification.permission === 'granted') {
                       new Notification('Offrows Update', {
@@ -78,4 +84,4 @@ export default function ServiceWorkerRegistration() {
   }, []);
 
   return null; // This component doesn't render anything
-} 
+}

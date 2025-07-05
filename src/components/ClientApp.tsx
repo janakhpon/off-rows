@@ -56,7 +56,7 @@ export default function ClientApp() {
 
   const handleCreateTable = async () => {
     if (!validateTableName(newTableName)) return;
-    
+
     try {
       await addTable(createNewTableData(newTableName));
       setNewTableName(createEmptyString());
@@ -78,7 +78,11 @@ export default function ClientApp() {
   return (
     <div className="flex flex-col h-screen bg-white dark:bg-gray-800">
       <OfflineIndicator />
-      <Header onToggleSidebar={() => {}} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+      <Header
+        onToggleSidebar={() => {}}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+      />
       <div className="flex overflow-hidden flex-1">
         {/* Table Tabs */}
         <div className="flex flex-col w-full">
@@ -89,10 +93,10 @@ export default function ClientApp() {
                 key={table.id}
                 onClick={() => setActiveTable(table)}
                 className={cn(
-                  "px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer",
+                  'px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer',
                   activeTable?.id === table.id
                     ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-200'
-                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700',
                 )}
                 type="button"
               >
@@ -158,4 +162,4 @@ export default function ClientApp() {
       )}
     </div>
   );
-} 
+}

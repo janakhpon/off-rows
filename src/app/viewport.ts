@@ -5,4 +5,4 @@ const viewport = {
   userScalable: false,
 };
 
-export default viewport; 
+export default viewport;

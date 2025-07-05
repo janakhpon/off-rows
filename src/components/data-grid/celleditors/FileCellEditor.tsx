@@ -10,7 +10,12 @@ interface FileCellEditorProps {
   ariaLabel?: string;
 }
 
-const FileCellEditor: React.FC<FileCellEditorProps> = ({ value, getFileUrl, onUpload, ariaLabel }) => {
+const FileCellEditor: React.FC<FileCellEditorProps> = ({
+  value,
+  getFileUrl,
+  onUpload,
+  ariaLabel,
+}) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   return (
@@ -40,7 +45,7 @@ const FileCellEditor: React.FC<FileCellEditorProps> = ({ value, getFileUrl, onUp
         ref={fileInputRef}
         type="file"
         style={{ display: 'none' }}
-        onChange={e => {
+        onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) onUpload(file);
         }}
@@ -49,4 +54,4 @@ const FileCellEditor: React.FC<FileCellEditorProps> = ({ value, getFileUrl, onUp
   );
 };
 
-export default FileCellEditor; 
+export default FileCellEditor;

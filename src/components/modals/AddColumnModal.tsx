@@ -1,10 +1,9 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 import { FieldSchema, FieldTypeSchema } from '@/lib/schemas';
 import { z } from 'zod';
 import { X } from 'lucide-react';
-
 
 interface AddColumnModalProps {
   open: boolean;
@@ -40,7 +39,10 @@ export default function AddColumnModal({ open, onClose, onAddColumn }: AddColumn
   const handleOptionsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({
       ...prev,
-      options: e.target.value.split(',').map(opt => opt.trim()).filter(Boolean),
+      options: e.target.value
+        .split(',')
+        .map((opt) => opt.trim())
+        .filter(Boolean),
     }));
   };
 
@@ -98,13 +100,17 @@ export default function AddColumnModal({ open, onClose, onAddColumn }: AddColumn
               className="px-3 py-2 w-full text-sm rounded border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             >
               {FieldTypeSchema.options.map((type) => (
-                <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
+                <option key={type} value={type}>
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </option>
               ))}
             </select>
           </div>
           {form.type === 'dropdown' && (
             <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">Options (comma separated)</label>
+              <label className="block mb-1 text-sm font-medium text-gray-700">
+                Options (comma separated)
+              </label>
               <input
                 name="options"
                 value={form.options.join(', ')}
@@ -115,11 +121,21 @@ export default function AddColumnModal({ open, onClose, onAddColumn }: AddColumn
           )}
           {(form.type === 'images' || form.type === 'files') && (
             <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">Default Value (comma separated file names for placeholder only)</label>
+              <label className="block mb-1 text-sm font-medium text-gray-700">
+                Default Value (comma separated file names for placeholder only)
+              </label>
               <input
                 name="defaultValue"
                 value={Array.isArray(form.defaultValue) ? form.defaultValue.join(', ') : ''}
-                onChange={e => setForm(prev => ({ ...prev, defaultValue: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    defaultValue: e.target.value
+                      .split(',')
+                      .map((s) => s.trim())
+                      .filter(Boolean),
+                  }))
+                }
                 className="px-3 py-2 w-full text-sm rounded border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -147,4 +163,4 @@ export default function AddColumnModal({ open, onClose, onAddColumn }: AddColumn
       </div>
     </div>
   );
-} 
+}

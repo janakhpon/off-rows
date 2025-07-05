@@ -1,16 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  FileText, 
-  Filter, 
-  SortAsc, 
-  Eye, 
-  Settings, 
-  Download, 
-  Upload, 
+import {
+  FileText,
+  Filter,
+  SortAsc,
+  Eye,
+  Settings,
+  Download,
+  Upload,
   ChevronDown,
-  X
+  X,
 } from 'lucide-react';
 import { useTables } from '@/app/contexts/TableContext';
 import { Field, FileValueWithId } from '@/lib/schemas';
@@ -24,8 +24,13 @@ export default function Toolbar() {
   const [isViewMenuOpen, setIsViewMenuOpen] = useState(false);
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
-  const fileInputRef = useState<HTMLInputElement | null>(null)[0] || (typeof window !== 'undefined' ? document.createElement('input') : null);
-  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const fileInputRef =
+    useState<HTMLInputElement | null>(null)[0] ||
+    (typeof window !== 'undefined' ? document.createElement('input') : null);
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
 
   // Auto-hide notification after 3s
   useEffect(() => {
@@ -33,6 +38,7 @@ export default function Toolbar() {
       const timeout = setTimeout(() => setNotification(null), 3000);
       return () => clearTimeout(timeout);
     }
+    return undefined;
   }, [notification]);
 
   if (!activeTable) {
@@ -46,23 +52,23 @@ export default function Toolbar() {
   }
 
   // Helper: get rows for active table
-  const tableRows = activeTable ? rows.filter(r => r.tableId === activeTable.id) : [];
+  const tableRows = activeTable ? rows.filter((r) => r.tableId === activeTable.id) : [];
 
   // Helper: get field order and names
-  const fieldIds = activeTable ? activeTable.fields.map(f => f.id) : [];
-  const fieldNames = activeTable ? activeTable.fields.map(f => f.name) : [];
+  const fieldIds = activeTable ? activeTable.fields.map((f) => f.id) : [];
+  const fieldNames = activeTable ? activeTable.fields.map((f) => f.name) : [];
 
   // Export CSV
   const handleExportCSV = () => {
     if (!activeTable) return;
     const csvRows = [fieldNames.join(',')];
     for (const row of tableRows) {
-      const vals = fieldIds.map(fid => {
+      const vals = fieldIds.map((fid) => {
         let v = row.data[fid];
         if (typeof v === 'object' && v !== null) v = JSON.stringify(v);
         return v === undefined || v === null ? '' : String(v).replace(/"/g, '""');
       });
-      csvRows.push(vals.map(val => `"${val}"`).join(','));
+      csvRows.push(vals.map((val) => `"${val}"`).join(','));
     }
     const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -79,9 +85,17 @@ export default function Toolbar() {
   // Export JSON
   const handleExportJSON = () => {
     if (!activeTable) return;
-    const data = tableRows.map(row => {
-      const obj: Record<string, string | number | boolean | FileValueWithId | FileValueWithId[] | null> = {};
-      for (const fid of fieldIds) obj[fid] = row.data[fid];
+    const data = tableRows.map((row) => {
+      const obj: Record<
+        string,
+        string | number | boolean | FileValueWithId | FileValueWithId[] | null
+      > = {};
+      for (const fid of fieldIds) {
+        const value = row.data[fid];
+        if (value !== undefined) {
+          obj[fid] = value;
+        }
+      }
       return obj;
     });
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -112,14 +126,27 @@ export default function Toolbar() {
         setNotification({ message: 'CSV must have at least one row.', type: 'error' });
         return;
       }
-      const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+      const firstLine = lines[0];
+      if (!firstLine) {
+        setNotification({ message: 'Invalid CSV file.', type: 'error' });
+        return;
+      }
+      const headers = firstLine.split(',').map((h) => h.replace(/"/g, '').trim());
       for (let i = 1; i < lines.length; ++i) {
-        const vals = lines[i].split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(v => v.replace(/^"|"$/g, ''));
-        const data: Record<string, string | number | boolean | FileValueWithId | FileValueWithId[] | null> = {};
+        const line = lines[i];
+        if (!line) continue;
+        const vals = line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map((v) => v.replace(/^"|"$/g, ''));
+        const data: Record<
+          string,
+          string | number | boolean | FileValueWithId | FileValueWithId[] | null
+        > = {};
         headers.forEach((h, idx) => {
           const fieldIdx = headers.indexOf(h);
-          if (fieldIdx !== -1 && fieldIdx < fieldIds.length) {
-            data[fieldIds[fieldIdx]] = vals[idx] as string;
+          if (fieldIdx !== -1 && fieldIdx < fieldIds.length && fieldIds[fieldIdx]) {
+            const val = vals[idx];
+            if (val !== undefined) {
+              data[fieldIds[fieldIdx]!] = val as string;
+            }
           }
         });
         await addRow({ tableId: activeTable.id!, data });
@@ -141,7 +168,10 @@ export default function Toolbar() {
       const file = target.files && target.files[0];
       if (!file) return;
       const text = await file.text();
-      let arr: Record<string, string | number | boolean | FileValueWithId | FileValueWithId[] | null>[] = [];
+      let arr: Record<
+        string,
+        string | number | boolean | FileValueWithId | FileValueWithId[] | null
+      >[] = [];
       try {
         arr = JSON.parse(text);
       } catch {
@@ -153,7 +183,10 @@ export default function Toolbar() {
         return;
       }
       for (const obj of arr) {
-        const data: Record<string, string | number | boolean | FileValueWithId | FileValueWithId[] | null> = {};
+        const data: Record<
+          string,
+          string | number | boolean | FileValueWithId | FileValueWithId[] | null
+        > = {};
         for (const fid of fieldIds) {
           if (Object.prototype.hasOwnProperty.call(obj, fid)) data[fid] = obj[fid] as string;
         }
@@ -166,14 +199,18 @@ export default function Toolbar() {
   };
 
   const handleRowHeightChange = (height: 'compact' | 'default' | 'large') => {
-    // TODO: Implement row height change
+    // // TODO: Implement row height change
     console.log('Row height:', height);
   };
 
   return (
     <>
       {notification && (
-        <div className={cn(`fixed top-6 right-6 z-50 px-4 py-2 rounded shadow-lg text-white font-medium transition-all ${notification.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`)}>
+        <div
+          className={cn(
+            `fixed top-6 right-6 z-50 px-4 py-2 rounded shadow-lg text-white font-medium transition-all ${notification.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`,
+          )}
+        >
           {notification.message}
         </div>
       )}
@@ -184,26 +221,32 @@ export default function Toolbar() {
             <div className="relative">
               <button
                 onClick={() => setIsFileMenuOpen(!isFileMenuOpen)}
-                className={cn("inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500")}
+                className={cn(
+                  'inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500',
+                )}
               >
                 <FileText className="mr-2 w-4 h-4" />
                 File
                 <ChevronDown className="ml-2 w-4 h-4" />
               </button>
-              
+
               {isFileMenuOpen && (
                 <div className="absolute left-0 z-50 mt-2 w-56 w-full bg-white rounded-md border border-gray-200 shadow-lg sm:w-56">
                   <div className="py-1">
                     <button
                       onClick={handleImportCSV}
-                      className={cn("block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100")}
+                      className={cn(
+                        'block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100',
+                      )}
                     >
                       <Upload className="inline mr-2 w-4 h-4" />
                       Import CSV
                     </button>
                     <button
                       onClick={handleImportJSON}
-                      className={cn("block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100")}
+                      className={cn(
+                        'block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100',
+                      )}
                     >
                       <Upload className="inline mr-2 w-4 h-4" />
                       Import JSON
@@ -211,14 +254,18 @@ export default function Toolbar() {
                     <div className="my-1 border-t border-gray-200"></div>
                     <button
                       onClick={handleExportCSV}
-                      className={cn("block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100")}
+                      className={cn(
+                        'block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100',
+                      )}
                     >
                       <Download className="inline mr-2 w-4 h-4" />
                       Export CSV
                     </button>
                     <button
                       onClick={handleExportJSON}
-                      className={cn("block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100")}
+                      className={cn(
+                        'block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100',
+                      )}
                     >
                       <Download className="inline mr-2 w-4 h-4" />
                       Export JSON
@@ -232,13 +279,15 @@ export default function Toolbar() {
             <div className="relative">
               <button
                 onClick={() => setIsViewMenuOpen(!isViewMenuOpen)}
-                className={cn("inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500")}
+                className={cn(
+                  'inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500',
+                )}
               >
                 <Eye className="mr-2 w-4 h-4" />
                 View Options
                 <ChevronDown className="ml-2 w-4 h-4" />
               </button>
-              
+
               {isViewMenuOpen && (
                 <div className="absolute left-0 z-50 mt-2 w-64 w-full bg-white rounded-md border border-gray-200 shadow-lg sm:w-64">
                   <div className="py-1">
@@ -246,8 +295,18 @@ export default function Toolbar() {
                       Hide Fields
                     </div>
                     {activeTable.fields.map((field: Field) => (
-                      <label key={field.id} className={cn("flex items-center px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100")}>
-                        <input type="checkbox" className={cn("mr-3 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500")} />
+                      <label
+                        key={field.id}
+                        className={cn(
+                          'flex items-center px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100',
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          className={cn(
+                            'mr-3 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500',
+                          )}
+                        />
                         {field.name}
                       </label>
                     ))}
@@ -257,19 +316,25 @@ export default function Toolbar() {
                     </div>
                     <button
                       onClick={() => handleRowHeightChange('compact')}
-                      className={cn("block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100")}
+                      className={cn(
+                        'block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100',
+                      )}
                     >
                       Compact
                     </button>
                     <button
                       onClick={() => handleRowHeightChange('default')}
-                      className={cn("block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100")}
+                      className={cn(
+                        'block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100',
+                      )}
                     >
                       Default
                     </button>
                     <button
                       onClick={() => handleRowHeightChange('large')}
-                      className={cn("block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100")}
+                      className={cn(
+                        'block px-4 py-2 w-full text-sm text-left text-gray-700 transition-colors hover:bg-gray-100',
+                      )}
                     >
                       Large
                     </button>
@@ -282,13 +347,15 @@ export default function Toolbar() {
             <div className="relative">
               <button
                 onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
-                className={cn("inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500")}
+                className={cn(
+                  'inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500',
+                )}
               >
                 <Filter className="mr-2 w-4 h-4" />
                 Filter
                 <ChevronDown className="ml-2 w-4 h-4" />
               </button>
-              
+
               {isFilterMenuOpen && (
                 <div className="absolute left-0 z-50 mt-2 w-80 w-full bg-white rounded-md border border-gray-200 shadow-lg sm:w-80">
                   <div className="p-4">
@@ -296,24 +363,38 @@ export default function Toolbar() {
                       <h3 className="text-sm font-medium text-gray-900">Add Filter</h3>
                       <button
                         onClick={() => setIsFilterMenuOpen(false)}
-                        className={cn("text-gray-400 hover:text-gray-600")}
+                        className={cn('text-gray-400 hover:text-gray-600')}
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                     <div className="space-y-3">
                       <div>
-                        <label className="block mb-1 text-xs font-medium text-gray-700">Field</label>
-                        <select className={cn("px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500")}>
+                        <label className="block mb-1 text-xs font-medium text-gray-700">
+                          Field
+                        </label>
+                        <select
+                          className={cn(
+                            'px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500',
+                          )}
+                        >
                           <option>Select a field</option>
                           {activeTable.fields.map((field: Field) => (
-                            <option key={field.id} value={field.id}>{field.name}</option>
+                            <option key={field.id} value={field.id}>
+                              {field.name}
+                            </option>
                           ))}
                         </select>
                       </div>
                       <div>
-                        <label className="block mb-1 text-xs font-medium text-gray-700">Operator</label>
-                        <select className={cn("px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500")}>
+                        <label className="block mb-1 text-xs font-medium text-gray-700">
+                          Operator
+                        </label>
+                        <select
+                          className={cn(
+                            'px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500',
+                          )}
+                        >
                           <option>equals</option>
                           <option>contains</option>
                           <option>greater than</option>
@@ -321,14 +402,22 @@ export default function Toolbar() {
                         </select>
                       </div>
                       <div>
-                        <label className="block mb-1 text-xs font-medium text-gray-700">Value</label>
+                        <label className="block mb-1 text-xs font-medium text-gray-700">
+                          Value
+                        </label>
                         <input
                           type="text"
-                          className={cn("px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500")}
+                          className={cn(
+                            'px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500',
+                          )}
                           placeholder="Enter value"
                         />
                       </div>
-                      <button className={cn("px-4 py-2 w-full text-sm font-medium text-white bg-blue-600 rounded-md transition-colors hover:bg-blue-700")}>
+                      <button
+                        className={cn(
+                          'px-4 py-2 w-full text-sm font-medium text-white bg-blue-600 rounded-md transition-colors hover:bg-blue-700',
+                        )}
+                      >
                         Add Filter
                       </button>
                     </div>
@@ -341,13 +430,15 @@ export default function Toolbar() {
             <div className="relative">
               <button
                 onClick={() => setIsSortMenuOpen(!isSortMenuOpen)}
-                className={cn("inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500")}
+                className={cn(
+                  'inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500',
+                )}
               >
                 <SortAsc className="mr-2 w-4 h-4" />
                 Sort
                 <ChevronDown className="ml-2 w-4 h-4" />
               </button>
-              
+
               {isSortMenuOpen && (
                 <div className="absolute left-0 z-50 mt-2 w-64 w-full bg-white rounded-md border border-gray-200 shadow-lg sm:w-64">
                   <div className="p-4">
@@ -355,29 +446,47 @@ export default function Toolbar() {
                       <h3 className="text-sm font-medium text-gray-900">Sort Rules</h3>
                       <button
                         onClick={() => setIsSortMenuOpen(false)}
-                        className={cn("text-gray-400 hover:text-gray-600")}
+                        className={cn('text-gray-400 hover:text-gray-600')}
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                     <div className="space-y-3">
                       <div>
-                        <label className="block mb-1 text-xs font-medium text-gray-700">Sort by</label>
-                        <select className={cn("px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500")}>
+                        <label className="block mb-1 text-xs font-medium text-gray-700">
+                          Sort by
+                        </label>
+                        <select
+                          className={cn(
+                            'px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500',
+                          )}
+                        >
                           <option>Select a field</option>
                           {activeTable.fields.map((field: Field) => (
-                            <option key={field.id} value={field.id}>{field.name}</option>
+                            <option key={field.id} value={field.id}>
+                              {field.name}
+                            </option>
                           ))}
                         </select>
                       </div>
                       <div>
-                        <label className="block mb-1 text-xs font-medium text-gray-700">Order</label>
-                        <select className={cn("px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500")}>
+                        <label className="block mb-1 text-xs font-medium text-gray-700">
+                          Order
+                        </label>
+                        <select
+                          className={cn(
+                            'px-3 py-2 w-full text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500',
+                          )}
+                        >
                           <option value="asc">Ascending</option>
                           <option value="desc">Descending</option>
                         </select>
                       </div>
-                      <button className={cn("px-4 py-2 w-full text-sm font-medium text-white bg-blue-600 rounded-md transition-colors hover:bg-blue-700")}>
+                      <button
+                        className={cn(
+                          'px-4 py-2 w-full text-sm font-medium text-white bg-blue-600 rounded-md transition-colors hover:bg-blue-700',
+                        )}
+                      >
                         Add Sort Rule
                       </button>
                     </div>
@@ -387,7 +496,11 @@ export default function Toolbar() {
             </div>
           </div>
           <div className="flex gap-2 items-center mt-2 sm:mt-0">
-            <button className={cn("inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500")}>
+            <button
+              className={cn(
+                'inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500',
+              )}
+            >
               <Settings className="mr-2 w-4 h-4" />
               Settings
             </button>
@@ -396,4 +509,4 @@ export default function Toolbar() {
       </div>
     </>
   );
-} 
+}
