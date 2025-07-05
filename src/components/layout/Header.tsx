@@ -2,10 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Menu, Search, Plus, Download, Upload } from 'lucide-react';
-import { useTables } from '../contexts/TableContext';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTables } from '@/app/contexts/TableContext';
+import { useTheme } from '@/app/contexts/ThemeContext';
 import { useAppStore } from '@/lib/store';
-import ThemeToggle from './ThemeToggle';
+import { ThemeToggle } from '@/components';
 import { Table, TableRow, FileValueWithId } from '@/lib/schemas';
 import { Dispatch, SetStateAction } from 'react';
 import { cn } from '@/lib/utils';
@@ -90,7 +90,7 @@ function useTableExportImport(
             data[fid] = vals[idx];
           }
         }
-        await addRow({ tableId: activeTable.id, data });
+        await addRow({ tableId: activeTable.id!, data });
       }
       setNotification({ message: 'CSV import complete!', type: 'success' });
     };
@@ -125,7 +125,7 @@ function useTableExportImport(
             data[fid] = obj[fid] as string | number | boolean | FileValueWithId | FileValueWithId[] | null;
           }
         }
-        await addRow({ tableId: activeTable.id, data });
+        await addRow({ tableId: activeTable.id!, data });
       }
       setNotification({ message: 'JSON import complete!', type: 'success' });
     };
@@ -199,7 +199,7 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
         theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
       )}
     >
-      <div className="flex items-center justify-between h-16 px-4 sm:px-6">
+      <div className="flex justify-between items-center px-4 h-16 sm:px-6">
         {/* Left side - Menu button and logo */}
         <div className="flex items-center space-x-4">
           <button
@@ -210,15 +210,14 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
             )}
             type="button"
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="w-5 h-5" />
           </button>
           
           <div className="flex items-center space-x-3">
             <div className="hidden sm:block">
               <h1 
                 className={cn(
-                  "text-xl font-bold",
-                  theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                  "text-xl font-bold text-gray-900 dark:text-gray-100"
                 )}
               >
                 Offrows
@@ -236,7 +235,7 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
         </div>
 
         {/* Center - Search and table info */}
-        <div className="flex-1 max-w-2xl mx-4 hidden md:block">
+        <div className="hidden flex-1 mx-4 max-w-2xl md:block">
           <div className="relative">
             <Search 
               className={cn(
@@ -270,7 +269,7 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
         <div className="flex items-center space-x-2">
           {/* Table info */}
           {activeTable && (
-            <div className="hidden sm:flex items-center space-x-3 mr-4">
+            <div className="hidden items-center mr-4 space-x-3 sm:flex">
               <div className="text-right">
                 <h2 
                   className={cn(
@@ -302,7 +301,7 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
               )}
               type="button"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="w-4 h-4" />
             </button>
             {/* Export and Import buttons */}
             <button
@@ -314,9 +313,9 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
               )}
               type="button"
             >
-              <Download className="h-4 w-4" />
+              <Download className="w-4 h-4" />
               {exportMenuOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                <div className="absolute right-0 z-50 mt-2 w-44 bg-white rounded-md border border-gray-200 shadow-lg">
                   <button
                     onClick={handleExportCSV}
                     className={cn(
@@ -347,9 +346,9 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
               )}
               type="button"
             >
-              <Upload className="h-4 w-4" />
+              <Upload className="w-4 h-4" />
               {importMenuOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                <div className="absolute right-0 z-50 mt-2 w-44 bg-white rounded-md border border-gray-200 shadow-lg">
                   <button
                     onClick={handleImportCSV}
                     className={cn(
@@ -378,7 +377,7 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
       </div>
 
       {/* Mobile search bar */}
-      <div className="md:hidden px-4 pb-4">
+      <div className="px-4 pb-4 md:hidden">
         <div className="relative">
           <Search 
             className={cn(

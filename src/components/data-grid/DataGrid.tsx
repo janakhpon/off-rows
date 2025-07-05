@@ -3,12 +3,11 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { DataGrid, RenderCellProps } from 'react-data-grid';
 import { Plus, Trash2, AlertTriangle } from 'lucide-react';
-import { useTables } from '../contexts/TableContext';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTables } from '@/app/contexts/TableContext';
+import { useTheme } from '@/app/contexts/ThemeContext';
 import { useAppStore } from '@/lib/store';
 import { Field, TableRow, FileValueWithId, Table } from '@/lib/schemas';
-import AddColumnModal from './modals/AddColumnModal';
-import DeleteColumnModal from './modals/DeleteColumnModal';
+import { AddColumnModal, DeleteColumnModal } from '@/components';
 import { fileOperations } from '@/lib/database';
 import TextCellEditor from './celleditors/TextCellEditor';
 import NumberCellEditor from './celleditors/NumberCellEditor';
@@ -100,6 +99,10 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
   const [selectedRows, setSelectedRows] = useState<Set<number>>(createEmptySet());
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteType, setDeleteType] = useState<'rows' | 'table' | null>(null);
+  
+  // --- CELL EDITING STATE ---
+  // Track which cell is currently being edited
+  const [editingCell, setEditingCell] = useState<{ rowId: number; fieldId: string } | null>(null);
 
   // --- ROW ORDER STATE ---
   // Maintain row order for consistent display and drag-and-drop support
@@ -246,14 +249,14 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
   const allRowIds = orderedRows.map(row => row.id).filter((id): id is number => typeof id === 'number');
   const allSelected = selectedRows.size > 0 && allRowIds.every(id => selectedRows.has(id));
   const someSelected = selectedRows.size > 0 && !allSelected;
-  const handleSelectAll = (checked: boolean) => {
+  const handleSelectAll = useCallback((checked: boolean) => {
     if (checked) {
       setSelectedRows(new Set<number>(allRowIds));
     } else {
       setSelectedRows(new Set<number>());
     }
-  };
-  const handleSelectRow = (rowId: number | undefined, checked: boolean) => {
+  }, [allRowIds]);
+  const handleSelectRow = useCallback((rowId: number | undefined, checked: boolean) => {
     if (typeof rowId !== 'number') return;
     const newSet = new Set(selectedRows);
     if (checked) {
@@ -262,7 +265,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
       newSet.delete(rowId);
     }
     setSelectedRows(newSet as Set<number>);
-  };
+  }, [selectedRows]);
 
   // --- COLUMNS ---
   const columns = useMemo(() => {
@@ -348,6 +351,9 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
                 onChange={(val: string) => updateRow(row.id, { data: { ...row.data, [field.id]: val } })}
                 placeholder={`Enter ${field.name.toLowerCase()}...`}
                 ariaLabel={`Edit ${field.name}`}
+                isEditing={editingCell?.rowId === row.id && editingCell?.fieldId === field.id}
+                onEditStart={() => setEditingCell({ rowId: row.id, fieldId: field.id })}
+                onEditEnd={() => setEditingCell(null)}
               />
             );
           case 'number':
@@ -356,6 +362,9 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
                 value={typeof value === 'number' ? value : ''}
                 onChange={(val: number | null) => updateRow(row.id, { data: { ...row.data, [field.id]: val } })}
                 ariaLabel={`Edit ${field.name}`}
+                isEditing={editingCell?.rowId === row.id && editingCell?.fieldId === field.id}
+                onEditStart={() => setEditingCell({ rowId: row.id, fieldId: field.id })}
+                onEditEnd={() => setEditingCell(null)}
               />
             );
           case 'date':
@@ -364,6 +373,9 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
                 value={typeof value === 'string' ? value : ''}
                 onChange={(val: string) => updateRow(row.id, { data: { ...row.data, [field.id]: val } })}
                 ariaLabel={`Edit ${field.name}`}
+                isEditing={editingCell?.rowId === row.id && editingCell?.fieldId === field.id}
+                onEditStart={() => setEditingCell({ rowId: row.id, fieldId: field.id })}
+                onEditEnd={() => setEditingCell(null)}
               />
             );
           case 'boolean':
@@ -482,7 +494,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
       }
     }));
     return [rowNumberCol, selectCol, ...dataCols];
-  }, [activeTable, getColWidth, selectedRows, allSelected, someSelected]);
+  }, [activeTable, getColWidth, selectedRows, allSelected, someSelected, editingCell, getFileUrl, handleSelectAll, handleSelectRow, updateRow]);
 
   // --- REACT-DATA-GRID ROWS ---
   // Transform ordered rows for react-data-grid
@@ -530,7 +542,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
 
   const [rowHeight, setRowHeight] = useState(36); // default: medium
 
-  // Keyboard event handlers for modals
+  // Keyboard event handlers for modals and cell editing
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -541,14 +553,32 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
           setShowDeleteConfirm(false);
           setDeleteType(null);
         }
+        if (editingCell) {
+          setEditingCell(null);
+        }
       }
     };
 
-    if (imageModal || showDeleteConfirm) {
+    if (imageModal || showDeleteConfirm || editingCell) {
       document.addEventListener('keydown', handleKeyDown);
       return () => document.removeEventListener('keydown', handleKeyDown);
     }
-  }, [imageModal, showDeleteConfirm]);
+  }, [imageModal, showDeleteConfirm, editingCell]);
+
+  // Click outside to stop editing
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (editingCell && !target.closest('.rdg-cell')) {
+        setEditingCell(null);
+      }
+    };
+
+    if (editingCell) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [editingCell]);
 
   // --- Highlight logic for matching rows ---
   const isRowMatch = (row: DataGridRow) => {
@@ -802,7 +832,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
             {/* For each column, show sum if number, else blank */}
             {activeTable.fields.map((field) => (
               <div key={field.id} className="px-2 py-2 min-w-[120px] text-right">
-                {field.type === 'number' ? numberFieldSums[field.id] : ''}
+                {field.type === 'number' ? `${field.name}: ${numberFieldSums[field.id]}` : ''}
               </div>
             ))}
             {/* Add extra cells for select/row number columns if needed */}

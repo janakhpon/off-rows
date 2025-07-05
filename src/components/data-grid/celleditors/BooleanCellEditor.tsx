@@ -1,4 +1,7 @@
+'use client';
+
 import React, { useRef, useEffect } from 'react';
+
 
 interface BooleanCellEditorProps {
   value: boolean;
@@ -27,7 +30,7 @@ const BooleanCellEditor: React.FC<BooleanCellEditorProps> = ({
         type="checkbox"
         checked={value || false}
         aria-label={ariaLabel || 'Toggle value'}
-        className="w-4 h-4 text-blue-600 bg-transparent border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 focus:border-blue-500 cursor-pointer transition-all duration-150"
+        className="w-4 h-4 cursor-pointer transition-all duration-150"
         onChange={e => onChange(e.target.checked)}
         onKeyDown={e => {
           if (e.key === 'Enter' || e.key === ' ') {

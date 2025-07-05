@@ -1,216 +1,133 @@
-# Offrows
+# Offrows - Offline-first Project Tracker
 
-A modern, offline-first project tracking application built with Next.js 15, TypeScript, and modern web technologies. Offrows provides a spreadsheet-like interface similar to Airtable and Baserow, with full offline functionality.
+A modern, offline-first project tracking application built with Next.js, TypeScript, and IndexedDB for local data storage.
 
-## ✨ Features
+## Features
 
-- **🔄 Offline-First**: Works perfectly without internet connection using IndexedDB
-- **📊 Grid Interface**: Modern spreadsheet-like UI with sorting, filtering, and resizable columns
-- **📱 PWA Support**: Install as a native app on mobile and desktop
-- **🎨 Modern UI**: Clean, responsive design with Tailwind CSS
-- **⚡ Fast Performance**: Built with Next.js 15 and optimized for speed
-- **🔒 Data Privacy**: All data stored locally in your browser
-- **📈 Real-time Updates**: Instant data synchronization when online
-- **🎯 Task Management**: Track tasks, status, priorities, and progress
+- **Offline-first**: Works completely offline with IndexedDB storage
+- **Modern UI**: Clean, responsive interface with dark/light theme support
+- **Flexible Data Grid**: Excel-like spreadsheet interface with multiple data types
+- **File Management**: Upload and manage images and files
+- **Search & Filter**: Real-time search across text fields
+- **Export/Import**: CSV and JSON data export/import capabilities
+- **PWA Ready**: Progressive Web App with offline capabilities
 
-## 🚀 Getting Started
+## Project Structure
 
-### Prerequisites
-
-- Node.js 18+ 
-- npm or yarn
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/your-username/off-rows.git
-cd off-rows
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Run the development server:
-```bash
-npm run dev
-```
-
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### Building for Production
-
-```bash
-npm run build
-npm start
-```
-
-## 🏗️ Architecture
-
-### Tech Stack
-
-- **Framework**: Next.js 15 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS v4
-- **Database**: Dexie.js (IndexedDB wrapper)
-- **Data Grid**: react-data-grid
-- **Icons**: Lucide React
-- **PWA**: @ducanh2912/next-pwa
-
-### Project Structure
+The codebase follows modern React/Next.js best practices with a well-organized component structure:
 
 ```
 src/
-├── app/
-│   ├── components/          # React components
-│   │   ├── DataGrid.tsx     # Main data grid component
-│   │   ├── Header.tsx       # Application header
-│   │   ├── Sidebar.tsx      # Navigation sidebar
-│   │   ├── Toolbar.tsx      # Grid toolbar
-│   │   └── OfflineIndicator.tsx # Offline status indicator
-│   ├── globals.css          # Global styles
-│   ├── layout.tsx           # Root layout with SEO
-│   └── page.tsx             # Main page component
-├── lib/
-│   └── database.ts          # Dexie database configuration
-public/
-├── manifest.json            # PWA manifest
-├── sw.js                    # Service worker
-├── robots.txt               # SEO robots file
-├── sitemap.xml              # SEO sitemap
-└── icons/                   # PWA icons
+├── app/                    # Next.js app directory
+│   ├── contexts/          # React contexts
+│   ├── globals.css        # Global styles
+│   ├── layout.tsx         # Root layout
+│   └── page.tsx           # Main page
+├── components/            # All React components
+│   ├── ui/               # Reusable UI components
+│   │   ├── button.tsx
+│   │   ├── image.tsx
+│   │   ├── ThemeToggle.tsx
+│   │   └── OfflineIndicator.tsx
+│   ├── layout/           # Layout components
+│   │   ├── Header.tsx
+│   │   ├── Sidebar.tsx
+│   │   └── Toolbar.tsx
+│   ├── data-grid/        # Data grid components
+│   │   ├── DataGrid.tsx
+│   │   └── celleditors/  # Cell editor components
+│   │       ├── TextCellEditor.tsx
+│   │       ├── NumberCellEditor.tsx
+│   │       ├── DateCellEditor.tsx
+│   │       ├── BooleanCellEditor.tsx
+│   │       ├── DropdownCellEditor.tsx
+│   │       ├── FileCellEditor.tsx
+│   │       ├── FilesCellEditor.tsx
+│   │       ├── ImageCellEditor.tsx
+│   │       └── ImagesCellEditor.tsx
+│   ├── modals/           # Modal components
+│   │   ├── AddColumnModal.tsx
+│   │   └── DeleteColumnModal.tsx
+│   ├── ClientApp.tsx     # Main app component
+│   ├── ErrorBoundary.tsx # Error boundary
+│   └── index.ts          # Component exports
+└── lib/                  # Utility libraries
+    ├── database.ts       # IndexedDB operations
+    ├── schemas.ts        # Zod schemas
+    ├── store.ts          # Zustand store
+    └── utils.ts          # Utility functions
 ```
 
-## 🔧 Configuration
+## Key Improvements
 
-### PWA Configuration
+### 1. Component Organization
+- **Unified Structure**: All components are now in a single `src/components/` directory
+- **Logical Grouping**: Components are organized by purpose (ui, layout, data-grid, modals)
+- **Clean Imports**: Centralized exports via `src/components/index.ts`
 
-The app is configured as a Progressive Web App with:
+### 2. Cell Selection Fix
+- **Improved UX**: Cells now show plain text when not editing, input fields only when editing
+- **Better Focus Management**: Clicking a cell highlights the entire cell, not just the input
+- **Keyboard Navigation**: Escape key to cancel editing, Enter to save
+- **Click Outside**: Clicking outside a cell stops editing
 
-- **Manifest**: `public/manifest.json`
-- **Service Worker**: `public/sw.js`
-- **Icons**: Multiple sizes for different platforms
-- **Offline Support**: Caching and background sync
+### 3. Modern Best Practices
+- **TypeScript**: Full type safety throughout the application
+- **Component Composition**: Reusable, composable components
+- **Performance**: Optimized rendering with proper dependency arrays
+- **Accessibility**: ARIA labels and keyboard navigation support
 
-### SEO Configuration
+## Getting Started
 
-- **Meta Tags**: Comprehensive Open Graph and Twitter Card support
-- **Sitemap**: Auto-generated sitemap.xml
-- **Robots**: Proper robots.txt configuration
-- **Social Preview**: Uses preview.png for social media
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-### Database Schema
+2. **Run the development server**:
+   ```bash
+   npm run dev
+   ```
 
-```typescript
-interface Task {
-  id?: number;
-  taskName: string;
-  status: string;
-  dueDate: string;
-  priority: string;
-  assignee: string;
-  progress: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
+3. **Open your browser**:
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
-interface Project {
-  id?: number;
-  name: string;
-  description: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-```
+## Development
 
-## 📱 PWA Features
+### Component Development
+- All components are in `src/components/`
+- Use the index file for clean imports: `import { ComponentName } from '@/components'`
+- Follow the established patterns for new components
 
-- **Installable**: Add to home screen on mobile and desktop
-- **Offline**: Full functionality without internet
-- **Background Sync**: Data sync when connection is restored
-- **Push Notifications**: Ready for future implementation
-- **App-like Experience**: Native feel across platforms
+### Data Grid Customization
+- Cell editors are in `src/components/data-grid/celleditors/`
+- Each editor supports both display and edit modes
+- Add new field types by creating new cell editors
 
-## 🎨 UI Components
+### Styling
+- Uses Tailwind CSS for styling
+- Theme support via CSS custom properties
+- Responsive design with mobile-first approach
 
-### Data Grid
-- Sortable columns
-- Resizable columns
-- Custom cell renderers
-- Status indicators
-- Progress bars
-- Avatar initials
+## Data Types Supported
 
-### Responsive Design
-- Mobile-first approach
-- Touch-friendly interface
-- Adaptive layouts
-- Cross-platform compatibility
+- **Text**: Simple text input
+- **Number**: Numeric values with validation
+- **Date**: Date picker with formatting
+- **Boolean**: Checkbox/toggle
+- **Dropdown**: Select from predefined options
+- **Image**: Single image upload with preview
+- **Images**: Multiple image uploads
+- **File**: Single file upload
+- **Files**: Multiple file uploads
 
-## 🔒 Data Privacy
+## Browser Support
 
-- **Local Storage**: All data stored in your browser
-- **No Cloud**: No data sent to external servers
-- **Offline Capable**: Works without internet connection
-- **Export Options**: CSV and JSON export capabilities
+- Modern browsers with IndexedDB support
+- Progressive Web App capabilities
+- Offline functionality
+- Mobile responsive design
 
-## 🚀 Performance
+## License
 
-- **Fast Loading**: Optimized bundle size
-- **Lazy Loading**: Components loaded on demand
-- **Caching**: Intelligent caching strategies
-- **Compression**: Assets optimized for delivery
-
-## 📦 Available Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [Next.js](https://nextjs.org/) - React framework
-- [Dexie.js](https://dexie.org/) - IndexedDB wrapper
-- [react-data-grid](https://github.com/adazzle/react-data-grid) - Data grid component
-- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
-- [Lucide](https://lucide.dev/) - Beautiful icons
-
-## 📞 Support
-
-For support and questions, please open an issue on GitHub or contact the development team.
-
----
-
-**Offrows** - Modern, offline-first project tracking for the modern web. 
-
-
-
-Sync to Cloud -> overwrite the tables, rows in cloud 
-  - when delete a table in offline mode - mark it as soft delete in status and delete it from db only after that table is deleted properly in the cloud db
-  - when delete a row in offline mode - mark it as soft delete in status and delete it from db only after that row is deleted properly in the cloud db
-Sync from Cloud -> overwrite the current changes with all the changes from the cloud db
-
-when creating new rows, editing existing rows, deleting existing rows - always mark them properly with related status which will be used for syncing with the data from the cloud db.
-
-What is the best way to sync to cloud db? I want to make it dynamic, user can can connect to either to supabase or psql instance directly by providing a proper env or credentials but they should totally be optional since we are offline first (fully operational without the need for cloud or signing up) - but when user wants to sync, they need to be signed up and sync to a default cloud db (supabase) provided to them by default without needing them to provide credentials to connect to an additional db (their supabase or psql instance). Should we do implementation ready in both supabase and psql + s3  and let the user choose by selecting to sync to one of them?
-
-Encryption-Decryption
-  - we should provide a data encryption before storing the data to IDB and when read from it, decrypt it?
-
-Viz page
-  - can try to visualize the data by selecting a table (for example, select a table, what column to use as x axis, what to use as y axis of line chart, area chart? ...etc)
+This project is licensed under the MIT License.

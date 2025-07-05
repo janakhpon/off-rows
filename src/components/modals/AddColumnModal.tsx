@@ -5,6 +5,7 @@ import { FieldSchema, FieldTypeSchema } from '@/lib/schemas';
 import { z } from 'zod';
 import { X } from 'lucide-react';
 
+
 interface AddColumnModalProps {
   open: boolean;
   onClose: () => void;

@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
-import './globals.css';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { TableProvider } from './contexts/TableContext';
+
+import { ErrorBoundary, OfflineIndicator } from '@/components';
+import { inter, firaCode } from '@/lib/fonts';
+
+import './globals.css';
 import 'react-data-grid/lib/styles.css';
-import ErrorBoundary from './components/ErrorBoundary';
-import OfflineIndicator from './components/OfflineIndicator';
 
 export const metadata: Metadata = {
   title: 'Offrows - Modern Offline-First Spreadsheet & Database App',
@@ -72,7 +74,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className={`scroll-smooth ${inter.variable} ${firaCode.variable}`}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="theme-color" content="#1E3A8A" media="(prefers-color-scheme: light)" />

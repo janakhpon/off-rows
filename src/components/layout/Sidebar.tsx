@@ -1,7 +1,7 @@
 'use client';
 
 import { Menu, Plus, Database, ChevronRight, Settings, HelpCircle, Github } from 'lucide-react';
-import { useTables } from '../contexts/TableContext';
+import { useTables } from '@/app/contexts/TableContext';
 import { useAppStore } from '@/lib/store';
 import { Table } from '@/lib/schemas';
 interface SidebarProps {

@@ -12,8 +12,8 @@ import {
   ChevronDown,
   X
 } from 'lucide-react';
-import { useTables } from '../contexts/TableContext';
-import { Field } from '@/lib/schemas';
+import { useTables } from '@/app/contexts/TableContext';
+import { Field, FileValueWithId } from '@/lib/schemas';
 import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 
@@ -80,7 +80,7 @@ export default function Toolbar() {
   const handleExportJSON = () => {
     if (!activeTable) return;
     const data = tableRows.map(row => {
-      const obj: Record<string, any> = {};
+      const obj: Record<string, string | number | boolean | FileValueWithId | FileValueWithId[] | null> = {};
       for (const fid of fieldIds) obj[fid] = row.data[fid];
       return obj;
     });
@@ -115,14 +115,14 @@ export default function Toolbar() {
       const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
       for (let i = 1; i < lines.length; ++i) {
         const vals = lines[i].split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(v => v.replace(/^"|"$/g, ''));
-        const data: Record<string, string | number | boolean | import('@/lib/schemas').FileValueWithId | import('@/lib/schemas').FileValueWithId[] | null> = {};
+        const data: Record<string, string | number | boolean | FileValueWithId | FileValueWithId[] | null> = {};
         headers.forEach((h, idx) => {
           const fieldIdx = headers.indexOf(h);
           if (fieldIdx !== -1 && fieldIdx < fieldIds.length) {
             data[fieldIds[fieldIdx]] = vals[idx] as string;
           }
         });
-        await addRow({ tableId: activeTable.id, data });
+        await addRow({ tableId: activeTable.id!, data });
       }
       setNotification({ message: 'CSV import complete!', type: 'success' });
       setIsFileMenuOpen(false);
@@ -141,7 +141,7 @@ export default function Toolbar() {
       const file = target.files && target.files[0];
       if (!file) return;
       const text = await file.text();
-      let arr: Record<string, string | number | boolean | import('@/lib/schemas').FileValueWithId | import('@/lib/schemas').FileValueWithId[] | null>[] = [];
+      let arr: Record<string, string | number | boolean | FileValueWithId | FileValueWithId[] | null>[] = [];
       try {
         arr = JSON.parse(text);
       } catch {
@@ -153,11 +153,11 @@ export default function Toolbar() {
         return;
       }
       for (const obj of arr) {
-        const data: Record<string, string | number | boolean | import('@/lib/schemas').FileValueWithId | import('@/lib/schemas').FileValueWithId[] | null> = {};
+        const data: Record<string, string | number | boolean | FileValueWithId | FileValueWithId[] | null> = {};
         for (const fid of fieldIds) {
           if (Object.prototype.hasOwnProperty.call(obj, fid)) data[fid] = obj[fid] as string;
         }
-        await addRow({ tableId: activeTable.id, data });
+        await addRow({ tableId: activeTable.id!, data });
       }
       setNotification({ message: 'JSON import complete!', type: 'success' });
       setIsFileMenuOpen(false);
@@ -177,9 +177,9 @@ export default function Toolbar() {
           {notification.message}
         </div>
       )}
-      <div className="px-2 sm:px-4 py-2 sm:py-3 bg-white border-b border-gray-200">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0">
-          <div className="flex flex-wrap items-center gap-2">
+      <div className="px-2 py-2 bg-white border-b border-gray-200 sm:px-4 sm:py-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center sm:gap-0">
+          <div className="flex flex-wrap gap-2 items-center">
             {/* File Menu */}
             <div className="relative">
               <button
@@ -192,7 +192,7 @@ export default function Toolbar() {
               </button>
               
               {isFileMenuOpen && (
-                <div className="absolute left-0 z-50 mt-2 w-56 sm:w-56 w-full bg-white rounded-md border border-gray-200 shadow-lg">
+                <div className="absolute left-0 z-50 mt-2 w-56 w-full bg-white rounded-md border border-gray-200 shadow-lg sm:w-56">
                   <div className="py-1">
                     <button
                       onClick={handleImportCSV}
@@ -240,7 +240,7 @@ export default function Toolbar() {
               </button>
               
               {isViewMenuOpen && (
-                <div className="absolute left-0 z-50 mt-2 w-64 sm:w-64 w-full bg-white rounded-md border border-gray-200 shadow-lg">
+                <div className="absolute left-0 z-50 mt-2 w-64 w-full bg-white rounded-md border border-gray-200 shadow-lg sm:w-64">
                   <div className="py-1">
                     <div className="px-4 py-2 text-xs font-medium tracking-wide text-gray-500 uppercase">
                       Hide Fields
@@ -290,7 +290,7 @@ export default function Toolbar() {
               </button>
               
               {isFilterMenuOpen && (
-                <div className="absolute left-0 z-50 mt-2 w-80 sm:w-80 w-full bg-white rounded-md border border-gray-200 shadow-lg">
+                <div className="absolute left-0 z-50 mt-2 w-80 w-full bg-white rounded-md border border-gray-200 shadow-lg sm:w-80">
                   <div className="p-4">
                     <div className="flex justify-between items-center mb-3">
                       <h3 className="text-sm font-medium text-gray-900">Add Filter</h3>
@@ -349,7 +349,7 @@ export default function Toolbar() {
               </button>
               
               {isSortMenuOpen && (
-                <div className="absolute left-0 z-50 mt-2 w-64 sm:w-64 w-full bg-white rounded-md border border-gray-200 shadow-lg">
+                <div className="absolute left-0 z-50 mt-2 w-64 w-full bg-white rounded-md border border-gray-200 shadow-lg sm:w-64">
                   <div className="p-4">
                     <div className="flex justify-between items-center mb-3">
                       <h3 className="text-sm font-medium text-gray-900">Sort Rules</h3>
@@ -386,7 +386,7 @@ export default function Toolbar() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2 mt-2 sm:mt-0">
+          <div className="flex gap-2 items-center mt-2 sm:mt-0">
             <button className={cn("inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500")}>
               <Settings className="mr-2 w-4 h-4" />
               Settings

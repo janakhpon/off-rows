@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useTables } from '../contexts/TableContext';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTables } from '@/app/contexts/TableContext';
+import { useTheme } from '@/app/contexts/ThemeContext';
 import { useAppStore } from '@/lib/store';
-import Header from './Header';
-import DataGridComponent from './DataGrid';
-import OfflineIndicator from './OfflineIndicator';
+import { Header, DataGrid as DataGridComponent, OfflineIndicator } from '@/components';
 import { cn } from '@/lib/utils';
 
 // Pure utility functions
@@ -55,24 +53,14 @@ export default function ClientApp() {
   };
 
   return (
-    <div
-      className={cn(
-        "flex flex-col h-screen",
-        theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-      )}
-    >
+    <div className="flex flex-col h-screen bg-white dark:bg-gray-800">
       <OfflineIndicator />
       <Header onToggleSidebar={() => {}} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
       <div className="flex overflow-hidden flex-1">
         {/* Table Tabs */}
         <div className="flex flex-col w-full">
           {/* Tab Bar */}
-          <div
-            className={cn(
-              "flex overflow-x-auto items-center px-4 py-2 space-x-2 border-b",
-              theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-            )}
-          >
+          <div className="flex overflow-x-auto items-center px-4 py-2 space-x-2 border-b bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
             {tables.map((table) => (
               <button
                 key={table.id}
