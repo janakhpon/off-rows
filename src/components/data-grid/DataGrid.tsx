@@ -2,12 +2,12 @@
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { DataGrid, RenderCellProps } from 'react-data-grid';
-import { Plus, Trash2, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, AlertTriangle, Code } from 'lucide-react';
 import { useTables } from '@/app/contexts/TableContext';
 import { useTheme } from '@/app/contexts/ThemeContext';
 import { useAppStore } from '@/lib/store';
 import { Field, TableRow, FileValueWithId, Table } from '@/lib/schemas';
-import { AddColumnModal, DeleteColumnModal } from '@/components';
+import { AddColumnModal, DeleteColumnModal, TableSchemaModal } from '@/components';
 import { fileOperations } from '@/lib/database';
 import TextCellEditor from './celleditors/TextCellEditor';
 import NumberCellEditor from './celleditors/NumberCellEditor';
@@ -129,6 +129,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
   } = useAppStore();
   const [showAddColumn, setShowAddColumn] = useState(false);
   const [showDeleteColumn, setShowDeleteColumn] = useState(false);
+  const [showSchemaModal, setShowSchemaModal] = useState(false);
   const [columnToDelete, setColumnToDelete] = useState<Field | null>(null);
   const [selectedRows, setSelectedRows] = useState<Set<number>>(createEmptySet());
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -808,6 +809,12 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
         columnName={columnToDelete?.name || ''}
       />
 
+      <TableSchemaModal
+        open={showSchemaModal}
+        onClose={() => setShowSchemaModal(false)}
+        table={activeTable}
+      />
+
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div
@@ -844,14 +851,14 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
                   setShowDeleteConfirm(false);
                   setDeleteType(null);
                 }}
-                className="px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                className="px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 cursor-pointer"
                 type="button"
               >
                 Cancel
               </button>
               <button
                 onClick={deleteType === 'rows' ? handleDeleteRows : handleDeleteTable}
-                className="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                className="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 cursor-pointer"
                 type="button"
               >
                 Delete
@@ -883,7 +890,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
               {imageModal.name}
             </div>
             <button
-              className="px-4 py-2 text-white bg-blue-600 rounded transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="px-4 py-2 text-white bg-blue-600 rounded transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
               onClick={() => setImageModal(null)}
               type="button"
               aria-label="Close image preview"
@@ -900,7 +907,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
           {selectedRows.size > 0 && (
             <button
               onClick={() => confirmDelete('rows')}
-              className="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
+              className="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer"
               type="button"
             >
               <Trash2 className="mr-1 w-4 h-4" /> Delete {selectedRows.size} Row
@@ -947,8 +954,16 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
 
         <div className="flex items-center space-x-2">
           <button
+            onClick={() => setShowSchemaModal(true)}
+            className="flex items-center p-1 text-xs font-medium rounded-md transition-colors cursor-pointer md:py-2 md:px-3 md:text-sm"
+            type="button"
+          >
+            <Code className="mr-1 w-4 h-4" /> Schema
+          </button>
+
+          <button
             onClick={() => setShowAddColumn(true)}
-            className="flex items-center p-1 text-xs font-medium rounded-md transition-colors md:py-2 md:px-3 md:text-sm"
+            className="flex items-center p-1 text-xs font-medium rounded-md transition-colors cursor-pointer md:py-2 md:px-3 md:text-sm"
             type="button"
           >
             <Plus className="mr-1 w-4 h-4" /> Add Column
@@ -956,7 +971,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
 
           <button
             onClick={() => confirmDelete('table')}
-            className="flex items-center p-1 text-xs font-medium rounded-md transition-colors md:px-3 md:py-2 md:text-sm"
+            className="flex items-center p-1 text-xs font-medium rounded-md transition-colors cursor-pointer md:px-3 md:py-2 md:text-sm"
             type="button"
           >
             <Trash2 className="mr-1 w-4 h-4" /> Delete Table

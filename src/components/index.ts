@@ -27,6 +27,7 @@ export { default as ImagesCellEditor } from './data-grid/celleditors/ImagesCellE
 // Modal components
 export { default as AddColumnModal } from './modals/AddColumnModal';
 export { default as DeleteColumnModal } from './modals/DeleteColumnModal';
+export { default as TableSchemaModal } from './modals/TableSchemaModal';
 
 // Other components
 export { default as ClientApp } from './ClientApp';

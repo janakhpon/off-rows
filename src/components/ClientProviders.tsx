@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { ThemeProvider } from '@/app/contexts/ThemeContext';
 import { TableProvider } from '@/app/contexts/TableContext';
+import { NotificationProvider } from '@/app/contexts/NotificationContext';
 import { ErrorBoundary, OfflineIndicator } from '@/components';
 
 interface ClientProvidersProps {
@@ -39,8 +40,10 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
     <ErrorBoundary>
       <ThemeProvider>
         <TableProvider>
-          <OfflineIndicator />
-          <Suspense fallback={<StaticLoading />}>{children}</Suspense>
+          <NotificationProvider>
+            <OfflineIndicator />
+            <Suspense fallback={<StaticLoading />}>{children}</Suspense>
+          </NotificationProvider>
         </TableProvider>
       </ThemeProvider>
     </ErrorBoundary>
