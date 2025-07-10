@@ -19,6 +19,7 @@ import ImagesCellEditor from './celleditors/ImagesCellEditor';
 import FilesCellEditor from './celleditors/FilesCellEditor';
 import ImageCellEditor from './celleditors/ImageCellEditor';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type DataGridRow = {
   id: number;
@@ -308,7 +309,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
     .filter((row): row is TableRow & { id: number } => row.id !== undefined)
     .map((row) => row.id);
   const allSelected = selectedRows.size > 0 && allRowIds.every((id) => selectedRows.has(id));
-  const someSelected = selectedRows.size > 0 && !allSelected;
+
   const handleSelectAll = useCallback(
     (checked: boolean) => {
       if (checked) {
@@ -352,27 +353,32 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
     const selectCol = {
       key: 'select',
       name: (
-        <input
-          type="checkbox"
-          checked={allSelected}
-          ref={(el) => {
-            if (el) el.indeterminate = someSelected;
-          }}
-          onChange={(e) => handleSelectAll(e.target.checked)}
-          aria-label="Select all rows"
-          className="accent-blue-600"
-        />
+        <div className="flex justify-center items-center">
+          <Checkbox
+            checked={allSelected}
+            onCheckedChange={handleSelectAll}
+            aria-label="Select all rows"
+            className="cursor-pointer"
+            ref={(el) => {
+              if (el) {
+                // Note: Radix UI Checkbox doesn't support indeterminate state directly
+                // We'll handle this with custom styling or logic if needed
+              }
+            }}
+          />
+        </div>
       ),
       width: 40,
       resizable: false,
       renderCell: ({ row }: RenderCellProps<DataGridRow>) => (
-        <input
-          type="checkbox"
-          checked={selectedRows.has(row.id)}
-          onChange={(e) => handleSelectRow(row.id, e.target.checked)}
-          aria-label="Select row"
-          className="accent-blue-600"
-        />
+        <div className="flex justify-center items-center">
+          <Checkbox
+            checked={selectedRows.has(row.id)}
+            onCheckedChange={(checked) => handleSelectRow(row.id, !!checked)}
+            aria-label="Select row"
+            className="cursor-pointer"
+          />
+        </div>
       ),
       headerCellClass: 'text-center',
       cellClass: 'text-center',
@@ -632,7 +638,6 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
     getColWidth,
     selectedRows,
     allSelected,
-    someSelected,
     editingCell,
     getFileUrl,
     handleSelectAll,
@@ -780,7 +785,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
   }
 
   return (
-    <div className="flex overflow-auto flex-col flex-grow px-2 min-w-0">
+    <div className="flex overflow-auto flex-col flex-grow px-1 min-w-0 sm:px-2">
       {/* Modals */}
       <AddColumnModal
         open={showAddColumn}
@@ -828,19 +833,18 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
           aria-labelledby="delete-modal-title"
         >
           <div
-            className="p-6 mx-4 w-96 max-w-md rounded-lg animate-scale-in"
+            className="p-6 mx-4 w-96 max-w-md bg-white dark:bg-gray-800 rounded-lg animate-scale-in shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center mb-4">
               <AlertTriangle
-                className="mr-3 w-6 h-6"
-                style={{ color: theme === 'dark' ? '#f59e0b' : '#f59e0b' }}
+                className="mr-3 w-6 h-6 text-yellow-500 dark:text-yellow-400"
               />
-              <h2 id="delete-modal-title" className="text-lg font-semibold">
+              <h2 id="delete-modal-title" className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 Confirm Delete
               </h2>
             </div>
-            <p>
+            <p className="text-gray-700 dark:text-gray-300">
               {deleteType === 'rows'
                 ? `Are you sure you want to delete ${selectedRows.size} selected row(s)? This action cannot be undone.`
                 : 'Are you sure you want to delete this entire table? This action cannot be undone.'}
@@ -851,14 +855,14 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
                   setShowDeleteConfirm(false);
                   setDeleteType(null);
                 }}
-                className="px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 cursor-pointer"
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md transition-colors duration-200 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                 type="button"
               >
                 Cancel
               </button>
               <button
                 onClick={deleteType === 'rows' ? handleDeleteRows : handleDeleteTable}
-                className="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 cursor-pointer"
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-500 rounded-md transition-colors duration-200 cursor-pointer hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                 type="button"
               >
                 Delete
@@ -878,7 +882,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
           aria-labelledby="image-modal-title"
         >
           <div
-            className="flex flex-col items-center p-4 w-full max-w-lg bg-white rounded-lg shadow-lg animate-scale-in"
+            className="flex flex-col items-center p-4 w-full max-w-lg bg-white dark:bg-gray-800 rounded-lg shadow-lg animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
             <img
@@ -886,11 +890,11 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
               alt={imageModal.name}
               className="mb-4 max-w-full max-h-96 rounded"
             />
-            <div id="image-modal-title" className="mb-2 text-sm font-medium text-center">
+            <div id="image-modal-title" className="mb-2 text-sm font-medium text-center text-gray-900 dark:text-gray-100">
               {imageModal.name}
             </div>
             <button
-              className="px-4 py-2 text-white bg-blue-600 rounded transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
+              className="px-4 py-2 text-white bg-blue-600 dark:bg-blue-500 rounded transition-colors duration-200 cursor-pointer hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               onClick={() => setImageModal(null)}
               type="button"
               aria-label="Close image preview"
@@ -902,54 +906,57 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
       )}
 
       {/* Toolbar */}
-      <div className="flex justify-between items-center p-2 border-b">
-        <div className="flex items-center space-x-2">
+      <div className="flex flex-col gap-2 justify-between items-start p-2 border-b sm:flex-row sm:items-center">
+        <div className="flex flex-wrap items-center space-x-2">
           {selectedRows.size > 0 && (
             <button
               onClick={() => confirmDelete('rows')}
-              className="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer"
+              className="flex items-center px-2 py-1 text-xs font-medium rounded-md transition-colors cursor-pointer sm:px-3 sm:py-2 sm:text-sm"
               type="button"
             >
-              <Trash2 className="mr-1 w-4 h-4" /> Delete {selectedRows.size} Row
-              {selectedRows.size > 1 ? 's' : ''}
+              <Trash2 className="mr-1 w-3 h-3 sm:w-4 sm:h-4" /> 
+              <span className="hidden sm:inline">Delete {selectedRows.size} Row{selectedRows.size > 1 ? 's' : ''}</span>
+              <span className="sm:hidden">Del {selectedRows.size}</span>
             </button>
           )}
           {/* Row Height Dropdown */}
-          <label className="ml-4 text-xs text-gray-500 dark:text-gray-300">Row height:</label>
-          <select
-            value={rowHeight}
-            onChange={(e) => setRowHeight(Number(e.target.value))}
-            className="px-2 py-2 text-xs rounded border cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400"
-            style={{ minWidth: 100 }}
-          >
-            <option
-              value={40}
-              style={{
-                backgroundColor: theme === 'dark' ? '#1e3a8a' : '#dbeafe',
-                color: theme === 'dark' ? '#93c5fd' : '#1d4ed8',
-              }}
+          <div className="flex items-center space-x-1">
+            <label className="text-xs text-gray-500 dark:text-gray-300">Height:</label>
+            <select
+              value={rowHeight}
+              onChange={(e) => setRowHeight(Number(e.target.value))}
+              className="px-1 py-1 text-xs rounded border cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400"
+              style={{ minWidth: 60 }}
             >
-              Small
-            </option>
-            <option
-              value={60}
-              style={{
-                backgroundColor: theme === 'dark' ? '#1e3a8a' : '#dbeafe',
-                color: theme === 'dark' ? '#93c5fd' : '#1d4ed8',
-              }}
-            >
-              Medium
-            </option>
-            <option
-              value={80}
-              style={{
-                backgroundColor: theme === 'dark' ? '#1e3a8a' : '#dbeafe',
-                color: theme === 'dark' ? '#93c5fd' : '#1d4ed8',
-              }}
-            >
-              Large
-            </option>
-          </select>
+              <option
+                value={40}
+                style={{
+                  backgroundColor: theme === 'dark' ? '#1e3a8a' : '#dbeafe',
+                  color: theme === 'dark' ? '#93c5fd' : '#1d4ed8',
+                }}
+              >
+                Small
+              </option>
+              <option
+                value={60}
+                style={{
+                  backgroundColor: theme === 'dark' ? '#1e3a8a' : '#dbeafe',
+                  color: theme === 'dark' ? '#93c5fd' : '#1d4ed8',
+                }}
+              >
+                Medium
+              </option>
+              <option
+                value={80}
+                style={{
+                  backgroundColor: theme === 'dark' ? '#1e3a8a' : '#dbeafe',
+                  color: theme === 'dark' ? '#93c5fd' : '#1d4ed8',
+                }}
+              >
+                Large
+              </option>
+            </select>
+          </div>
         </div>
 
         <div className="flex items-center space-x-2">
@@ -1003,20 +1010,54 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
         {showSummary && (
           <div
             className={cn(
-              'flex w-full border-t text-xs font-medium',
+              'flex w-full border-t text-xs font-medium transition-colors duration-200 overflow-x-auto',
               theme === 'dark'
-                ? 'bg-blue-950 text-blue-100 border-blue-900'
-                : 'bg-blue-50 text-blue-900 border-blue-200',
+                ? 'bg-gray-800/50 text-gray-200 border-gray-700'
+                : 'bg-gray-50 text-gray-700 border-gray-200',
             )}
           >
-            <div className="px-2 py-2 min-w-[50px] text-center">Summary</div>
-            {/* For each column, show sum if number, else blank */}
+            {/* Row number column */}
+            <div className="flex-shrink-0 px-1 py-2 w-8 font-semibold text-center sm:px-2 sm:py-3 sm:w-12">
+              <span className="hidden sm:inline">Summary</span>
+              <span className="text-xs sm:hidden">Sum</span>
+            </div>
+            
+            {/* Select column */}
+            <div className="flex-shrink-0 px-1 py-2 w-6 text-center sm:px-2 sm:py-3 sm:w-10">
+              {/* Empty space for checkbox column */}
+            </div>
+            
+            {/* Data columns */}
             {activeTable.fields.map((field) => (
-              <div key={field.id} className="px-2 py-2 min-w-[120px] text-right">
-                {field.type === 'number' ? `${field.name}: ${numberFieldSums[field.id]}` : ''}
+              <div 
+                key={field.id} 
+                className={cn(
+                  'flex-shrink-0 px-1 py-2 sm:px-2 sm:py-3 text-right transition-colors duration-200',
+                  field.type === 'number' 
+                    ? theme === 'dark' 
+                      ? 'text-blue-300 font-semibold' 
+                      : 'text-blue-700 font-semibold'
+                    : 'text-gray-400'
+                )}
+                style={{ 
+                  minWidth: Math.max(60, getColWidth(field.id, field.type) * 0.6),
+                  maxWidth: getColWidth(field.id, field.type) * 1.2 
+                }}
+              >
+                {field.type === 'number' ? (
+                  <div className="flex flex-col items-end gap-0.5 sm:gap-1">
+                    <span className="hidden text-xs opacity-75 sm:inline">
+                      {field.name}:
+                    </span>
+                    <span className="font-mono text-xs sm:text-sm">
+                      {numberFieldSums[field.id]?.toLocaleString() || '0'}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-xs opacity-50">-</span>
+                )}
               </div>
             ))}
-            {/* Add extra cells for select/row number columns if needed */}
           </div>
         )}
       </div>

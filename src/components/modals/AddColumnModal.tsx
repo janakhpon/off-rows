@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { FieldSchema, FieldTypeSchema } from '@/lib/schemas';
 import { z } from 'zod';
 import { X } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface AddColumnModalProps {
   open: boolean;
@@ -70,34 +71,34 @@ export default function AddColumnModal({ open, onClose, onAddColumn }: AddColumn
 
   return (
     <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-40">
-      <div className="relative p-6 mx-2 w-full max-w-md bg-white rounded-lg shadow-lg animate-fade-in">
+      <div className="relative p-6 mx-2 w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-lg animate-fade-in">
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 p-1 text-gray-400 transition-colors cursor-pointer hover:text-gray-700"
+          className="absolute top-3 right-3 p-1 text-gray-400 transition-colors cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
           aria-label="Close"
         >
           <X className="w-5 h-5" />
         </button>
-        <h2 className="mb-4 text-lg font-semibold">Add Column</h2>
+        <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Add Column</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block mb-1 text-sm font-medium text-gray-700">Name</label>
+            <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
             <input
               name="name"
               value={form.name}
               onChange={handleChange}
-              className="px-3 py-2 w-full text-sm rounded border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              className="px-3 py-2 w-full text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
               required
               autoFocus
             />
           </div>
           <div>
-            <label className="block mb-1 text-sm font-medium text-gray-700">Type</label>
+            <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
             <select
               name="type"
               value={form.type}
               onChange={handleChange}
-              className="px-3 py-2 w-full text-sm rounded border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              className="px-3 py-2 w-full text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
             >
               {FieldTypeSchema.options.map((type) => (
                 <option key={type} value={type}>
@@ -108,20 +109,20 @@ export default function AddColumnModal({ open, onClose, onAddColumn }: AddColumn
           </div>
           {form.type === 'dropdown' && (
             <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">
+              <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
                 Options (comma separated)
               </label>
               <input
                 name="options"
                 value={form.options.join(', ')}
                 onChange={handleOptionsChange}
-                className="px-3 py-2 w-full text-sm rounded border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-2 w-full text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
               />
             </div>
           )}
           {(form.type === 'images' || form.type === 'files') && (
             <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">
+              <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
                 Default Value (comma separated file names for placeholder only)
               </label>
               <input
@@ -136,25 +137,23 @@ export default function AddColumnModal({ open, onClose, onAddColumn }: AddColumn
                       .filter(Boolean),
                   }))
                 }
-                className="px-3 py-2 w-full text-sm rounded border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-2 w-full text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
               />
             </div>
           )}
           <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
+            <Checkbox
               name="required"
               checked={form.required}
-              onChange={handleChange}
-              className="w-4 h-4 text-blue-600 rounded border-gray-300"
+              onCheckedChange={(checked) => setForm((prev) => ({ ...prev, required: !!checked }))}
             />
-            <label className="text-sm text-gray-700">Required</label>
+            <label className="text-sm text-gray-700 dark:text-gray-300">Required</label>
           </div>
-          {error && <div className="text-sm text-red-600">{error}</div>}
+          {error && <div className="text-sm text-red-600 dark:text-red-400">{error}</div>}
           <div className="flex justify-end">
             <button
               type="submit"
-              className="px-4 py-2 text-white bg-blue-600 rounded transition-colors cursor-pointer hover:bg-blue-700"
+              className="px-4 py-2 text-white bg-blue-600 rounded transition-colors cursor-pointer hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
             >
               Add Column
             </button>

@@ -9,7 +9,7 @@ import {
 } from './schemas';
 
 // Create database instance
-const db = new Dexie('OffrowsDatabase');
+export const db = new Dexie('OffrowsDatabase');
 
 // Define database schema
 db.version(4).stores({
@@ -22,6 +22,13 @@ db.version(4).stores({
 // Initialize with sample data if database is empty
 export async function initializeDatabase() {
   const tableCount = await db.table('tables').count();
+
+  // Check if we should skip initialization (after clearing storage)
+  const skipInitialization = sessionStorage.getItem('skipInitialization');
+  if (skipInitialization === 'true') {
+    sessionStorage.removeItem('skipInitialization');
+    return;
+  }
 
   if (tableCount === 0) {
     const sampleTables: Omit<Table, 'id' | 'createdAt' | 'updatedAt'>[] = [

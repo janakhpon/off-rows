@@ -52,6 +52,9 @@ interface AppState {
   // Add actions for colWidths/rowHeights
   updateColWidths: (tableId: number, colWidths: Record<string, number>) => Promise<void>;
   updateRowHeights: (tableId: number, rowHeights: Record<string, number>) => Promise<void>;
+  
+  // Reset state
+  resetState: () => void;
 }
 
 // Pure functions for state updates
@@ -80,6 +83,7 @@ const createInitialState = (): Omit<
   | 'deleteColumn'
   | 'updateColWidths'
   | 'updateRowHeights'
+  | 'resetState'
 > => ({
   tables: [],
   activeTable: null,
@@ -415,6 +419,20 @@ export const useAppStore = create<AppState>()(
         updateRowHeights: async (tableId, rowHeights) => {
           await tableOperations.updateRowHeights(tableId, rowHeights);
           await get().refreshTables();
+        },
+
+        // Reset state
+        resetState: () => {
+          set({
+            tables: [],
+            activeTable: null,
+            rows: [],
+            views: [],
+            activeView: null,
+            selectedRows: new Set<number>(),
+            loading: false,
+            error: null,
+          });
         },
       }),
       {

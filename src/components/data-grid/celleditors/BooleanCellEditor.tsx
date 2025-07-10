@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect } from 'react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface BooleanCellEditorProps {
   value: boolean;
@@ -9,7 +10,7 @@ interface BooleanCellEditorProps {
 }
 
 const BooleanCellEditor: React.FC<BooleanCellEditorProps> = ({ value, onChange, ariaLabel }) => {
-  const checkboxRef = useRef<HTMLInputElement>(null);
+  const checkboxRef = useRef<HTMLButtonElement>(null);
 
   // Auto-focus on mount
   useEffect(() => {
@@ -20,25 +21,16 @@ const BooleanCellEditor: React.FC<BooleanCellEditorProps> = ({ value, onChange, 
 
   return (
     <div className="flex items-center justify-center h-full w-full">
-      <input
+      <Checkbox
         ref={checkboxRef}
-        type="checkbox"
         checked={value || false}
+        onCheckedChange={onChange}
         aria-label={ariaLabel || 'Toggle value'}
-        className="w-4 h-4 cursor-pointer transition-all duration-150"
-        onChange={(e) => onChange(e.target.checked)}
+        className="cursor-pointer"
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onChange(!value);
-          }
           if (e.key === 'Escape') {
             e.currentTarget.blur();
           }
-        }}
-        style={{
-          accentColor: 'var(--primary)',
-          color: 'inherit',
         }}
       />
     </div>

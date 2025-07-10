@@ -37,7 +37,15 @@ function useTableExportImport(
     for (const row of tableRows) {
       const vals = fieldIds.map((fid: string) => {
         let v = row.data[fid];
-        if (typeof v === 'object' && v !== null) v = JSON.stringify(v);
+        // Handle blob fields - just export the file name or a placeholder
+        if (typeof v === 'object' && v !== null) {
+          if ('fileId' in v && 'name' in v) {
+            // File/image field - export filename
+            v = (v as { name: string }).name || '[File]';
+          } else {
+            v = JSON.stringify(v);
+          }
+        }
         return v === undefined || v === null ? '' : String(v).replace(/"/g, '""');
       });
       csvRows.push(vals.map((val: string) => `"${val}"`).join(','));
@@ -57,7 +65,21 @@ function useTableExportImport(
     if (!activeTable) return;
     const data = tableRows.map((row: TableRow) => {
       const obj: Record<string, unknown> = {};
-      for (const fid of fieldIds) obj[fid] = row.data[fid];
+      for (const fid of fieldIds) {
+        const value = row.data[fid];
+        // Handle blob fields - export file info instead of blob data
+        if (typeof value === 'object' && value !== null && 'fileId' in value) {
+          obj[fid] = {
+            fileId: (value as { fileId: number }).fileId,
+            name: (value as { name: string }).name || 'Unknown file',
+            type: (value as { type: string }).type || 'application/octet-stream',
+            // Note: Actual file content is not included in table export
+            // Use full database export for complete file backup
+          };
+        } else {
+          obj[fid] = value;
+        }
+      }
       return obj;
     });
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });

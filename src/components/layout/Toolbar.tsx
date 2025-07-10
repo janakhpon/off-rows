@@ -16,6 +16,7 @@ import { useTables } from '@/app/contexts/TableContext';
 import { Field, FileValueWithId } from '@/lib/schemas';
 import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function Toolbar() {
   const { activeTable } = useTables();
@@ -301,10 +302,9 @@ export default function Toolbar() {
                           'flex items-center px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100',
                         )}
                       >
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           className={cn(
-                            'mr-3 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500',
+                            'mr-3',
                           )}
                         />
                         {field.name}

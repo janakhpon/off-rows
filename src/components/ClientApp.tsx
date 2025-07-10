@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTables } from '@/app/contexts/TableContext';
 import { useAppStore } from '@/lib/store';
-import { Header, DataGrid as DataGridComponent, OfflineIndicator } from '@/components';
+import { Header, Sidebar, DataGrid as DataGridComponent, OfflineIndicator } from '@/components';
 import { cn } from '@/lib/utils';
 
 // Pure utility functions
@@ -43,6 +43,7 @@ export default function ClientApp() {
   const [showCreateTable, setShowCreateTable] = useState(createEmptyBoolean());
   const [newTableName, setNewTableName] = useState(createEmptyString());
   const [searchQuery, setSearchQuery] = useState('');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Ensure the app is ready after hydration
   useEffect(() => {
@@ -76,45 +77,51 @@ export default function ClientApp() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-white dark:bg-gray-800">
+    <div className="flex h-screen bg-white dark:bg-gray-800">
       <OfflineIndicator />
-      <Header
-        onToggleSidebar={() => {}}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
+      <Sidebar 
+        isCollapsed={sidebarCollapsed} 
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
       />
-      <div className="flex overflow-hidden flex-1">
-        {/* Table Tabs */}
-        <div className="flex flex-col w-full">
-          {/* Tab Bar */}
-          <div className="flex overflow-x-auto items-center px-4 py-2 space-x-2 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
-            {tables.map((table) => (
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <Header
+          onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+        />
+        <div className="flex overflow-hidden flex-1">
+          {/* Table Tabs */}
+          <div className="flex flex-col w-full">
+            {/* Tab Bar */}
+            <div className="flex overflow-x-auto items-center px-4 py-2 space-x-2 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+              {tables.map((table) => (
+                <button
+                  key={table.id}
+                  onClick={() => setActiveTable(table)}
+                  className={cn(
+                    'px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer',
+                    activeTable?.id === table.id
+                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-200'
+                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700',
+                  )}
+                  type="button"
+                >
+                  {table.name}
+                </button>
+              ))}
+              {/* Create Table Button */}
               <button
-                key={table.id}
-                onClick={() => setActiveTable(table)}
-                className={cn(
-                  'px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer',
-                  activeTable?.id === table.id
-                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-200'
-                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700',
-                )}
+                onClick={() => setShowCreateTable(true)}
+                className="cursor-pointer px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900"
                 type="button"
               >
-                {table.name}
+                + New Table
               </button>
-            ))}
-            {/* Create Table Button */}
-            <button
-              onClick={() => setShowCreateTable(true)}
-              className="cursor-pointer px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900"
-              type="button"
-            >
-              + New Table
-            </button>
-          </div>
-          {/* Main Content */}
-          <div className="overflow-hidden flex-1">
-            <DataGridComponent searchQuery={searchQuery} />
+            </div>
+            {/* Main Content */}
+            <div className="overflow-hidden flex-1">
+              <DataGridComponent searchQuery={searchQuery} />
+            </div>
           </div>
         </div>
       </div>
