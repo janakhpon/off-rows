@@ -833,7 +833,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
           aria-labelledby="delete-modal-title"
         >
           <div
-            className="p-6 mx-4 w-96 max-w-md bg-white dark:bg-gray-800 rounded-lg animate-scale-in shadow-lg"
+            className="p-6 mx-4 w-96 max-w-md bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center mb-4">
@@ -855,14 +855,14 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
                   setShowDeleteConfirm(false);
                   setDeleteType(null);
                 }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md transition-colors duration-200 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md transition-colors duration-200 cursor-pointer dark:text-gray-300 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                 type="button"
               >
                 Cancel
               </button>
               <button
                 onClick={deleteType === 'rows' ? handleDeleteRows : handleDeleteTable}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-500 rounded-md transition-colors duration-200 cursor-pointer hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md transition-colors duration-200 cursor-pointer dark:bg-red-500 hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                 type="button"
               >
                 Delete
@@ -882,7 +882,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
           aria-labelledby="image-modal-title"
         >
           <div
-            className="flex flex-col items-center p-4 w-full max-w-lg bg-white dark:bg-gray-800 rounded-lg shadow-lg animate-scale-in"
+            className="flex flex-col items-center p-4 w-full max-w-lg bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
             <img
@@ -894,7 +894,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
               {imageModal.name}
             </div>
             <button
-              className="px-4 py-2 text-white bg-blue-600 dark:bg-blue-500 rounded transition-colors duration-200 cursor-pointer hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="px-4 py-2 text-white bg-blue-600 rounded transition-colors duration-200 cursor-pointer dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               onClick={() => setImageModal(null)}
               type="button"
               aria-label="Close image preview"
@@ -1046,7 +1046,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
               >
                 {field.type === 'number' ? (
                   <div className="flex flex-col items-end gap-0.5 sm:gap-1">
-                    <span className="hidden text-xs opacity-75 sm:inline">
+                    <span className="hidden text-xs text-gray-900 opacity-75 sm:inline dark:text-gray-300">
                       {field.name}:
                     </span>
                     <span className="font-mono text-xs sm:text-sm">
