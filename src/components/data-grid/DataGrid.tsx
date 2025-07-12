@@ -306,10 +306,10 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
   const [imageModal, setImageModal] = useState<{ images: { url: string; name: string; fileId: number }[]; index: number } | null>(null);
   const [imageModalFullscreen, setImageModalFullscreen] = useState(false);
   // Helper to open modal for single or multiple images
-  const openImageModal = (images: { url: string; name: string; fileId: number }[], index: number) => {
+  const openImageModal = useCallback((images: { url: string; name: string; fileId: number }[], index: number) => {
     setImageModal({ images, index });
     setImageModalFullscreen(false);
-  };
+  }, []);
   // --- SELECT ALL CHECKBOX LOGIC ---
   const allRowIds = orderedRows
     .filter((row): row is TableRow & { id: number } => row.id !== undefined)
@@ -1117,7 +1117,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
             {/* Row number column */}
             <div className="flex-shrink-0 px-1 py-2 w-8 min-w-0 font-semibold text-center sm:px-2 sm:py-3 sm:w-12">
               <span className="hidden font-mono text-sm text-gray-800 whitespace-nowrap sm:inline dark:text-gray-100">Summary</span>
-              <span className="text-gray-800 whitespace-nowrap  sm:hidden dark:text-gray-100">Sum</span>
+              <span className="text-gray-800 whitespace-nowrap sm:hidden dark:text-gray-100">Sum</span>
             </div>
 
             {/* Select column */}

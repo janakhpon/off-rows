@@ -276,607 +276,625 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile overlay */}
+      {/* Mobile overlay with blur effect */}
       {!isCollapsed && (
         <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden modal-backdrop"
+          className="fixed inset-0 z-40 backdrop-blur-sm bg-black/20 md:hidden transition-all duration-300 ease-in-out"
           onClick={onToggle}
         />
       )}
 
-      {/* Sidebar - only render when not collapsed */}
-      {!isCollapsed && (
+      {/* Sidebar with improved animations */}
+      <div
+        className={cn(
+          'fixed md:relative z-50 h-full shadow-lg transition-all duration-300 ease-in-out',
+          theme === 'dark' ? 'bg-gray-800/95 border-gray-700' : 'bg-white/95 border-gray-200',
+          'border-r backdrop-blur-md',
+          'w-80',
+          isCollapsed 
+            ? '-translate-x-full md:translate-x-0 md:w-0 md:opacity-0 md:overflow-hidden' 
+            : 'translate-x-0 md:w-80 md:opacity-100',
+        )}
+      >
+        {/* Header with smooth transitions */}
         <div
           className={cn(
-            'fixed md:relative z-50 h-full shadow-sm transition-all duration-300 ease-in-out',
-            theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200',
-            'border-r',
-            'w-80',
-            'translate-x-0',
+            'flex justify-between items-center p-4 transition-all duration-200',
+            theme === 'dark' ? 'bg-gray-700/90' : 'bg-gray-50/90',
+            'backdrop-blur-sm',
           )}
         >
-          {/* Header */}
-          <div
-            className={cn(
-              'flex justify-between items-center p-4',
-              theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50',
-            )}
-          >
-            {showSettings ? (
-              <>
-                <Settings className="w-6 h-6 text-blue-600" />
-                <span className="font-semibold text-gray-900 dark:text-gray-100">Settings</span>
-              </>
-            ) : (
-              <>
-                <Settings className="w-6 h-6 text-blue-600" />
-                <span className="font-semibold text-gray-900 dark:text-gray-100">Application</span>
-              </>
-            )}
-            {showSettings && (
-              <button
-                onClick={() => setShowSettings(false)}
-                className={cn(
-                  'p-2 rounded-lg transition-colors duration-200 cursor-pointer focus-ring',
-                  theme === 'dark'
-                    ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-600'
-                    : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100',
-                )}
-                type="button"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
+          {showSettings ? (
+            <>
+              <Settings className="w-6 h-6 text-blue-600 transition-colors duration-200" />
+              <span className="font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Settings</span>
+            </>
+          ) : (
+            <>
+              <Settings className="w-6 h-6 text-blue-600 transition-colors duration-200" />
+              <span className="font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Application</span>
+            </>
+          )}
+          {showSettings && (
+            <button
+              onClick={() => setShowSettings(false)}
+              className={cn(
+                'p-2 rounded-lg transition-all duration-200 cursor-pointer focus-ring hover:scale-105',
+                theme === 'dark'
+                  ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-600'
+                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100',
+              )}
+              type="button"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
 
-          {/* Content */}
-          <div className="overflow-y-auto flex-1">
-            {!showSettings ? (
-              // Main menu
-              <div className="p-4">
-                <div className="mb-4">
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    Application
-                  </h3>
-                </div>
-                {/* Main Actions */}
-                <div className="space-y-1">
-                  <button
-                    onClick={handleSettings}
-                    className={cn(
-                      'w-full text-left p-2 rounded-lg transition-all duration-200 cursor-pointer group border border-transparent',
-                      theme === 'dark'
-                        ? 'text-gray-300 hover:bg-gray-700 hover:text-gray-100'
-                        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900',
-                      'flex items-center space-x-2',
-                    )}
-                    type="button"
-                  >
-                    <Settings
-                      className={cn(
-                        'w-4 h-4',
-                        'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300',
-                      )}
-                    />
-                    <span className="text-sm">Settings</span>
-                  </button>
-
-                  <button
-                    onClick={handleHelp}
-                    className={cn(
-                      'w-full text-left p-2 rounded-lg transition-all duration-200 cursor-pointer group border border-transparent',
-                      theme === 'dark'
-                        ? 'text-gray-300 hover:bg-gray-700 hover:text-gray-100'
-                        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900',
-                      'flex items-center space-x-2',
-                    )}
-                    type="button"
-                  >
-                    <HelpCircle
-                      className={cn(
-                        'w-4 h-4',
-                        'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300',
-                      )}
-                    />
-                    <span className="text-sm">Help</span>
-                  </button>
-
-                  <button
-                    onClick={handleGithub}
-                    className={cn(
-                      'w-full text-left p-2 rounded-lg transition-all duration-200 cursor-pointer group border border-transparent',
-                      theme === 'dark'
-                        ? 'text-gray-300 hover:bg-gray-700 hover:text-gray-100'
-                        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900',
-                      'flex items-center space-x-2',
-                    )}
-                    type="button"
-                  >
-                    <Github
-                      className={cn(
-                        'w-4 h-4',
-                        'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300',
-                      )}
-                    />
-                    <span className="text-sm">GitHub</span>
-                  </button>
-                </div>
+        {/* Content with smooth scrolling */}
+        <div className="overflow-y-auto flex-1 scroll-smooth">
+          {!showSettings ? (
+            // Main menu with enhanced animations
+            <div className="p-4 space-y-2">
+              <div className="mb-4 animate-fade-in">
+                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                  Application
+                </h3>
               </div>
-            ) : (
-              // Settings content
-              <div className="p-4 space-y-6">
-                {/* Message */}
-                {message && (
-                  <div
+              {/* Main Actions with hover animations */}
+              <div className="space-y-1">
+                <button
+                  onClick={handleSettings}
+                  className={cn(
+                    'w-full text-left p-3 rounded-lg transition-all duration-200 cursor-pointer group border border-transparent',
+                    'hover:scale-[1.02] hover:shadow-sm',
+                    theme === 'dark'
+                      ? 'text-gray-300 hover:bg-gray-700/80 hover:text-gray-100'
+                      : 'text-gray-700 hover:bg-gray-50/80 hover:text-gray-900',
+                    'flex items-center space-x-3',
+                  )}
+                  type="button"
+                >
+                  <Settings
                     className={cn(
-                      'p-3 rounded-lg',
-                      message.type === 'success'
-                        ? 'bg-green-50 text-green-800 border border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-700'
-                        : 'bg-red-50 text-red-800 border border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-700',
+                      'w-4 h-4 transition-all duration-200',
+                      'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300',
+                      'group-hover:scale-110',
                     )}
-                  >
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">{message.text}</span>
-                      <button
-                        onClick={clearMessage}
-                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                        type="button"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
+                  />
+                  <span className="text-sm font-medium">Settings</span>
+                </button>
+
+                <button
+                  onClick={handleHelp}
+                  className={cn(
+                    'w-full text-left p-3 rounded-lg transition-all duration-200 cursor-pointer group border border-transparent',
+                    'hover:scale-[1.02] hover:shadow-sm',
+                    theme === 'dark'
+                      ? 'text-gray-300 hover:bg-gray-700/80 hover:text-gray-100'
+                      : 'text-gray-700 hover:bg-gray-50/80 hover:text-gray-900',
+                    'flex items-center space-x-3',
+                  )}
+                  type="button"
+                >
+                  <HelpCircle
+                    className={cn(
+                      'w-4 h-4 transition-all duration-200',
+                      'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300',
+                      'group-hover:scale-110',
+                    )}
+                  />
+                  <span className="text-sm font-medium">Help</span>
+                </button>
+
+                <button
+                  onClick={handleGithub}
+                  className={cn(
+                    'w-full text-left p-3 rounded-lg transition-all duration-200 cursor-pointer group border border-transparent',
+                    'hover:scale-[1.02] hover:shadow-sm',
+                    theme === 'dark'
+                      ? 'text-gray-300 hover:bg-gray-700/80 hover:text-gray-100'
+                      : 'text-gray-700 hover:bg-gray-50/80 hover:text-gray-900',
+                    'flex items-center space-x-3',
+                  )}
+                  type="button"
+                >
+                  <Github
+                    className={cn(
+                      'w-4 h-4 transition-all duration-200',
+                      'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300',
+                      'group-hover:scale-110',
+                    )}
+                  />
+                  <span className="text-sm font-medium">GitHub</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            // Settings content with enhanced animations
+            <div className="p-4 space-y-6 animate-fade-in">
+              {/* Message with slide-in animation */}
+              {message && (
+                <div
+                  className={cn(
+                    'p-3 rounded-lg transition-all duration-300 ease-out animate-slide-in-right',
+                    message.type === 'success'
+                      ? 'bg-green-50 text-green-800 border border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-700'
+                      : 'bg-red-50 text-red-800 border border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-700',
+                  )}
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">{message.text}</span>
+                    <button
+                      onClick={clearMessage}
+                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 hover:scale-110"
+                      type="button"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Cloud Sync Section */}
+              {/* Cloud Sync Section with enhanced styling */}
+              <div className="space-y-3 animate-fade-in-up">
+                <h3 className="flex items-center space-x-2 text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                  <Cloud className="w-4 h-4 text-blue-600 transition-colors duration-200" />
+                  <span>Cloud Sync</span>
+                </h3>
+
                 <div className="space-y-3">
-                  <h3 className="flex items-center space-x-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-                    <Cloud className="w-4 h-4 text-blue-600" />
-                    <span>Cloud Sync</span>
-                  </h3>
-
-                  <div className="space-y-3">
-                    {/* Enable Sync Toggle */}
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-xs font-medium text-gray-900 dark:text-gray-100">
-                          Enable Cloud Sync
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {isOnline
-                            ? 'Sync data with cloud storage'
-                            : 'Requires internet connection'}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => setSyncEnabled(!syncEnabled)}
-                        disabled={!isOnline}
-                        className={cn(
-                          'inline-flex relative items-center w-11 h-6 rounded-full transition-colors duration-200 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
-                          syncEnabled
-                            ? 'bg-blue-600 hover:bg-blue-700'
-                            : 'bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500',
-                        )}
-                        type="button"
-                      >
-                        <span className="sr-only">Enable cloud sync</span>
-                        <span
-                          className={cn(
-                            'inline-block w-4 h-4 bg-white rounded-full transition-transform duration-200 transform',
-                            syncEnabled ? 'translate-x-6' : 'translate-x-1',
-                          )}
-                        />
-                      </button>
+                  {/* Enable Sync Toggle with enhanced animations */}
+                  <div className="flex justify-between items-center p-3 rounded-lg transition-all duration-200 hover:bg-gray-50/50 dark:hover:bg-gray-700/50">
+                    <div>
+                      <p className="text-xs font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                        Enable Cloud Sync
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                        {isOnline
+                          ? 'Sync data with cloud storage'
+                          : 'Requires internet connection'}
+                      </p>
                     </div>
-
-                    {/* Connection Status */}
-                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg dark:bg-gray-700">
-                      <div className="flex items-center space-x-2">
-                        {isOnline ? (
-                          <Wifi className="w-3 h-3 text-green-600" />
-                        ) : (
-                          <WifiOff className="w-3 h-3 text-gray-400" />
-                        )}
-                        <span className="text-xs text-gray-600 dark:text-gray-300">
-                          {isOnline ? 'Online' : 'Offline'}
-                        </span>
-                      </div>
-                      {lastSyncTime && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          Last: {new Date(lastSyncTime).toLocaleTimeString()}
-                        </span>
+                    <button
+                      onClick={() => setSyncEnabled(!syncEnabled)}
+                      disabled={!isOnline}
+                      className={cn(
+                        'inline-flex relative items-center w-11 h-6 rounded-full transition-all duration-300 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
+                        'hover:scale-105',
+                        syncEnabled
+                          ? 'bg-blue-600 hover:bg-blue-700 shadow-lg'
+                          : 'bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500',
                       )}
+                      type="button"
+                    >
+                      <span className="sr-only">Enable cloud sync</span>
+                      <span
+                        className={cn(
+                          'inline-block w-4 h-4 bg-white rounded-full transition-all duration-300 transform shadow-md',
+                          syncEnabled ? 'translate-x-6' : 'translate-x-1',
+                        )}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Connection Status with enhanced styling */}
+                  <div className="flex justify-between items-center p-3 bg-gray-50/80 rounded-lg dark:bg-gray-700/80 transition-all duration-200 hover:bg-gray-100/80 dark:hover:bg-gray-600/80">
+                    <div className="flex items-center space-x-2">
+                      {isOnline ? (
+                        <Wifi className="w-3 h-3 text-green-600 animate-pulse" />
+                      ) : (
+                        <WifiOff className="w-3 h-3 text-gray-400" />
+                      )}
+                      <span className="text-xs text-gray-600 dark:text-gray-300 transition-colors duration-200">
+                        {isOnline ? 'Online' : 'Offline'}
+                      </span>
                     </div>
+                    {lastSyncTime && (
+                      <span className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                        Last: {new Date(lastSyncTime).toLocaleTimeString()}
+                      </span>
+                    )}
+                  </div>
 
-                    {/* Sync Options - Only show when sync is enabled */}
-                    {syncEnabled && (
-                      <div className="p-3 space-y-3 bg-blue-50 rounded-lg border border-blue-200 dark:bg-blue-900/20 dark:border-blue-700">
-                        {/* Bidirectional Sync */}
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="text-xs font-medium text-gray-900 dark:text-gray-100">
-                              Bidirectional Sync
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              Sync both ways automatically
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => setBidirectionalSync(!bidirectionalSync)}
-                            disabled={!syncEnabled}
-                            className={cn(
-                              'inline-flex relative items-center w-9 h-5 rounded-full transition-colors duration-200 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
-                              bidirectionalSync
-                                ? 'bg-blue-600 hover:bg-blue-700'
-                                : 'bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500',
-                            )}
-                            type="button"
-                          >
-                            <span className="sr-only">Enable bidirectional sync</span>
-                            <span
-                              className={cn(
-                                'inline-block w-3 h-3 bg-white rounded-full transition-transform duration-200 transform',
-                                bidirectionalSync ? 'translate-x-5' : 'translate-x-1',
-                              )}
-                            />
-                          </button>
+                  {/* Sync Options - Only show when sync is enabled */}
+                  {syncEnabled && (
+                    <div className="p-3 space-y-3 bg-blue-50/80 rounded-lg border border-blue-200 dark:bg-blue-900/20 dark:border-blue-700 transition-all duration-300 animate-fade-in-up">
+                      {/* Bidirectional Sync */}
+                      <div className="flex justify-between items-center p-2 rounded-lg transition-all duration-200 hover:bg-blue-100/50 dark:hover:bg-blue-800/30">
+                        <div>
+                          <p className="text-xs font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                            Bidirectional Sync
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                            Sync both ways automatically
+                          </p>
                         </div>
-
-                        {/* Auto Sync */}
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="text-xs font-medium text-gray-900 dark:text-gray-100">
-                              Auto Sync
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              Sync automatically when online
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => setAutoSync(!autoSync)}
-                            disabled={!syncEnabled}
+                        <button
+                          onClick={() => setBidirectionalSync(!bidirectionalSync)}
+                          disabled={!syncEnabled}
+                          className={cn(
+                            'inline-flex relative items-center w-9 h-5 rounded-full transition-all duration-300 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
+                            'hover:scale-105',
+                            bidirectionalSync
+                              ? 'bg-blue-600 hover:bg-blue-700 shadow-md'
+                              : 'bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500',
+                          )}
+                          type="button"
+                        >
+                          <span className="sr-only">Enable bidirectional sync</span>
+                          <span
                             className={cn(
-                              'inline-flex relative items-center w-9 h-5 rounded-full transition-colors duration-200 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
-                              autoSync
-                                ? 'bg-blue-600 hover:bg-blue-700'
-                                : 'bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500',
+                              'inline-block w-3 h-3 bg-white rounded-full transition-all duration-300 transform shadow-sm',
+                              bidirectionalSync ? 'translate-x-5' : 'translate-x-1',
                             )}
-                            type="button"
-                          >
-                            <span className="sr-only">Enable auto sync</span>
-                            <span
-                              className={cn(
-                                'inline-block w-3 h-3 bg-white rounded-full transition-transform duration-200 transform',
-                                autoSync ? 'translate-x-5' : 'translate-x-1',
-                              )}
-                            />
-                          </button>
-                        </div>
+                          />
+                        </button>
+                      </div>
 
-                        {/* Manual Sync Buttons */}
-                        <div className="space-y-2">
+                      {/* Auto Sync */}
+                      <div className="flex justify-between items-center p-2 rounded-lg transition-all duration-200 hover:bg-blue-100/50 dark:hover:bg-blue-800/30">
+                        <div>
+                          <p className="text-xs font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                            Auto Sync
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                            Sync automatically when online
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setAutoSync(!autoSync)}
+                          disabled={!syncEnabled}
+                          className={cn(
+                            'inline-flex relative items-center w-9 h-5 rounded-full transition-all duration-300 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
+                            'hover:scale-105',
+                            autoSync
+                              ? 'bg-blue-600 hover:bg-blue-700 shadow-md'
+                              : 'bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500',
+                          )}
+                          type="button"
+                        >
+                          <span className="sr-only">Enable auto sync</span>
+                          <span
+                            className={cn(
+                              'inline-block w-3 h-3 bg-white rounded-full transition-all duration-300 transform shadow-sm',
+                              autoSync ? 'translate-x-5' : 'translate-x-1',
+                            )}
+                          />
+                        </button>
+                      </div>
+
+                      {/* Manual Sync Buttons with enhanced styling */}
+                      <div className="space-y-2">
+                        <button
+                          disabled={!syncEnabled || !isOnline}
+                          className={cn(
+                            'flex items-center px-3 py-2 space-x-2 w-full text-xs rounded-lg transition-all duration-200 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
+                            'hover:scale-[1.02] hover:shadow-sm',
+                            theme === 'dark'
+                              ? 'text-gray-300 bg-gray-700/80 hover:bg-gray-600'
+                              : 'text-gray-700 bg-gray-50/80 hover:bg-gray-100',
+                          )}
+                          type="button"
+                        >
+                          <ArrowUpDown className="w-3 h-3" />
+                          <span>Sync All</span>
+                        </button>
+
+                        <div className="grid grid-cols-2 gap-2">
                           <button
                             disabled={!syncEnabled || !isOnline}
                             className={cn(
-                              'flex items-center px-3 py-2 space-x-2 w-full text-xs rounded-lg transition-colors duration-200 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
+                              'flex items-center px-2 py-2 space-x-1 text-xs rounded-lg transition-all duration-200 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
+                              'hover:scale-[1.02] hover:shadow-sm',
                               theme === 'dark'
-                                ? 'text-gray-300 bg-gray-700 hover:bg-gray-600'
-                                : 'text-gray-700 bg-gray-50 hover:bg-gray-100',
+                                ? 'text-gray-300 bg-gray-700/80 hover:bg-gray-600'
+                                : 'text-gray-700 bg-gray-50/80 hover:bg-gray-100',
                             )}
                             type="button"
                           >
-                            <ArrowUpDown className="w-3 h-3" />
-                            <span>Sync All</span>
+                            <ArrowUp className="w-3 h-3" />
+                            <span>Upload</span>
                           </button>
 
-                          <div className="grid grid-cols-2 gap-2">
-                            <button
-                              disabled={!syncEnabled || !isOnline}
-                              className={cn(
-                                'flex items-center px-2 py-2 space-x-1 text-xs rounded-lg transition-colors duration-200 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
-                                theme === 'dark'
-                                  ? 'text-gray-300 bg-gray-700 hover:bg-gray-600'
-                                  : 'text-gray-700 bg-gray-50 hover:bg-gray-100',
-                              )}
-                              type="button"
-                            >
-                              <ArrowUp className="w-3 h-3" />
-                              <span>Upload</span>
-                            </button>
-
-                            <button
-                              disabled={!syncEnabled || !isOnline}
-                              className={cn(
-                                'flex items-center px-2 py-2 space-x-1 text-xs rounded-lg transition-colors duration-200 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
-                                theme === 'dark'
-                                  ? 'text-gray-300 bg-gray-700 hover:bg-gray-600'
-                                  : 'text-gray-700 bg-gray-50 hover:bg-gray-100',
-                              )}
-                              type="button"
-                            >
-                              <ArrowDown className="w-3 h-3" />
-                              <span>Download</span>
-                            </button>
-                          </div>
+                          <button
+                            disabled={!syncEnabled || !isOnline}
+                            className={cn(
+                              'flex items-center px-2 py-2 space-x-1 text-xs rounded-lg transition-all duration-200 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
+                              'hover:scale-[1.02] hover:shadow-sm',
+                              theme === 'dark'
+                                ? 'text-gray-300 bg-gray-700/80 hover:bg-gray-600'
+                                : 'text-gray-700 bg-gray-50/80 hover:bg-gray-100',
+                            )}
+                            type="button"
+                          >
+                            <ArrowDown className="w-3 h-3" />
+                            <span>Download</span>
+                          </button>
                         </div>
                       </div>
-                    )}
+                    </div>
+                  )}
 
-                    {/* Sync Status Indicators */}
-                    {syncEnabled && (
+                  {/* Sync Status Indicators with enhanced styling */}
+                  {syncEnabled && (
+                    <div className="space-y-2 p-3 bg-gray-50/80 rounded-lg dark:bg-gray-700/80 transition-all duration-200">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-600 dark:text-gray-400 transition-colors duration-200">Pending Changes:</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                          {pendingCount}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-600 dark:text-gray-400 transition-colors duration-200">Synced Items:</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                          {syncedCount}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Image Settings Section with enhanced animations */}
+              <div className="space-y-3 animate-fade-in-up">
+                <h3 className="flex items-center space-x-2 text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                  <Image className="w-4 h-4 text-blue-600 transition-colors duration-200" aria-hidden="true" />
+                  <span>Image Settings</span>
+                </h3>
+
+                <div className="space-y-3">
+                  {/* Convert to WebP Toggle with enhanced styling */}
+                  <div className="flex justify-between items-center p-3 rounded-lg transition-all duration-200 hover:bg-gray-50/50 dark:hover:bg-gray-700/50">
+                    <div>
+                      <p className="text-xs font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                        Convert to WebP
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                        Convert images to WebP format after compression
+                      </p>
+                    </div>
+                    <Switch
+                      checked={convertToWebP}
+                      onCheckedChange={setConvertToWebP}
+                      className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-gray-600 transition-all duration-200 hover:scale-105"
+                    />
+                  </div>
+
+                  {/* Image Quality Slider with enhanced styling */}
+                  <div className="space-y-2 p-3 rounded-lg transition-all duration-200 hover:bg-gray-50/50 dark:hover:bg-gray-700/50">
+                    <div className="flex justify-between items-center">
+                      <p className="text-xs font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                        Image Quality
+                      </p>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                        {imageQuality[0]}%
+                      </span>
+                    </div>
+                    <Slider
+                      value={imageQuality}
+                      onValueChange={setImageQuality}
+                      max={100}
+                      min={10}
+                      step={5}
+                      className="w-full transition-all duration-200"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                      Higher quality = larger file size
+                    </p>
+                  </div>
+
+                  {/* Sync Images to S3 Toggle with enhanced styling */}
+                  <div className="flex justify-between items-center p-3 rounded-lg transition-all duration-200 hover:bg-gray-50/50 dark:hover:bg-gray-700/50">
+                    <div>
+                      <p className="text-xs font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                        Sync Images to S3
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                        {isOnline
+                          ? 'Sync images to AWS S3 when online'
+                          : 'Requires internet connection'}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={syncImagesToS3}
+                      onCheckedChange={handleSyncImagesToS3Toggle}
+                      disabled={!isOnline}
+                      className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-gray-600 disabled:opacity-50 transition-all duration-200 hover:scale-105"
+                    />
+                  </div>
+
+                  {/* Show Image Notifications Toggle with enhanced styling */}
+                  <div className="flex justify-between items-center p-3 rounded-lg transition-all duration-200 hover:bg-gray-50/50 dark:hover:bg-gray-700/50">
+                    <div>
+                      <p className="text-xs font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                        Display Image Notifications
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                        Show compression and conversion status notifications
+                      </p>
+                    </div>
+                    <Switch
+                      checked={showImageNotifications}
+                      onCheckedChange={setShowImageNotifications}
+                      className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-gray-600 transition-all duration-200 hover:scale-105"
+                    />
+                  </div>
+
+                  {/* Image Sync Status with enhanced styling */}
+                  {syncImagesToS3 && (
+                    <div className="p-3 bg-blue-50/80 rounded-lg border border-blue-200 dark:bg-blue-900/20 dark:border-blue-700 transition-all duration-300 animate-fade-in-up">
                       <div className="space-y-2">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-gray-600 dark:text-gray-400">Pending Changes:</span>
-                          <span className="font-medium text-gray-900 dark:text-gray-100">
+                          <span className="text-gray-600 dark:text-gray-400 transition-colors duration-200">
+                            Pending Images:
+                          </span>
+                          <span className="font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
                             {pendingCount}
                           </span>
                         </div>
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-gray-600 dark:text-gray-400">Synced Items:</span>
-                          <span className="font-medium text-gray-900 dark:text-gray-100">
+                          <span className="text-gray-600 dark:text-gray-400 transition-colors duration-200">Synced Images:</span>
+                          <span className="font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
                             {syncedCount}
                           </span>
                         </div>
                       </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Image Settings Section */}
-                <div className="space-y-3">
-                  <h3 className="flex items-center space-x-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-                    <Image className="w-4 h-4 text-blue-600" aria-hidden="true" />
-                    <span>Image Settings</span>
-                  </h3>
-
-                  <div className="space-y-3">
-                    {/* Convert to WebP Toggle */}
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-xs font-medium text-gray-900 dark:text-gray-100">
-                          Convert to WebP
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Convert images to WebP format after compression
-                        </p>
-                      </div>
-                      <Switch
-                        checked={convertToWebP}
-                        onCheckedChange={setConvertToWebP}
-                        className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-gray-600"
-                      />
                     </div>
+                  )}
+                </div>
+              </div>
 
-                    {/* Image Quality Slider */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <p className="text-xs font-medium text-gray-900 dark:text-gray-100">
-                          Image Quality
-                        </p>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {imageQuality[0]}%
-                        </span>
-                      </div>
-                      <Slider
-                        value={imageQuality}
-                        onValueChange={setImageQuality}
-                        max={100}
-                        min={10}
-                        step={5}
-                        className="w-full"
-                      />
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Higher quality = larger file size
+              {/* Security Section with enhanced styling */}
+              <div className="space-y-3 animate-fade-in-up">
+                <h3 className="flex items-center space-x-2 text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                  <Shield className="w-4 h-4 text-blue-600 transition-colors duration-200" />
+                  <span>Security</span>
+                </h3>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center p-3 rounded-lg transition-all duration-200 hover:bg-gray-50/50 dark:hover:bg-gray-700/50">
+                    <div>
+                      <p className="text-xs font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                        Encryption
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                        Encrypt data stored locally (coming soon)
                       </p>
                     </div>
-
-                    {/* Sync Images to S3 Toggle */}
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-xs font-medium text-gray-900 dark:text-gray-100">
-                          Sync Images to S3
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {isOnline
-                            ? 'Sync images to AWS S3 when online'
-                            : 'Requires internet connection'}
-                        </p>
-                      </div>
-                      <Switch
-                        checked={syncImagesToS3}
-                        onCheckedChange={handleSyncImagesToS3Toggle}
-                        disabled={!isOnline}
-                        className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-gray-600 disabled:opacity-50"
-                      />
-                    </div>
-
-                    {/* Show Image Notifications Toggle */}
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-xs font-medium text-gray-900 dark:text-gray-100">
-                          Display Image Notifications
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Show compression and conversion status notifications
-                        </p>
-                      </div>
-                      <Switch
-                        checked={showImageNotifications}
-                        onCheckedChange={setShowImageNotifications}
-                        className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-gray-600"
-                      />
-                    </div>
-
-                    {/* Image Sync Status */}
-                    {syncImagesToS3 && (
-                      <div className="p-2 bg-blue-50 rounded-lg border border-blue-200 dark:bg-blue-900/20 dark:border-blue-700">
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center text-xs">
-                            <span className="text-gray-600 dark:text-gray-400">
-                              Pending Images:
-                            </span>
-                            <span className="font-medium text-gray-900 dark:text-gray-100">
-                              {pendingCount}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center text-xs">
-                            <span className="text-gray-600 dark:text-gray-400">Synced Images:</span>
-                            <span className="font-medium text-gray-900 dark:text-gray-100">
-                              {syncedCount}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Security Section */}
-                <div className="space-y-3">
-                  <h3 className="flex items-center space-x-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-                    <Shield className="w-4 h-4 text-blue-600" />
-                    <span>Security</span>
-                  </h3>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-xs font-medium text-gray-900 dark:text-gray-100">
-                          Encryption
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Encrypt data stored locally (coming soon)
-                        </p>
-                      </div>
-                      <button
-                        disabled
-                        className="inline-flex relative items-center w-9 h-5 bg-gray-200 rounded-full transition-colors duration-200 cursor-not-allowed dark:bg-gray-600"
-                        type="button"
-                      >
-                        <span className="sr-only">Enable encryption</span>
-                        <span className="inline-block w-3 h-3 bg-white rounded-full transition-transform duration-200 transform translate-x-1 dark:bg-gray-300" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Data Management Section */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    Data Management
-                  </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Note: Database export excludes file content to prevent errors. Use individual
-                    table exports for files.
-                  </p>
-
-                  <div className="space-y-2">
-                    {/* Export Database */}
                     <button
-                      onClick={exportDatabase}
-                      disabled={isLoading}
-                      className={cn(
-                        'flex items-center px-3 py-2 space-x-2 w-full text-xs rounded-lg transition-colors duration-200 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
-                        theme === 'dark'
-                          ? 'text-gray-300 bg-gray-700 hover:bg-gray-600'
-                          : 'text-gray-700 bg-gray-50 hover:bg-gray-100',
-                      )}
+                      disabled
+                      className="inline-flex relative items-center w-9 h-5 bg-gray-200 rounded-full transition-all duration-200 cursor-not-allowed dark:bg-gray-600"
                       type="button"
                     >
-                      <Download className="w-3 h-3" />
-                      <span>Export Database (no files)</span>
-                    </button>
-
-                    {/* Import Database */}
-                    <div className="relative">
-                      <input
-                        type="file"
-                        accept=".json"
-                        onChange={importDatabase}
-                        disabled={isLoading}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-                        id="import-database"
-                      />
-                      <label
-                        htmlFor="import-database"
-                        className={cn(
-                          'flex items-center px-3 py-2 space-x-2 w-full text-xs rounded-lg transition-colors duration-200 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
-                          theme === 'dark'
-                            ? 'text-gray-300 bg-gray-700 hover:bg-gray-600'
-                            : 'text-gray-700 bg-gray-50 hover:bg-gray-100',
-                        )}
-                      >
-                        <Upload className="w-3 h-3" />
-                        <span>Import Database</span>
-                      </label>
-                    </div>
-
-                    {/* Reset Database */}
-                    <button
-                      onClick={() => setShowResetConfirm(true)}
-                      disabled={isLoading}
-                      className={cn(
-                        'flex items-center px-3 py-2 space-x-2 w-full text-xs rounded-lg transition-colors duration-200 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
-                        theme === 'dark'
-                          ? 'text-orange-300 bg-orange-900/20 hover:bg-orange-900/30'
-                          : 'text-orange-700 bg-orange-50 hover:bg-orange-100',
-                      )}
-                      type="button"
-                    >
-                      <RotateCcw className="w-3 h-3" />
-                      <span>Reset Database</span>
-                    </button>
-
-                    {/* Clear All Storage */}
-                    <button
-                      onClick={() => setShowClearConfirm(true)}
-                      disabled={isLoading}
-                      className={cn(
-                        'flex items-center px-3 py-2 space-x-2 w-full text-xs rounded-lg transition-colors duration-200 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
-                        theme === 'dark'
-                          ? 'text-red-300 bg-red-900/20 hover:bg-red-900/30'
-                          : 'text-red-700 bg-red-50 hover:bg-red-100',
-                      )}
-                      type="button"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                      <span>Clear All Storage</span>
+                      <span className="sr-only">Enable encryption</span>
+                      <span className="inline-block w-3 h-3 bg-white rounded-full transition-transform duration-200 transform translate-x-1 dark:bg-gray-300" />
                     </button>
                   </div>
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Footer */}
-          <div className={cn('border-t', theme === 'dark' ? 'border-gray-700' : 'border-gray-200')}>
-            <div className="p-4">
-              <div className="text-xs text-gray-500 dark:text-gray-400">Offrows v0.1.0</div>
+              {/* Data Management Section with enhanced styling */}
+              <div className="space-y-3 animate-fade-in-up">
+                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                  Data Management
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                  Note: Database export excludes file content to prevent errors. Use individual
+                  table exports for files.
+                </p>
+
+                <div className="space-y-2">
+                  {/* Export Database with enhanced styling */}
+                  <button
+                    onClick={exportDatabase}
+                    disabled={isLoading}
+                    className={cn(
+                      'flex items-center px-3 py-2 space-x-2 w-full text-xs rounded-lg transition-all duration-200 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
+                      'hover:scale-[1.02] hover:shadow-sm',
+                      theme === 'dark'
+                        ? 'text-gray-300 bg-gray-700/80 hover:bg-gray-600'
+                        : 'text-gray-700 bg-gray-50/80 hover:bg-gray-100',
+                    )}
+                    type="button"
+                  >
+                    <Download className="w-3 h-3 transition-transform duration-200 group-hover:scale-110" />
+                    <span>Export Database (no files)</span>
+                  </button>
+
+                  {/* Import Database with enhanced styling */}
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept=".json"
+                      onChange={importDatabase}
+                      disabled={isLoading}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                      id="import-database"
+                    />
+                    <label
+                      htmlFor="import-database"
+                      className={cn(
+                        'flex items-center px-3 py-2 space-x-2 w-full text-xs rounded-lg transition-all duration-200 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
+                        'hover:scale-[1.02] hover:shadow-sm',
+                        theme === 'dark'
+                          ? 'text-gray-300 bg-gray-700/80 hover:bg-gray-600'
+                          : 'text-gray-700 bg-gray-50/80 hover:bg-gray-100',
+                      )}
+                    >
+                      <Upload className="w-3 h-3 transition-transform duration-200 group-hover:scale-110" />
+                      <span>Import Database</span>
+                    </label>
+                  </div>
+
+                  {/* Reset Database with enhanced styling */}
+                  <button
+                    onClick={() => setShowResetConfirm(true)}
+                    disabled={isLoading}
+                    className={cn(
+                      'flex items-center px-3 py-2 space-x-2 w-full text-xs rounded-lg transition-all duration-200 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
+                      'hover:scale-[1.02] hover:shadow-sm',
+                      theme === 'dark'
+                        ? 'text-orange-300 bg-orange-900/20 hover:bg-orange-900/30'
+                        : 'text-orange-700 bg-orange-50/80 hover:bg-orange-100',
+                    )}
+                    type="button"
+                  >
+                    <RotateCcw className="w-3 h-3 transition-transform duration-200 group-hover:scale-110" />
+                    <span>Reset Database</span>
+                  </button>
+
+                  {/* Clear All Storage with enhanced styling */}
+                  <button
+                    onClick={() => setShowClearConfirm(true)}
+                    disabled={isLoading}
+                    className={cn(
+                      'flex items-center px-3 py-2 space-x-2 w-full text-xs rounded-lg transition-all duration-200 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
+                      'hover:scale-[1.02] hover:shadow-sm',
+                      theme === 'dark'
+                        ? 'text-red-300 bg-red-900/20 hover:bg-red-900/30'
+                        : 'text-red-700 bg-red-50/80 hover:bg-red-100',
+                    )}
+                    type="button"
+                  >
+                    <Trash2 className="w-3 h-3 transition-transform duration-200 group-hover:scale-110" />
+                    <span>Clear All Storage</span>
+                  </button>
+                </div>
+              </div>
             </div>
+          )}
+        </div>
+
+        {/* Footer with enhanced styling */}
+        <div className={cn('border-t transition-colors duration-200', theme === 'dark' ? 'border-gray-700' : 'border-gray-200')}>
+          <div className="p-4">
+            <div className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">Offrows v0.1.0</div>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Clear Storage Confirmation Modal */}
+      {/* Clear Storage Confirmation Modal with enhanced animations */}
       {showClearConfirm && (
-        <div className="flex fixed inset-0 justify-center items-center p-4 z-60">
+        <div className="flex fixed inset-0 justify-center items-center p-4 z-60 animate-fade-in">
           <div
-            className="absolute inset-0 bg-black bg-opacity-50"
+            className="absolute inset-0 backdrop-blur-sm bg-black/30 transition-all duration-300"
             onClick={() => setShowClearConfirm(false)}
           />
           <div
             className={cn(
-              'relative p-6 w-full max-w-md rounded-lg shadow-xl',
-              theme === 'dark' ? 'bg-gray-800' : 'bg-white',
+              'relative p-6 w-full max-w-md rounded-lg shadow-xl transition-all duration-300 animate-scale-in',
+              theme === 'dark' ? 'bg-gray-800/95' : 'bg-white/95',
+              'backdrop-blur-md',
             )}
           >
             <div className="flex items-center mb-4 space-x-3">
-              <AlertTriangle className="w-6 h-6 text-red-600" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              <AlertTriangle className="w-6 h-6 text-red-600 transition-colors duration-200" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">
                 Clear All Storage
               </h3>
             </div>
-            <p className="mb-6 text-sm text-gray-600 dark:text-gray-300">
+            <p className="mb-6 text-sm text-gray-600 dark:text-gray-300 transition-colors duration-200">
               This will permanently delete all your data including tables, rows, files, and all
               browser storage. This action cannot be undone.
             </p>
@@ -884,10 +902,10 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               <button
                 onClick={() => setShowClearConfirm(false)}
                 className={cn(
-                  'flex-1 px-4 py-2 text-sm rounded-lg transition-colors duration-200 cursor-pointer focus-ring',
+                  'flex-1 px-4 py-2 text-sm rounded-lg transition-all duration-200 cursor-pointer focus-ring hover:scale-105',
                   theme === 'dark'
-                    ? 'text-gray-200 bg-gray-700 hover:bg-gray-600'
-                    : 'text-gray-700 bg-gray-100 hover:bg-gray-200',
+                    ? 'text-gray-200 bg-gray-700/80 hover:bg-gray-600'
+                    : 'text-gray-700 bg-gray-100/80 hover:bg-gray-200',
                 )}
                 type="button"
               >
@@ -896,7 +914,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               <button
                 onClick={clearAllStorage}
                 disabled={isLoading}
-                className="flex-1 px-4 py-2 text-sm text-white bg-red-600 rounded-lg transition-colors duration-200 cursor-pointer hover:bg-red-700 focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2 text-sm text-white bg-red-600 rounded-lg transition-all duration-200 cursor-pointer hover:bg-red-700 hover:scale-105 focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
                 type="button"
               >
                 {isLoading ? 'Clearing...' : 'Clear All'}
@@ -906,26 +924,27 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         </div>
       )}
 
-      {/* Reset Database Confirmation Modal */}
+      {/* Reset Database Confirmation Modal with enhanced animations */}
       {showResetConfirm && (
-        <div className="flex fixed inset-0 justify-center items-center p-4 z-60">
+        <div className="flex fixed inset-0 justify-center items-center p-4 z-60 animate-fade-in">
           <div
-            className="absolute inset-0 bg-black bg-opacity-50"
+            className="absolute inset-0 backdrop-blur-sm bg-black/30 transition-all duration-300"
             onClick={() => setShowResetConfirm(false)}
           />
           <div
             className={cn(
-              'relative p-6 w-full max-w-md rounded-lg shadow-xl',
-              theme === 'dark' ? 'bg-gray-800' : 'bg-white',
+              'relative p-6 w-full max-w-md rounded-lg shadow-xl transition-all duration-300 animate-scale-in',
+              theme === 'dark' ? 'bg-gray-800/95' : 'bg-white/95',
+              'backdrop-blur-md',
             )}
           >
             <div className="flex items-center mb-4 space-x-3">
-              <AlertTriangle className="w-6 h-6 text-orange-600" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              <AlertTriangle className="w-6 h-6 text-orange-600 transition-colors duration-200" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">
                 Reset Database
               </h3>
             </div>
-            <p className="mb-6 text-sm text-gray-600 dark:text-gray-300">
+            <p className="mb-6 text-sm text-gray-600 dark:text-gray-300 transition-colors duration-200">
               This will delete all your tables and data, then reinitialize with sample data. This
               action cannot be undone.
             </p>
@@ -933,10 +952,10 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               <button
                 onClick={() => setShowResetConfirm(false)}
                 className={cn(
-                  'flex-1 px-4 py-2 text-sm rounded-lg transition-colors duration-200 cursor-pointer focus-ring',
+                  'flex-1 px-4 py-2 text-sm rounded-lg transition-all duration-200 cursor-pointer focus-ring hover:scale-105',
                   theme === 'dark'
-                    ? 'text-gray-200 bg-gray-700 hover:bg-gray-600'
-                    : 'text-gray-700 bg-gray-100 hover:bg-gray-200',
+                    ? 'text-gray-200 bg-gray-700/80 hover:bg-gray-600'
+                    : 'text-gray-700 bg-gray-100/80 hover:bg-gray-200',
                 )}
                 type="button"
               >
@@ -945,7 +964,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               <button
                 onClick={resetDatabase}
                 disabled={isLoading}
-                className="flex-1 px-4 py-2 text-sm text-white bg-orange-600 rounded-lg transition-colors duration-200 cursor-pointer hover:bg-orange-700 focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2 text-sm text-white bg-orange-600 rounded-lg transition-all duration-200 cursor-pointer hover:bg-orange-700 hover:scale-105 focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
                 type="button"
               >
                 {isLoading ? 'Resetting...' : 'Reset Database'}

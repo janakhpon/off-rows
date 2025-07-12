@@ -107,30 +107,45 @@ const ImageCellEditor: React.FC<ImageCellEditorProps> = ({
   return (
     <div className="flex flex-row gap-2 items-center h-full transition-all duration-200">
       {value && getFileUrl(value.fileId) ? (
-        <img
-          src={getFileUrl(value.fileId)!}
-          alt={value.name}
-          className="object-cover w-14 h-14 border border-gray-200 transition-all duration-200 cursor-pointer cell-img"
-          style={{ borderRadius: 6 }}
-          onClick={() => onPreview(getFileUrl(value.fileId)!, value.name)}
+        <div className="flex items-center gap-1">
+          <img
+            src={getFileUrl(value.fileId)!}
+            alt={value.name}
+            className="object-cover w-14 h-14 border border-gray-200 transition-all duration-200 cursor-pointer cell-img hover:scale-105 hover:shadow-md"
+            style={{ borderRadius: 6 }}
+            onClick={() => onPreview(getFileUrl(value.fileId)!, value.name)}
+            tabIndex={0}
+            aria-label={ariaLabel || `Preview image ${value.name}`}
+          />
+          {/* Small replace button */}
+          <button
+            className="flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium border border-gray-300 transition-all duration-150 text-gray-500 hover:text-blue-600 hover:bg-blue-50 hover:scale-110"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isProcessing}
+            type="button"
+            aria-label="Replace image"
+            title="Replace image"
+          >
+            {isProcessing ? '...' : '↻'}
+          </button>
+        </div>
+      ) : (
+        /* Show + button only when no image exists */
+        <button
+          className={`flex items-center justify-center w-8 h-8 rounded-full text-lg font-bold border border-gray-300 transition-all duration-150 ${
+            isProcessing
+              ? 'text-gray-500 bg-gray-200 cursor-not-allowed'
+              : 'text-blue-600 bg-gray-100 hover:bg-blue-100 hover:scale-105'
+          }`}
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isProcessing}
+          type="button"
+          aria-label={ariaLabel || 'Upload image'}
           tabIndex={0}
-          aria-label={ariaLabel || `Preview image ${value.name}`}
-        />
-      ) : null}
-      <button
-        className={`flex items-center justify-center w-8 h-8 rounded-full text-lg font-bold border border-gray-300 transition-colors duration-150 ml-1 ${
-          isProcessing
-            ? 'text-gray-500 bg-gray-200 cursor-not-allowed'
-            : 'text-blue-600 bg-gray-100 hover:bg-blue-100'
-        }`}
-        onClick={() => fileInputRef.current?.click()}
-        disabled={isProcessing}
-        type="button"
-        aria-label={ariaLabel || (value ? 'Replace image' : 'Upload image')}
-        tabIndex={0}
-      >
-        {isProcessing ? '...' : '+'}
-      </button>
+        >
+          {isProcessing ? '...' : '+'}
+        </button>
+      )}
       <input
         ref={fileInputRef}
         type="file"

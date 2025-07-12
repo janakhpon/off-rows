@@ -166,7 +166,7 @@ const ImagesCellEditor: React.FC<ImagesCellEditorProps> = ({
             key={img.fileId}
             src={imgUrl}
             alt={img.name}
-            className="cell-img cursor-pointer w-14 h-14 object-cover transition-all duration-200 border border-gray-200"
+            className="cell-img cursor-pointer w-14 h-14 object-cover transition-all duration-200 border border-gray-200 hover:scale-105 hover:shadow-md"
             style={{ borderRadius: 6 }}
             onClick={() => onPreview(imgUrl, img.name)}
             tabIndex={0}
@@ -175,10 +175,10 @@ const ImagesCellEditor: React.FC<ImagesCellEditorProps> = ({
         ) : null;
       })}
       <button
-        className={`flex items-center justify-center w-8 h-8 rounded-full text-lg font-bold border border-gray-300 transition-colors duration-150 ml-1 ${
+        className={`flex items-center justify-center w-8 h-8 rounded-full text-lg font-bold border border-gray-300 transition-all duration-150 ml-1 ${
           isProcessing
             ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-            : 'bg-gray-100 hover:bg-blue-100 text-blue-600'
+            : 'bg-gray-100 hover:bg-blue-100 text-blue-600 hover:scale-105 hover:shadow-sm'
         }`}
         onClick={() => fileInputRef.current?.click()}
         disabled={isProcessing}

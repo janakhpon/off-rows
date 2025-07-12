@@ -28,7 +28,7 @@ const FilesCellEditor: React.FC<FilesCellEditorProps> = ({
             href={fileUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="cell-link flex items-center px-3 py-1 rounded-full bg-gray-100 border border-gray-200 text-blue-700 text-xs font-medium max-w-[120px] truncate transition-all duration-200"
+            className="cell-link flex items-center px-3 py-1 rounded-full bg-gray-100 border border-gray-200 text-blue-700 text-xs font-medium max-w-[120px] truncate transition-all duration-200 hover:scale-105 hover:shadow-sm hover:bg-blue-50"
             aria-label={ariaLabel || `Download file ${file.name}`}
             style={{ minWidth: 0 }}
           >
@@ -37,7 +37,7 @@ const FilesCellEditor: React.FC<FilesCellEditorProps> = ({
         ) : null;
       })}
       <button
-        className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 hover:bg-blue-100 text-blue-600 text-lg font-bold border border-gray-300 transition-colors duration-150 ml-1"
+        className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 hover:bg-blue-100 text-blue-600 text-lg font-bold border border-gray-300 transition-all duration-150 ml-1 hover:scale-105 hover:shadow-sm"
         onClick={() => fileInputRef.current?.click()}
         type="button"
         aria-label={ariaLabel || 'Upload files'}

@@ -77,13 +77,13 @@ export default function ClientApp() {
   };
 
   return (
-    <div className="flex h-screen bg-white dark:bg-gray-800">
+    <div className="flex h-screen bg-white dark:bg-gray-800 transition-all duration-300 ease-in-out">
       <OfflineIndicator />
       <Sidebar
         isCollapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex flex-col flex-1 overflow-hidden transition-all duration-300 ease-in-out">
         <Header
           onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
           searchQuery={searchQuery}
@@ -92,44 +92,49 @@ export default function ClientApp() {
         <div className="flex overflow-hidden flex-1">
           {/* Table Tabs */}
           <div className="flex flex-col w-full">
-            {/* Tab Bar */}
-            <div className="flex overflow-x-auto items-center px-4 py-2 space-x-2 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
-              {tables.map((table) => (
+            {/* Tab Bar with enhanced animations */}
+            <div className="flex overflow-x-auto items-center px-4 py-2 space-x-2 bg-white/95 dark:bg-gray-800/95 border-b border-gray-200 dark:border-gray-700 backdrop-blur-sm transition-all duration-300 ease-in-out">
+              {tables.map((table, index) => (
                 <button
                   key={table.id}
                   onClick={() => setActiveTable(table)}
                   className={cn(
-                    'px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer',
+                    'px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap cursor-pointer hover:scale-105',
                     activeTable?.id === table.id
-                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-200'
-                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700',
+                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-200 shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-300',
                   )}
+                  style={{ animationDelay: `${index * 0.1}s` }}
                   type="button"
                 >
                   {table.name}
                 </button>
               ))}
-              {/* Create Table Button */}
+              {/* Create Table Button with enhanced styling */}
               <button
                 onClick={() => setShowCreateTable(true)}
-                className="cursor-pointer px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900"
+                className="cursor-pointer px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 hover:scale-105 hover:shadow-sm"
                 type="button"
               >
                 + New Table
               </button>
             </div>
             {/* Main Content */}
-            <div className="overflow-hidden flex-1">
+            <div className="overflow-hidden flex-1 transition-all duration-300 ease-in-out">
               <DataGridComponent searchQuery={searchQuery} />
             </div>
           </div>
         </div>
       </div>
-      {/* Create Table Modal */}
+      {/* Create Table Modal with enhanced animations */}
       {showCreateTable && (
-        <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50">
-          <div className="p-6 mx-4 w-96 max-w-md bg-white rounded-lg dark:bg-gray-800">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <div className="flex fixed inset-0 z-50 justify-center items-center p-4 animate-fade-in">
+          <div 
+            className="absolute inset-0 backdrop-blur-sm bg-black/30 transition-all duration-300"
+            onClick={() => setShowCreateTable(false)}
+          />
+          <div className="relative p-6 mx-4 w-96 max-w-md bg-white/95 dark:bg-gray-800/95 rounded-lg shadow-xl backdrop-blur-md transition-all duration-300 animate-scale-in">
+            <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">
               Create New Table
             </h2>
             <input
@@ -137,28 +142,24 @@ export default function ClientApp() {
               value={newTableName}
               onChange={(e) => setNewTableName(e.target.value)}
               placeholder="Enter table name"
-              className="p-2 w-full text-gray-900 bg-white rounded-md border border-gray-200 focus:ring-2 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
-              onFocus={(e) => {
-                e.target.style.borderColor = '#3b82f6';
-                e.target.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.1)';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '';
-                e.target.style.boxShadow = 'none';
-              }}
+              className={cn(
+                'p-2 w-full text-gray-900 bg-white/80 dark:bg-gray-700/80 rounded-md border border-gray-200 dark:border-gray-600 dark:text-gray-100 transition-all duration-300',
+                'focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500',
+                'hover:border-gray-400 dark:hover:border-gray-500',
+              )}
               onKeyDown={handleKeyPress}
             />
             <div className="flex justify-end mt-4 space-x-2">
               <button
                 onClick={() => setShowCreateTable(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 rounded-md transition-colors dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-md transition-all duration-200 hover:bg-gray-100/80 dark:hover:bg-gray-700/80 hover:scale-105"
                 type="button"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateTable}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md transition-colors hover:bg-blue-700"
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md transition-all duration-200 hover:bg-blue-700 hover:scale-105 hover:shadow-lg"
                 type="button"
               >
                 Create
