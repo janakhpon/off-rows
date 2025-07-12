@@ -2,7 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { FileValueWithId } from '@/lib/schemas';
-import { processImage } from '@/lib/imageProcessing';
+import { processImage, shouldConvertToWebP } from '@/lib/imageProcessing';
 import { generateUniqueFilename } from '@/lib/filename';
 import { saveImageToIDB } from '@/lib/database';
 import { useImageSettingsStore } from '@/lib/imageSettingsStore';
@@ -48,11 +48,14 @@ const ImageCellEditor: React.FC<ImageCellEditorProps> = ({
       const arrayBuffer = await file.arrayBuffer();
       const input = new Uint8Array(arrayBuffer);
 
+      // Check if WebP conversion would be beneficial
+      const shouldConvert = convertToWebP ? await shouldConvertToWebP(input) : false;
+      
       // Process image using WASM with current settings
-      const processed = await processImage(input, convertToWebP, imageQuality);
+      const processed = await processImage(input, shouldConvert, imageQuality);
 
       // Generate unique filename
-      const ext = convertToWebP ? 'webp' : 'jpg';
+      const ext = shouldConvert ? 'webp' : 'jpg';
       const filename = generateUniqueFilename(ext);
       const processedFormat = ext.toUpperCase();
 
@@ -61,7 +64,7 @@ const ImageCellEditor: React.FC<ImageCellEditorProps> = ({
 
       // Create a new File object for the processed image
       const processedFile = new File([processed], filename, {
-        type: convertToWebP ? 'image/webp' : 'image/jpeg',
+        type: shouldConvert ? 'image/webp' : 'image/jpeg',
       });
 
       // Show success notification with processing details (if enabled)
@@ -69,7 +72,7 @@ const ImageCellEditor: React.FC<ImageCellEditorProps> = ({
         const compressionRatio = (((originalSize - processed.length) / originalSize) * 100).toFixed(
           1,
         );
-        const action = convertToWebP ? 'compressed and converted' : 'compressed';
+        const action = shouldConvert ? 'compressed and converted' : 'compressed';
 
         showNotification({
           type: 'success',

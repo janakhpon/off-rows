@@ -2,13 +2,13 @@
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { DataGrid, RenderCellProps } from 'react-data-grid';
-import { Plus, Trash2, AlertTriangle, Code } from 'lucide-react';
+import { Plus, Trash2, AlertTriangle, Code, Download, Maximize2, Minimize2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTables } from '@/app/contexts/TableContext';
 import { useTheme } from '@/app/contexts/ThemeContext';
 import { useAppStore } from '@/lib/store';
 import { Field, TableRow, FileValueWithId, Table } from '@/lib/schemas';
 import { AddColumnModal, DeleteColumnModal, TableSchemaModal } from '@/components';
-import { fileOperations } from '@/lib/database';
+import { fileOperations, addDeletedFileRecord } from '@/lib/database';
 import TextCellEditor from './celleditors/TextCellEditor';
 import NumberCellEditor from './celleditors/NumberCellEditor';
 import DateCellEditor from './celleditors/DateCellEditor';
@@ -303,7 +303,13 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
 
   // --- REACT-DATA-GRID COLUMNS ---
   // State for image preview modal
-  const [imageModal, setImageModal] = useState<{ url: string; name: string } | null>(null);
+  const [imageModal, setImageModal] = useState<{ images: { url: string; name: string; fileId: number }[]; index: number } | null>(null);
+  const [imageModalFullscreen, setImageModalFullscreen] = useState(false);
+  // Helper to open modal for single or multiple images
+  const openImageModal = (images: { url: string; name: string; fileId: number }[], index: number) => {
+    setImageModal({ images, index });
+    setImageModalFullscreen(false);
+  };
   // --- SELECT ALL CHECKBOX LOGIC ---
   const allRowIds = orderedRows
     .filter((row): row is TableRow & { id: number } => row.id !== undefined)
@@ -517,7 +523,22 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
                     // Error handling removed with notification system
                   }
                 }}
-                onPreview={(url: string, name: string) => setImageModal({ url, name })}
+                onPreview={(url: string, name: string) => {
+                  if (!activeTable) return;
+                  const row = orderedRows.find(r => r.data[field.id]);
+                  const value = row?.data[field.id];
+                  if (Array.isArray(value)) {
+                    const images = value
+                      .map((v: { fileId: number; name: string }) => {
+                        const fileUrl = getFileUrl(v.fileId);
+                        if (!fileUrl) return null;
+                        return { url: fileUrl, name: v.name, fileId: v.fileId };
+                      })
+                      .filter((img): img is { url: string; name: string; fileId: number } => !!img);
+                    const idx = images.findIndex(img => img.url === url && img.name === name);
+                    openImageModal(images, idx !== -1 ? idx : 0);
+                  }
+                }}
                 ariaLabel={field.name}
               />
             );
@@ -568,7 +589,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
                     // Error handling removed with notification system
                   }
                 }}
-                onPreview={(url: string, name: string) => setImageModal({ url, name })}
+                onPreview={(url: string, name: string, fileId?: number) => openImageModal([{ url, name, fileId: fileId ?? 0 }], 0)}
                 ariaLabel={field.name}
               />
             );
@@ -643,6 +664,8 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
     handleSelectAll,
     handleSelectRow,
     updateRow,
+    openImageModal,
+    orderedRows,
   ]);
 
   // --- REACT-DATA-GRID ROWS ---
@@ -874,37 +897,108 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
       )}
 
       {/* Image Modal */}
-      {imageModal && (
+      {imageModal && imageModal.images && typeof imageModal.index === 'number' && (
         <div
-          className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-60 animate-fade-in"
+          className={`flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-60 animate-fade-in ${imageModalFullscreen ? 'p-0' : ''}`}
           onClick={() => setImageModal(null)}
           role="dialog"
           aria-modal="true"
           aria-labelledby="image-modal-title"
         >
           <div
-            className="flex flex-col items-center p-4 w-full max-w-lg bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scale-in"
+            className={`flex flex-col items-center ${imageModalFullscreen ? 'p-0 w-screen max-w-none h-screen rounded-none max-h-none' : 'p-4 w-full max-w-lg'} bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scale-in relative`}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Minimize button in fullscreen mode */}
+            {imageModalFullscreen && (
+              <button
+                className="fixed top-4 right-4 z-50 p-2 bg-gray-100 rounded-full cursor-pointer dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-primary"
+                onClick={() => setImageModalFullscreen(false)}
+                title="Minimize"
+                aria-label="Minimize image"
+                type="button"
+              >
+                <Minimize2 className="w-6 h-6 cursor-pointer" />
+              </button>
+            )}
+            {/* Navigation arrows for multiple images */}
+            {imageModal.images.length > 1 && (
+              <>
+                <button
+                  className="absolute left-2 top-1/2 z-10 p-2 bg-gray-100 rounded-full transform -translate-y-1/2 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-primary"
+                  onClick={() => setImageModal((m) => m && { ...m, index: (m.index - 1 + m.images.length) % m.images.length })}
+                  title="Previous image"
+                  aria-label="Previous image"
+                  type="button"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <button
+                  className="absolute right-2 top-1/2 z-10 p-2 bg-gray-100 rounded-full transform -translate-y-1/2 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-primary"
+                  onClick={() => setImageModal((m) => m && { ...m, index: (m.index + 1) % m.images.length })}
+                  title="Next image"
+                  aria-label="Next image"
+                  type="button"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              </>
+            )}
             <img
-              src={imageModal.url}
-              alt={imageModal.name}
-              className="mb-4 max-w-full max-h-96 rounded"
+              src={imageModal.images[imageModal.index]?.url || ''}
+              alt={imageModal.images[imageModal.index]?.name || ''}
+              className={`mb-4 ${imageModalFullscreen ? 'object-contain w-full h-full max-h-screen max-w-screen' : 'max-w-full max-h-96'} rounded`}
             />
-            <div
-              id="image-modal-title"
-              className="mb-2 text-sm font-medium text-center text-gray-900 dark:text-gray-100"
-            >
-              {imageModal.name}
-            </div>
-            <button
-              className="px-4 py-2 text-white bg-blue-600 rounded transition-colors duration-200 cursor-pointer dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              onClick={() => setImageModal(null)}
-              type="button"
-              aria-label="Close image preview"
-            >
-              Close
-            </button>
+            {/* Status Bar */}
+            <ImageStatusBar
+              url={imageModal.images[imageModal.index]?.url || ''}
+              name={imageModal.images[imageModal.index]?.name || ''}
+              onDelete={async () => {
+                // Find the row and field for this image (multi-image field)
+                if (!activeTable) return;
+                let found = false;
+                if (!imageModal || !imageModal.images || typeof imageModal.index !== 'number') return;
+                const currentImage = imageModal.images[imageModal.index];
+                if (!currentImage) return;
+                for (const row of orderedRows) {
+                  for (const field of activeTable.fields) {
+                    const value = row.data[field.id];
+                    if (Array.isArray(value)) {
+                      const idx = value.findIndex(
+                        (v) => v && typeof v === 'object' && 'fileId' in v && v.fileId === currentImage.fileId
+                      );
+                      if (idx !== -1) {
+                        const fileValue = value[idx];
+                        if (fileValue && typeof fileValue.fileId === 'number') {
+                          // Remove the file from IDB
+                          await fileOperations.deleteFile(fileValue.fileId);
+                          // Add to deleted_files for S3 sync
+                          await addDeletedFileRecord({ fileId: fileValue.fileId, filename: fileValue.name });
+                          // Remove the image from the array
+                          const newArr = value.slice(0, idx).concat(value.slice(idx + 1));
+                          const newData = { ...row.data, [field.id]: newArr };
+                          if (typeof row.id === 'number') {
+                            await updateRow(row.id, { data: newData });
+                          }
+                          found = true;
+                          // Update modal images
+                          const newImages = imageModal.images.filter((img, i) => i !== imageModal.index);
+                          if (newImages.length === 0) {
+                            setImageModal(null);
+                          } else {
+                            setImageModal({ images: newImages, index: Math.max(0, imageModal.index - (imageModal.index === newImages.length ? 1 : 0)) });
+                          }
+                          break;
+                        }
+                      }
+                    }
+                  }
+                  if (found) break;
+                }
+              }}
+              fullscreen={imageModalFullscreen}
+              onToggleFullscreen={() => setImageModalFullscreen((f) => !f)}
+            />
           </div>
         </div>
       )}
@@ -1016,20 +1110,18 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
         {showSummary && (
           <div
             className={cn(
-              'flex w-full border-t text-xs font-medium transition-colors duration-200 overflow-x-auto',
-              theme === 'dark'
-                ? 'bg-gray-800/50 text-gray-200 border-gray-700'
-                : 'bg-gray-50 text-gray-700 border-gray-200',
+              'flex overflow-x-auto flex-wrap w-full text-xs font-medium bg-gray-50 border-t border-gray-200 transition-colors duration-200 dark:bg-gray-900/80 dark:border-gray-700',
             )}
+            style={{ minWidth: 0 }}
           >
             {/* Row number column */}
-            <div className="flex-shrink-0 px-1 py-2 w-8 font-semibold text-center sm:px-2 sm:py-3 sm:w-12">
-              <span className="hidden sm:inline">Summary</span>
-              <span className="text-xs sm:hidden">Sum</span>
+            <div className="flex-shrink-0 px-1 py-2 w-8 min-w-0 font-semibold text-center sm:px-2 sm:py-3 sm:w-12">
+              <span className="hidden font-mono text-sm text-gray-800 whitespace-nowrap sm:inline dark:text-gray-100">Summary</span>
+              <span className="text-gray-800 whitespace-nowrap  sm:hidden dark:text-gray-100">Sum</span>
             </div>
 
             {/* Select column */}
-            <div className="flex-shrink-0 px-1 py-2 w-6 text-center sm:px-2 sm:py-3 sm:w-10">
+            <div className="flex-shrink-0 px-1 py-2 w-6 min-w-0 text-center sm:px-2 sm:py-3 sm:w-10">
               {/* Empty space for checkbox column */}
             </div>
 
@@ -1038,30 +1130,19 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
               <div
                 key={field.id}
                 className={cn(
-                  'flex-shrink-0 px-1 py-2 sm:px-2 sm:py-3 text-right transition-colors duration-200',
+                  'flex-shrink-0 px-1 py-2 sm:px-2 sm:py-3 text-right transition-colors duration-200 min-w-0',
                   field.type === 'number'
-                    ? theme === 'dark'
-                      ? 'text-blue-300 font-semibold'
-                      : 'text-blue-700 font-semibold'
-                    : 'text-gray-400',
+                    ? 'font-semibold text-blue-700 dark:text-blue-200'
+                    : 'text-gray-600 dark:text-gray-400',
                 )}
-                style={{
-                  minWidth: Math.max(60, getColWidth(field.id, field.type) * 0.6),
-                  maxWidth: getColWidth(field.id, field.type) * 1.2,
-                }}
               >
                 {field.type === 'number' ? (
-                  <div className="flex flex-col items-end gap-0.5 sm:gap-1">
-                    <span className="hidden text-xs text-gray-900 opacity-75 sm:inline dark:text-gray-300">
-                      {field.name}:
-                    </span>
-                    <span className="font-mono text-xs sm:text-sm">
-                      {numberFieldSums[field.id]?.toLocaleString() || '0'}
+                  <div className="flex flex-col items-end gap-0.5 sm:gap-1 min-w-0">
+                    <span className="min-w-0 font-mono text-xs text-gray-900 truncate sm:text-sm dark:text-blue-100">
+                    {field.name}: {numberFieldSums[field.id]?.toLocaleString() || '0'}
                     </span>
                   </div>
-                ) : (
-                  <span className="text-xs opacity-50">-</span>
-                )}
+                ) :<></>}
               </div>
             ))}
           </div>
@@ -1075,6 +1156,81 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
         >
           + Add
         </button>
+      </div>
+    </div>
+  );
+}
+
+// ImageStatusBar component for the image modal
+function ImageStatusBar({ url, name, onDelete, fullscreen, onToggleFullscreen }: {
+  url: string;
+  name: string;
+  onDelete: () => void;
+  fullscreen?: boolean;
+  onToggleFullscreen?: () => void;
+}) {
+  const [type, setType] = React.useState<string>('');
+  const [size, setSize] = React.useState<number>(0);
+
+  React.useEffect(() => {
+    // Fetch the image as a blob to get type and size
+    fetch(url)
+      .then((res) => res.blob())
+      .then((blob) => {
+        setType(blob.type.toUpperCase().replace('IMAGE/', ''));
+        setSize(blob.size);
+      });
+  }, [url]);
+
+  const handleDownload = () => {
+    fetch(url)
+      .then((res) => res.blob())
+      .then((blob) => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = name;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      });
+  };
+
+  return (
+    <div className="flex justify-between items-center px-2 py-2 mt-2 w-full text-xs bg-gray-50 rounded-b-lg border-t border-gray-200 dark:border-gray-700 dark:bg-gray-900/60">
+      <div className="flex gap-2 items-center">
+        <span className="font-medium text-gray-700 dark:text-gray-200">{name}</span>
+        <span className="text-gray-400">{type}</span>
+        <span className="text-gray-400">{(size / 1024).toFixed(1)} KB</span>
+      </div>
+      <div className="flex gap-3 items-center">
+        <button
+          className="transition-colors cursor-pointer text-primary hover:text-red-600"
+          onClick={onDelete}
+          title="Delete image"
+          aria-label="Delete image"
+          type="button"
+        >
+          <Trash2 className="w-5 h-5" />
+        </button>
+        <button
+          className="transition-colors cursor-pointer hover:text-blue-600 text-primary"
+          onClick={handleDownload}
+          title="Download image"
+          aria-label="Download image"
+          type="button"
+        >
+          <Download className="w-5 h-5" />
+        </button>
+        {onToggleFullscreen && (
+          <button
+            className="transition-colors cursor-pointer hover:text-green-600 text-primary"
+            onClick={onToggleFullscreen}
+            title={fullscreen ? 'Minimize' : 'Expand'}
+            aria-label={fullscreen ? 'Minimize image' : 'Expand image'}
+            type="button"
+          >
+            {fullscreen ? <Minimize2 className="w-5 h-5 cursor-pointer" /> : <Maximize2 className="w-5 h-5 cursor-pointer" />}
+          </button>
+        )}
       </div>
     </div>
   );

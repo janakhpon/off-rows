@@ -26,6 +26,13 @@ if (!db.tables.some((t) => t.name === 'images')) {
   });
 }
 
+// Add deleted_files table for tracking deletions
+if (!db.tables.some((t) => t.name === 'deleted_files')) {
+  db.version(6).stores({
+    deleted_files: '++id, fileId, filename, deletedAt, synced',
+  });
+}
+
 // Initialize with sample data if database is empty
 export async function initializeDatabase() {
   const tableCount = await db.table('tables').count();
@@ -429,6 +436,23 @@ export async function getUnsyncedImages(): Promise<ImageRecord[]> {
 
 export async function markImageAsSynced(id: number): Promise<void> {
   await db.table('images').update(id, { synced: true });
+}
+
+export async function addDeletedFileRecord({ fileId, filename }: { fileId: number; filename: string }) {
+  await db.table('deleted_files').add({
+    fileId,
+    filename,
+    deletedAt: new Date().toISOString(),
+    synced: false,
+  });
+}
+
+export async function getUnsyncedDeletedFiles() {
+  return db.table('deleted_files').where('synced').equals(0).toArray();
+}
+
+export async function markDeletedFileAsSynced(id: number) {
+  await db.table('deleted_files').update(id, { synced: true });
 }
 
 export interface ImageRecord {

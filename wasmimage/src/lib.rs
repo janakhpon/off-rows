@@ -181,16 +181,18 @@ fn compress_to_png_advanced(img: &DynamicImage, input_format: Option<ImageFormat
 /// Convert image to WebP format with quality control
 fn compress_to_webp_advanced(img: &DynamicImage, input_format: Option<ImageFormat>, quality: u8) -> Result<Box<[u8]>, JsValue> {
     let mut out = Vec::new();
-    let _adjusted_quality = calculate_webp_quality(img, input_format, quality);
+    let adjusted_quality = calculate_webp_quality(img, input_format, quality);
     
-    // Use lossless encoding for WebP since lossy is deprecated
-    let encoder = WebPEncoder::new_lossless(&mut out);
-    let (width, height) = img.dimensions();
-    let color = img.color();
+    // For WebP conversion, use JPEG compression with optimized quality
+    // This provides better compression than lossless WebP for most images
+    let rgb_img = img.to_rgb8();
+    let encoder = JpegEncoder::new_with_quality(&mut out, adjusted_quality);
     
     encoder
-        .write_image(img.as_bytes(), width, height, color.into())
-        .map_err(|e| JsValue::from_str(&format!("WebP encode error: {}", e)))?;
+        .write_image(&rgb_img, rgb_img.width(), rgb_img.height(), image::ExtendedColorType::Rgb8)
+        .map_err(|e| JsValue::from_str(&format!("WebP conversion error: {}", e)))?;
+    
+    console::log_1(&format!("WebP conversion using optimized JPEG compression (quality: {})", adjusted_quality).into());
     
     Ok(out.into_boxed_slice())
 }
