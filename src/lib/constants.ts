@@ -91,7 +91,10 @@ export const SUCCESS_MESSAGES = {
 export const SUPPORTED_FILE_TYPES = {
   IMAGES: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
   DOCUMENTS: ['application/pdf', 'text/plain', 'application/msword'],
-  SPREADSHEETS: ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+  SPREADSHEETS: [
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  ],
 } as const;
 
 // Theme
@@ -106,4 +109,4 @@ export const STORAGE_KEYS = {
   THEME: 'offrows-theme',
   SIDEBAR_COLLAPSED: 'offrows-sidebar-collapsed',
   SELECTED_ROWS: 'offrows-selected-rows',
-} as const; 
+} as const;

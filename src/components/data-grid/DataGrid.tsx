@@ -837,10 +837,11 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center mb-4">
-              <AlertTriangle
-                className="mr-3 w-6 h-6 text-yellow-500 dark:text-yellow-400"
-              />
-              <h2 id="delete-modal-title" className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              <AlertTriangle className="mr-3 w-6 h-6 text-yellow-500 dark:text-yellow-400" />
+              <h2
+                id="delete-modal-title"
+                className="text-lg font-semibold text-gray-900 dark:text-gray-100"
+              >
                 Confirm Delete
               </h2>
             </div>
@@ -890,7 +891,10 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
               alt={imageModal.name}
               className="mb-4 max-w-full max-h-96 rounded"
             />
-            <div id="image-modal-title" className="mb-2 text-sm font-medium text-center text-gray-900 dark:text-gray-100">
+            <div
+              id="image-modal-title"
+              className="mb-2 text-sm font-medium text-center text-gray-900 dark:text-gray-100"
+            >
               {imageModal.name}
             </div>
             <button
@@ -914,8 +918,10 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
               className="flex items-center px-2 py-1 text-xs font-medium rounded-md transition-colors cursor-pointer sm:px-3 sm:py-2 sm:text-sm"
               type="button"
             >
-              <Trash2 className="mr-1 w-3 h-3 sm:w-4 sm:h-4" /> 
-              <span className="hidden sm:inline">Delete {selectedRows.size} Row{selectedRows.size > 1 ? 's' : ''}</span>
+              <Trash2 className="mr-1 w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">
+                Delete {selectedRows.size} Row{selectedRows.size > 1 ? 's' : ''}
+              </span>
               <span className="sm:hidden">Del {selectedRows.size}</span>
             </button>
           )}
@@ -1021,27 +1027,27 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
               <span className="hidden sm:inline">Summary</span>
               <span className="text-xs sm:hidden">Sum</span>
             </div>
-            
+
             {/* Select column */}
             <div className="flex-shrink-0 px-1 py-2 w-6 text-center sm:px-2 sm:py-3 sm:w-10">
               {/* Empty space for checkbox column */}
             </div>
-            
+
             {/* Data columns */}
             {activeTable.fields.map((field) => (
-              <div 
-                key={field.id} 
+              <div
+                key={field.id}
                 className={cn(
                   'flex-shrink-0 px-1 py-2 sm:px-2 sm:py-3 text-right transition-colors duration-200',
-                  field.type === 'number' 
-                    ? theme === 'dark' 
-                      ? 'text-blue-300 font-semibold' 
+                  field.type === 'number'
+                    ? theme === 'dark'
+                      ? 'text-blue-300 font-semibold'
                       : 'text-blue-700 font-semibold'
-                    : 'text-gray-400'
+                    : 'text-gray-400',
                 )}
-                style={{ 
+                style={{
                   minWidth: Math.max(60, getColWidth(field.id, field.type) * 0.6),
-                  maxWidth: getColWidth(field.id, field.type) * 1.2 
+                  maxWidth: getColWidth(field.id, field.type) * 1.2,
                 }}
               >
                 {field.type === 'number' ? (

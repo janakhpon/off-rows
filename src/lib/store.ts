@@ -52,7 +52,7 @@ interface AppState {
   // Add actions for colWidths/rowHeights
   updateColWidths: (tableId: number, colWidths: Record<string, number>) => Promise<void>;
   updateRowHeights: (tableId: number, rowHeights: Record<string, number>) => Promise<void>;
-  
+
   // Reset state
   resetState: () => void;
 }

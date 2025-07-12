@@ -60,14 +60,10 @@ const Notification: React.FC<NotificationProps> = ({
       className={`flex items-start p-4 border rounded-lg shadow-lg transition-all duration-300 ${getStyles()}`}
       role="alert"
     >
-      <div className="flex-shrink-0 mr-3 mt-0.5">
-        {getIcon()}
-      </div>
+      <div className="flex-shrink-0 mr-3 mt-0.5">{getIcon()}</div>
       <div className="flex-1 min-w-0">
         <h4 className="text-sm font-medium">{title}</h4>
-        {message && (
-          <p className="mt-1 text-sm opacity-90">{message}</p>
-        )}
+        {message && <p className="mt-1 text-sm opacity-90">{message}</p>}
       </div>
       <button
         onClick={() => {
@@ -83,4 +79,4 @@ const Notification: React.FC<NotificationProps> = ({
   );
 };
 
-export default Notification; 
+export default Notification;

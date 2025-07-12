@@ -21,19 +21,19 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     try {
       // Clear IndexedDB
       await db.delete();
-      
+
       // Clear localStorage
       localStorage.clear();
-      
+
       // Clear sessionStorage
       sessionStorage.clear();
-      
+
       // Clear cache storage
       if ('caches' in window) {
         const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
+        await Promise.all(cacheNames.map((name) => caches.delete(name)));
       }
-      
+
       // Reload the page to reinitialize everything
       window.location.reload();
     } catch (error) {
@@ -52,15 +52,15 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       await db.table('rows').clear();
       await db.table('views').clear();
       await db.table('files').clear();
-      
+
       // Reinitialize database
       const { initializeDatabase } = await import('@/lib/database');
       await initializeDatabase();
-      
+
       // Refresh the app state
       const { refreshTables } = useAppStore.getState();
       await refreshTables();
-      
+
       setMessage({ type: 'success', text: 'Database reset successfully' });
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to reset database: ' + (error as Error).message });
@@ -78,7 +78,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       const rows = await db.table('rows').toArray();
       const views = await db.table('views').toArray();
       const files = await db.table('files').toArray();
-      
+
       const exportData = {
         version: '1.0',
         timestamp: new Date().toISOString(),
@@ -87,7 +87,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         views,
         files,
       };
-      
+
       // Create and download file
       const blob = new Blob([JSON.stringify(exportData, null, 2)], {
         type: 'application/json',
@@ -100,7 +100,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
+
       setMessage({ type: 'success', text: 'Database exported successfully' });
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to export database: ' + (error as Error).message });
@@ -112,23 +112,23 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const importDatabase = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    
+
     setIsLoading(true);
     try {
       const text = await file.text();
       const importData = JSON.parse(text);
-      
+
       // Validate import data
       if (!importData.tables || !importData.rows || !importData.views) {
         throw new Error('Invalid backup file format');
       }
-      
+
       // Clear existing data
       await db.table('tables').clear();
       await db.table('rows').clear();
       await db.table('views').clear();
       await db.table('files').clear();
-      
+
       // Import new data
       if (importData.tables.length > 0) {
         await db.table('tables').bulkAdd(importData.tables);
@@ -142,11 +142,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       if (importData.files && importData.files.length > 0) {
         await db.table('files').bulkAdd(importData.files);
       }
-      
+
       // Refresh the app state
       const { refreshTables } = useAppStore.getState();
       await refreshTables();
-      
+
       setMessage({ type: 'success', text: 'Database imported successfully' });
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to import database: ' + (error as Error).message });
@@ -166,10 +166,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-50 bg-black bg-opacity-50 modal-backdrop"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 z-50 bg-black bg-opacity-50 modal-backdrop" onClick={onClose} />
 
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -216,12 +213,14 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <Shield className="w-5 h-5 text-blue-600" />
                 <span>Security</span>
               </h3>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-900">Encryption</p>
-                    <p className="text-xs text-gray-500">Encrypt data stored locally (coming soon)</p>
+                    <p className="text-xs text-gray-500">
+                      Encrypt data stored locally (coming soon)
+                    </p>
                   </div>
                   <button
                     disabled
@@ -238,7 +237,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             {/* Data Management Section */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium text-gray-900">Data Management</h3>
-              
+
               <div className="space-y-3">
                 {/* Export Database */}
                 <button
@@ -300,15 +299,18 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       {/* Clear Storage Confirmation Modal */}
       {showClearConfirm && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
-          <div className="bg-black bg-opacity-50 absolute inset-0" onClick={() => setShowClearConfirm(false)} />
+          <div
+            className="bg-black bg-opacity-50 absolute inset-0"
+            onClick={() => setShowClearConfirm(false)}
+          />
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
             <div className="flex items-center space-x-3 mb-4">
               <AlertTriangle className="w-6 h-6 text-red-600" />
               <h3 className="text-lg font-semibold text-gray-900">Clear All Storage</h3>
             </div>
             <p className="text-sm text-gray-600 mb-6">
-              This will permanently delete all your data including tables, rows, files, and all browser storage. 
-              This action cannot be undone.
+              This will permanently delete all your data including tables, rows, files, and all
+              browser storage. This action cannot be undone.
             </p>
             <div className="flex space-x-3">
               <button
@@ -334,15 +336,18 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       {/* Reset Database Confirmation Modal */}
       {showResetConfirm && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
-          <div className="bg-black bg-opacity-50 absolute inset-0" onClick={() => setShowResetConfirm(false)} />
+          <div
+            className="bg-black bg-opacity-50 absolute inset-0"
+            onClick={() => setShowResetConfirm(false)}
+          />
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
             <div className="flex items-center space-x-3 mb-4">
               <AlertTriangle className="w-6 h-6 text-orange-600" />
               <h3 className="text-lg font-semibold text-gray-900">Reset Database</h3>
             </div>
             <p className="text-sm text-gray-600 mb-6">
-              This will delete all your tables and data, then reinitialize with sample data. 
-              This action cannot be undone.
+              This will delete all your tables and data, then reinitialize with sample data. This
+              action cannot be undone.
             </p>
             <div className="flex space-x-3">
               <button
@@ -366,4 +371,4 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       )}
     </>
   );
-} 
+}

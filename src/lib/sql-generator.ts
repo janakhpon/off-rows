@@ -7,7 +7,13 @@ import { Table, Field } from './schemas';
 
 // Types
 type SqlDataType = 'TEXT' | 'DECIMAL(15,2)' | 'BOOLEAN' | 'DATE' | 'VARCHAR(255)' | 'INTEGER';
-type FieldValue = string | number | boolean | null | { name: string; type: string; fileId: number } | { name: string; type: string; fileId: number }[];
+type FieldValue =
+  | string
+  | number
+  | boolean
+  | null
+  | { name: string; type: string; fileId: number }
+  | { name: string; type: string; fileId: number }[];
 type RowData = Record<string, FieldValue>;
 
 // Constants
@@ -29,7 +35,10 @@ const STANDARD_COLUMNS = [
 
 // Utility functions
 const sanitizeTableName = (name: string): string => {
-  return name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  return name
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9_]/g, '');
 };
 
 const escapeSqlString = (value: string): string => {
@@ -48,26 +57,26 @@ const getFieldTypeMapping = (fieldType: Field['type']): SqlDataType => {
     images: SQL_DATA_TYPES.TEXT,
     files: SQL_DATA_TYPES.TEXT,
   };
-  
+
   return typeMap[fieldType] || SQL_DATA_TYPES.TEXT;
 };
 
 const generateFieldConstraints = (field: Field): string[] => {
   const constraints: string[] = [];
-  
+
   if (field.required) {
     constraints.push('NOT NULL');
   }
-  
+
   if (field.type === 'dropdown' && field.options?.length) {
-    const escapedOptions = field.options.map(opt => `'${escapeSqlString(opt)}'`).join(', ');
+    const escapedOptions = field.options.map((opt) => `'${escapeSqlString(opt)}'`).join(', ');
     constraints.push(`CHECK (${field.id} IN (${escapedOptions}))`);
   }
-  
+
   if (field.type === 'number') {
     constraints.push(`CHECK (typeof(${field.id}) = 'numeric')`);
   }
-  
+
   return constraints;
 };
 
@@ -75,7 +84,7 @@ const generateDefaultValue = (field: Field): string => {
   if (field.defaultValue === undefined || field.defaultValue === null) {
     return '';
   }
-  
+
   const valueMap: Record<Field['type'], (value: FieldValue) => string> = {
     text: (value) => `DEFAULT '${escapeSqlString(String(value))}'`,
     number: (value) => `DEFAULT ${Number(value)}`,
@@ -87,7 +96,7 @@ const generateDefaultValue = (field: Field): string => {
     images: (value) => `DEFAULT '${escapeSqlString(JSON.stringify(value))}'`,
     files: (value) => `DEFAULT '${escapeSqlString(JSON.stringify(value))}'`,
   };
-  
+
   return valueMap[field.type]?.(field.defaultValue) || '';
 };
 
@@ -95,11 +104,11 @@ const formatFieldValue = (field: Field, value: FieldValue): string => {
   if (value === null || value === undefined) {
     return 'NULL';
   }
-  
+
   const formatters: Record<Field['type'], (value: FieldValue) => string> = {
     text: (value) => `'${escapeSqlString(String(value))}'`,
     number: (value) => String(Number(value)),
-    boolean: (value) => value ? '1' : '0',
+    boolean: (value) => (value ? '1' : '0'),
     date: (value) => `'${escapeSqlString(String(value))}'`,
     dropdown: (value) => `'${escapeSqlString(String(value))}'`,
     image: (value) => `'${escapeSqlString(JSON.stringify(value))}'`,
@@ -107,7 +116,7 @@ const formatFieldValue = (field: Field, value: FieldValue): string => {
     images: (value) => `'${escapeSqlString(JSON.stringify(value))}'`,
     files: (value) => `'${escapeSqlString(JSON.stringify(value))}'`,
   };
-  
+
   return formatters[field.type]?.(value) || `'${escapeSqlString(String(value))}'`;
 };
 
@@ -118,29 +127,29 @@ export const generateCreateTableSQL = (table: Table): string => {
   if (!table.fields.length) {
     throw new Error('Table must have at least one field');
   }
-  
+
   const tableName = sanitizeTableName(table.name);
-  
-  const fieldDefinitions = table.fields.map(field => {
+
+  const fieldDefinitions = table.fields.map((field) => {
     const dataType = getFieldTypeMapping(field.type);
     const constraints = generateFieldConstraints(field);
     const defaultValue = generateDefaultValue(field);
-    
+
     let definition = `  ${field.id} ${dataType}`;
-    
+
     if (defaultValue) {
       definition += ` ${defaultValue}`;
     }
-    
+
     if (constraints.length > 0) {
       definition += ` ${constraints.join(' ')}`;
     }
-    
+
     return definition;
   });
-  
+
   const allColumns = [...STANDARD_COLUMNS, ...fieldDefinitions];
-  
+
   return `CREATE TABLE ${tableName} (
 ${allColumns.join(',\n')}
 );
@@ -163,9 +172,9 @@ END;`;
  */
 export const generateInsertSQL = (table: Table, rowData: RowData): string => {
   const tableName = sanitizeTableName(table.name);
-  const fieldNames = table.fields.map(f => f.id);
-  const values = table.fields.map(field => formatFieldValue(field, rowData[field.id] ?? null));
-  
+  const fieldNames = table.fields.map((f) => f.id);
+  const values = table.fields.map((field) => formatFieldValue(field, rowData[field.id] ?? null));
+
   return `INSERT INTO ${tableName} (table_id, ${fieldNames.join(', ')}) 
 VALUES (${table.id}, ${values.join(', ')});`;
 };
@@ -174,19 +183,19 @@ VALUES (${table.id}, ${values.join(', ')});`;
  * Generate SELECT statement for a table
  */
 export const generateSelectSQL = (
-  table: Table, 
+  table: Table,
   options: {
     where?: Record<string, FieldValue>;
     orderBy?: string;
     limit?: number;
-  } = {}
+  } = {},
 ): string => {
   const tableName = sanitizeTableName(table.name);
-  const fieldNames = table.fields.map(f => f.id);
-  
+  const fieldNames = table.fields.map((f) => f.id);
+
   let sql = `SELECT id, table_id, ${fieldNames.join(', ')}, created_at, updated_at 
 FROM ${tableName}`;
-  
+
   if (options.where && Object.keys(options.where).length > 0) {
     const whereConditions = Object.entries(options.where).map(([key, value]) => {
       if (value === null) {
@@ -196,17 +205,17 @@ FROM ${tableName}`;
     });
     sql += ` WHERE ${whereConditions.join(' AND ')}`;
   }
-  
+
   if (options.orderBy) {
     sql += ` ORDER BY ${options.orderBy}`;
   } else {
     sql += ` ORDER BY created_at DESC`;
   }
-  
+
   if (options.limit) {
     sql += ` LIMIT ${options.limit}`;
   }
-  
+
   return sql + ';';
 };
 
@@ -215,16 +224,16 @@ FROM ${tableName}`;
  */
 export const generateUpdateSQL = (table: Table, rowId: number, updates: RowData): string => {
   const tableName = sanitizeTableName(table.name);
-  
+
   const setClauses = Object.entries(updates).map(([key, value]) => {
-    const field = table.fields.find(f => f.id === key);
+    const field = table.fields.find((f) => f.id === key);
     if (!field) {
       return `${key} = '${escapeSqlString(String(value))}'`;
     }
-    
+
     return `${key} = ${formatFieldValue(field, value)}`;
   });
-  
+
   return `UPDATE ${tableName} 
 SET ${setClauses.join(', ')}
 WHERE id = ${rowId};`;
@@ -245,19 +254,19 @@ export const generateCompleteDatabaseSchema = (tables: Table[]): string => {
   if (!tables.length) {
     return '-- No tables to generate schema for';
   }
-  
-  const createStatements = tables.map(table => generateCreateTableSQL(table));
-  
-  const viewStatements = tables.map(table => {
+
+  const createStatements = tables.map((table) => generateCreateTableSQL(table));
+
+  const viewStatements = tables.map((table) => {
     const tableName = sanitizeTableName(table.name);
-    const fieldNames = table.fields.map(f => f.id);
-    
+    const fieldNames = table.fields.map((f) => f.id);
+
     return `CREATE VIEW v_${tableName} AS
 SELECT id, table_id, ${fieldNames.join(', ')}, created_at, updated_at
 FROM ${tableName}
 WHERE table_id = ${table.id};`;
   });
-  
+
   return `-- Offrows Database Schema
 -- Generated from dynamic table definitions
 -- Generated on: ${new Date().toISOString()}
@@ -276,17 +285,17 @@ export const generateAddColumnMigration = (table: Table, newField: Field): strin
   const dataType = getFieldTypeMapping(newField.type);
   const constraints = generateFieldConstraints(newField);
   const defaultValue = generateDefaultValue(newField);
-  
+
   let sql = `ALTER TABLE ${tableName} ADD COLUMN ${newField.id} ${dataType}`;
-  
+
   if (defaultValue) {
     sql += ` ${defaultValue}`;
   }
-  
+
   if (constraints.length > 0) {
     sql += ` ${constraints.join(' ')}`;
   }
-  
+
   return sql + ';';
 };
 
@@ -295,7 +304,7 @@ export const generateAddColumnMigration = (table: Table, newField: Field): strin
  */
 export const generateDropColumnMigration = (table: Table, fieldId: string): string => {
   const tableName = sanitizeTableName(table.name);
-  
+
   return `-- Note: SQLite doesn't support DROP COLUMN directly
 -- You would need to recreate the table without this column
 -- This is a placeholder for the migration logic
@@ -324,4 +333,4 @@ export const SQLGenerator = {
   generateCompleteDatabaseSchema,
   generateAddColumnMigration,
   generateDropColumnMigration,
-} as const; 
+} as const;

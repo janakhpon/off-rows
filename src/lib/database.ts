@@ -19,6 +19,13 @@ db.version(4).stores({
   files: '++id, name, type',
 });
 
+// Extend schema for images table
+if (!db.tables.some((t) => t.name === 'images')) {
+  db.version(5).stores({
+    images: '++id, filename, synced, createdAt',
+  });
+}
+
 // Initialize with sample data if database is empty
 export async function initializeDatabase() {
   const tableCount = await db.table('tables').count();
@@ -396,3 +403,38 @@ export const fileOperations = {
     await db.table('files').delete(id);
   },
 };
+
+export async function saveImageToIDB({
+  filename,
+  data,
+  synced = false,
+}: {
+  filename: string;
+  data: Uint8Array;
+  synced?: boolean;
+}): Promise<number> {
+  const id = await db.table('images').add({
+    filename,
+    data,
+    synced,
+    createdAt: new Date().toISOString(),
+  } as ImageRecord);
+  return id as number;
+}
+
+export async function getUnsyncedImages(): Promise<ImageRecord[]> {
+  // Use 0 for false in IndexedDB boolean index
+  return db.table('images').where('synced').equals(0).toArray() as Promise<ImageRecord[]>;
+}
+
+export async function markImageAsSynced(id: number): Promise<void> {
+  await db.table('images').update(id, { synced: true });
+}
+
+export interface ImageRecord {
+  id?: number;
+  filename: string;
+  data: Uint8Array;
+  synced: boolean;
+  createdAt: string;
+}

@@ -14,6 +14,7 @@ const eslintConfig = [
   {
     rules: {
       '@next/next/no-img-element': 'off', // Disable for blob URLs from IndexedDB
+      'jsx-a11y/alt-text': 'off', // Disable for icon components from lucide-react
     },
   },
 ];

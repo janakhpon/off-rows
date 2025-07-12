@@ -26,16 +26,22 @@ export default function DeleteColumnModal({
             </div>
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Delete Column</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">This action cannot be undone.</p>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Delete Column
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              This action cannot be undone.
+            </p>
           </div>
         </div>
 
         <div className="mb-6">
           <p className="text-sm text-gray-700 dark:text-gray-300">
             Are you sure you want to delete the column{' '}
-            <span className="font-medium text-gray-900 dark:text-gray-100">&ldquo;{columnName}&rdquo;</span>? This will
-            permanently remove the column and all its data from this table.
+            <span className="font-medium text-gray-900 dark:text-gray-100">
+              &ldquo;{columnName}&rdquo;
+            </span>
+            ? This will permanently remove the column and all its data from this table.
           </p>
         </div>
 
