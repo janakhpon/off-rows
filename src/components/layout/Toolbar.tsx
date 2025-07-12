@@ -302,11 +302,7 @@ export default function Toolbar() {
                           'flex items-center px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100',
                         )}
                       >
-                        <Checkbox
-                          className={cn(
-                            'mr-3',
-                          )}
-                        />
+                        <Checkbox className={cn('mr-3')} />
                         {field.name}
                       </label>
                     ))}

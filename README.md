@@ -94,18 +94,6 @@ npm run lint         # Run ESLint
 npm run type-check   # TypeScript validation
 ```
 
-### Environment Configuration
-
-Create `.env.local` for local development:
-
-```env
-# Optional: Analytics tracking
-NEXT_PUBLIC_ANALYTICS_ID=your-analytics-id
-
-# Optional: Custom domain
-NEXT_PUBLIC_SITE_URL=https://yourdomain.com
-```
-
 
 ### 🤝 **Get Involved**
 

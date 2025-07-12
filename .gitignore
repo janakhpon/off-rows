@@ -51,9 +51,13 @@ next-env.d.ts
 *.swo
 *~
 
-# Rust
+# Rust/WASM
 rust/target/
 rust/pkg/
+wasmimage/target/
+wasmimage/pkg/
+wasmimage/Cargo.lock
+wasmimage/.cargo/
 
 # WASM build output (committed for deployment)
-# static/wasm-pkg/ is committed to git for deployment
+# public/wasm-pkg/ is committed to git for deployment

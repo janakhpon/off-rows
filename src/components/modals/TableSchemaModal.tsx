@@ -43,7 +43,7 @@ const getTypeScriptType = (fieldType: Field['type']): string => {
     images: 'FileValueWithId[]',
     files: 'FileValueWithId[]',
   };
-  
+
   return typeMap[fieldType] || 'string';
 };
 
@@ -51,22 +51,22 @@ const getDefaultValue = (field: Field): string => {
   const valueMap: Record<Field['type'], () => string> = {
     text: () => `"${field.name}"`,
     number: () => String(field.defaultValue || '0'),
-    boolean: () => field.defaultValue ? 'true' : 'false',
+    boolean: () => (field.defaultValue ? 'true' : 'false'),
     date: () => `"${new Date().toISOString().split('T')[0]}"`,
-    dropdown: () => field.options?.[0] ? `"${field.options[0]}"` : 'null',
+    dropdown: () => (field.options?.[0] ? `"${field.options[0]}"` : 'null'),
     image: () => 'null',
     file: () => 'null',
     images: () => '[]',
     files: () => '[]',
   };
-  
+
   return valueMap[field.type]?.() || 'null';
 };
 
 // Custom hooks
 const useClipboard = () => {
   const { showNotification } = useNotifications();
-  
+
   const copyToClipboard = async (text: string, type: CopyType) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -90,20 +90,24 @@ const useClipboard = () => {
 const useSchemaCode = (table: Table | null) => {
   return useMemo(() => {
     if (!table) return '';
-    
+
     const interfaceName = table.name.replace(/\s+/g, '');
-    
-    const fieldDefinitions = table.fields.map(field => {
-      const type = getTypeScriptType(field.type);
-      const required = field.required ? '' : '?';
-      return `  ${field.id}${required}: ${type};`;
-    }).join('\n');
-    
-    const sampleData = table.fields.map(field => {
-      const defaultValue = getDefaultValue(field);
-      return `  ${field.id}: ${defaultValue},`;
-    }).join('\n');
-    
+
+    const fieldDefinitions = table.fields
+      .map((field) => {
+        const type = getTypeScriptType(field.type);
+        const required = field.required ? '' : '?';
+        return `  ${field.id}${required}: ${type};`;
+      })
+      .join('\n');
+
+    const sampleData = table.fields
+      .map((field) => {
+        const defaultValue = getDefaultValue(field);
+        return `  ${field.id}: ${defaultValue},`;
+      })
+      .join('\n');
+
     return `// Table Schema for "${table.name}"
 interface ${interfaceName}Table {
   id: number;
@@ -125,12 +129,12 @@ ${sampleData}
 
 // Components
 const TabButton: React.FC<{
-  tab: typeof TAB_CONFIG[keyof typeof TAB_CONFIG];
+  tab: (typeof TAB_CONFIG)[keyof typeof TAB_CONFIG];
   isActive: boolean;
   onClick: () => void;
 }> = ({ tab, isActive, onClick }) => {
   const Icon = tab.icon;
-  
+
   return (
     <button
       onClick={onClick}
@@ -154,9 +158,7 @@ const CodeBlock: React.FC<{
 }> = ({ title, code, onCopy, copyLabel }) => (
   <div>
     <div className="flex justify-between items-center mb-3">
-      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-        {title}
-      </h3>
+      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{title}</h3>
       <button
         onClick={onCopy}
         className="flex items-center px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors cursor-pointer"
@@ -214,7 +216,7 @@ const TabNavigation: React.FC<{
 export default function TableSchemaModal({ open, onClose, table }: TableSchemaModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>('schema');
   const [generatedSQL, setGeneratedSQL] = useState<string>('');
-  
+
   const { copyToClipboard } = useClipboard();
   const schemaCode = useSchemaCode(table);
 
@@ -256,7 +258,7 @@ export default function TableSchemaModal({ open, onClose, table }: TableSchemaMo
   };
 
   return (
-    <div 
+    <div
       className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50 animate-fade-in"
       onKeyDown={handleKeyDown}
       role="dialog"
@@ -265,7 +267,7 @@ export default function TableSchemaModal({ open, onClose, table }: TableSchemaMo
     >
       <div className="relative p-6 mx-4 w-full max-w-4xl bg-white rounded-lg shadow-lg animate-scale-in dark:bg-gray-800">
         <ModalHeader table={table} onClose={onClose} />
-        
+
         <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
         <div className="space-y-4">
@@ -300,4 +302,4 @@ export default function TableSchemaModal({ open, onClose, table }: TableSchemaMo
       </div>
     </div>
   );
-} 
+}

@@ -2,7 +2,15 @@ import { Table, Field } from './schemas';
 import { VALIDATION } from './constants';
 
 // Types
-type RowData = Record<string, string | number | boolean | null | { name: string; type: string; fileId: number } | { name: string; type: string; fileId: number }[]>;
+type RowData = Record<
+  string,
+  | string
+  | number
+  | boolean
+  | null
+  | { name: string; type: string; fileId: number }
+  | { name: string; type: string; fileId: number }[]
+>;
 
 /**
  * Table utility functions
@@ -13,21 +21,27 @@ export const validateTableName = (name: string): { isValid: boolean; error?: str
   if (!name || name.trim().length === 0) {
     return { isValid: false, error: 'Table name is required' };
   }
-  
+
   if (name.length > VALIDATION.MAX_TABLE_NAME_LENGTH) {
-    return { isValid: false, error: `Table name must be less than ${VALIDATION.MAX_TABLE_NAME_LENGTH} characters` };
+    return {
+      isValid: false,
+      error: `Table name must be less than ${VALIDATION.MAX_TABLE_NAME_LENGTH} characters`,
+    };
   }
-  
+
   if (name.length < VALIDATION.MIN_TABLE_NAME_LENGTH) {
-    return { isValid: false, error: `Table name must be at least ${VALIDATION.MIN_TABLE_NAME_LENGTH} character` };
+    return {
+      isValid: false,
+      error: `Table name must be at least ${VALIDATION.MIN_TABLE_NAME_LENGTH} character`,
+    };
   }
-  
+
   // Check for invalid characters
   const invalidChars = /[<>:"/\\|?*]/;
   if (invalidChars.test(name)) {
     return { isValid: false, error: 'Table name contains invalid characters' };
   }
-  
+
   return { isValid: true };
 };
 
@@ -35,27 +49,36 @@ export const validateFieldName = (name: string): { isValid: boolean; error?: str
   if (!name || name.trim().length === 0) {
     return { isValid: false, error: 'Field name is required' };
   }
-  
+
   if (name.length > VALIDATION.MAX_FIELD_NAME_LENGTH) {
-    return { isValid: false, error: `Field name must be less than ${VALIDATION.MAX_FIELD_NAME_LENGTH} characters` };
+    return {
+      isValid: false,
+      error: `Field name must be less than ${VALIDATION.MAX_FIELD_NAME_LENGTH} characters`,
+    };
   }
-  
+
   if (name.length < VALIDATION.MIN_FIELD_NAME_LENGTH) {
-    return { isValid: false, error: `Field name must be at least ${VALIDATION.MIN_FIELD_NAME_LENGTH} character` };
+    return {
+      isValid: false,
+      error: `Field name must be at least ${VALIDATION.MIN_FIELD_NAME_LENGTH} character`,
+    };
   }
-  
+
   // Check for invalid characters
   const invalidChars = /[<>:"/\\|?*]/;
   if (invalidChars.test(name)) {
     return { isValid: false, error: 'Field name contains invalid characters' };
   }
-  
+
   return { isValid: true };
 };
 
 // Field utility functions
 export const generateFieldId = (name: string): string => {
-  return name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  return name
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9_]/g, '');
 };
 
 export const getFieldTypeLabel = (type: Field['type']): string => {
@@ -70,7 +93,7 @@ export const getFieldTypeLabel = (type: Field['type']): string => {
     images: 'Images',
     files: 'Files',
   };
-  
+
   return typeLabels[type] || 'Unknown';
 };
 
@@ -86,13 +109,16 @@ export const getFieldTypeDescription = (type: Field['type']): string => {
     images: 'Multiple image uploads',
     files: 'Multiple file uploads',
   };
-  
+
   return descriptions[type] || 'Unknown field type';
 };
 
 // Table utility functions
 export const sanitizeTableName = (name: string): string => {
-  return name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  return name
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9_]/g, '');
 };
 
 export const createDefaultTable = (name: string): Omit<Table, 'id' | 'createdAt' | 'updatedAt'> => {
@@ -110,14 +136,17 @@ export const createDefaultTable = (name: string): Omit<Table, 'id' | 'createdAt'
 
 export const getTableStats = (table: Table) => {
   const fieldCount = table.fields.length;
-  const requiredFields = table.fields.filter(f => f.required).length;
+  const requiredFields = table.fields.filter((f) => f.required).length;
   const optionalFields = fieldCount - requiredFields;
-  
-  const fieldTypes = table.fields.reduce((acc, field) => {
-    acc[field.type] = (acc[field.type] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-  
+
+  const fieldTypes = table.fields.reduce(
+    (acc, field) => {
+      acc[field.type] = (acc[field.type] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
+
   return {
     fieldCount,
     requiredFields,
@@ -143,7 +172,12 @@ export const createEmptyRowData = (table: Table): RowData => {
         acc[field.id] = (field.defaultValue as string) ?? new Date().toISOString().split('T')[0];
         break;
       case 'dropdown':
-        let dropdownVal = field.defaultValue !== undefined ? field.defaultValue : (field.options?.[0] !== undefined ? field.options[0] : '');
+        let dropdownVal =
+          field.defaultValue !== undefined
+            ? field.defaultValue
+            : field.options?.[0] !== undefined
+              ? field.options[0]
+              : '';
         if (dropdownVal === undefined || dropdownVal === null) dropdownVal = '';
         acc[field.id] = String(dropdownVal);
         break;
@@ -162,9 +196,12 @@ export const createEmptyRowData = (table: Table): RowData => {
   }, {} as RowData);
 };
 
-export const validateRowData = (table: Table, data: RowData): { isValid: boolean; errors: string[] } => {
+export const validateRowData = (
+  table: Table,
+  data: RowData,
+): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
-  
+
   for (const field of table.fields) {
     if (field.required) {
       const value = data[field.id];
@@ -172,7 +209,7 @@ export const validateRowData = (table: Table, data: RowData): { isValid: boolean
         errors.push(`${field.name} is required`);
       }
     }
-    
+
     // Type validation
     const value = data[field.id];
     if (value !== null && value !== undefined) {
@@ -195,7 +232,7 @@ export const validateRowData = (table: Table, data: RowData): { isValid: boolean
       }
     }
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors,
@@ -206,15 +243,15 @@ export const validateRowData = (table: Table, data: RowData): { isValid: boolean
 export const searchTableRows = (
   rows: { data: RowData }[],
   table: Table,
-  searchQuery: string
+  searchQuery: string,
 ): { data: RowData }[] => {
   if (!searchQuery.trim()) return rows;
-  
+
   const query = searchQuery.toLowerCase();
-  const textFields = table.fields.filter(f => f.type === 'text').map(f => f.id);
-  
-  return rows.filter(row => {
-    return textFields.some(fieldId => {
+  const textFields = table.fields.filter((f) => f.type === 'text').map((f) => f.id);
+
+  return rows.filter((row) => {
+    return textFields.some((fieldId) => {
       const value = row.data[fieldId];
       return value && String(value).toLowerCase().includes(query);
     });
@@ -224,15 +261,15 @@ export const searchTableRows = (
 export const sortTableRows = (
   rows: { data: RowData }[],
   sortBy: string,
-  sortOrder: 'asc' | 'desc' = 'asc'
+  sortOrder: 'asc' | 'desc' = 'asc',
 ): { data: RowData }[] => {
   return [...rows].sort((a, b) => {
     const aValue = a.data[sortBy];
     const bValue = b.data[sortBy];
-    
+
     if (aValue === null || aValue === undefined) return 1;
     if (bValue === null || bValue === undefined) return -1;
-    
+
     let comparison = 0;
     if (typeof aValue === 'string' && typeof bValue === 'string') {
       comparison = aValue.localeCompare(bValue);
@@ -241,18 +278,18 @@ export const sortTableRows = (
     } else {
       comparison = String(aValue).localeCompare(String(bValue));
     }
-    
+
     return sortOrder === 'desc' ? -comparison : comparison;
   });
 };
 
 // Export functions
 export const exportTableToCSV = (table: Table, rows: { data: RowData }[]): string => {
-  const headers = table.fields.map(f => f.name);
+  const headers = table.fields.map((f) => f.name);
   const csvRows = [headers.join(',')];
-  
+
   for (const row of rows) {
-    const values = table.fields.map(field => {
+    const values = table.fields.map((field) => {
       let value = row.data[field.id];
       if (value === null || value === undefined) {
         value = '';
@@ -263,18 +300,18 @@ export const exportTableToCSV = (table: Table, rows: { data: RowData }[]): strin
     });
     csvRows.push(values.join(','));
   }
-  
+
   return csvRows.join('\n');
 };
 
 export const exportTableToJSON = (table: Table, rows: { data: RowData }[]): string => {
-  const data = rows.map(row => {
+  const data = rows.map((row) => {
     const obj: RowData = {};
     for (const field of table.fields) {
       obj[field.id] = row.data[field.id] ?? null;
     }
     return obj;
   });
-  
+
   return JSON.stringify(data, null, 2);
-}; 
+};

@@ -26,24 +26,27 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   const [notifications, setNotifications] = useState<NotificationProps[]>([]);
 
   const dismissNotification = useCallback((id: string) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
+    setNotifications((prev) => prev.filter((notification) => notification.id !== id));
   }, []);
 
-  const showNotification = useCallback((notification: Omit<NotificationProps, 'id' | 'onDismiss'>) => {
-    const id = Math.random().toString(36).substr(2, 9);
-    const newNotification: NotificationProps = {
-      ...notification,
-      id,
-      onDismiss: dismissNotification,
-    };
-    
-    setNotifications(prev => [...prev, newNotification]);
-  }, [dismissNotification]);
+  const showNotification = useCallback(
+    (notification: Omit<NotificationProps, 'id' | 'onDismiss'>) => {
+      const id = Math.random().toString(36).substr(2, 9);
+      const newNotification: NotificationProps = {
+        ...notification,
+        id,
+        onDismiss: dismissNotification,
+      };
+
+      setNotifications((prev) => [...prev, newNotification]);
+    },
+    [dismissNotification],
+  );
 
   return (
     <NotificationContext.Provider value={{ showNotification, dismissNotification }}>
       {children}
-      
+
       {/* Notification Container */}
       <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm">
         {notifications.map((notification) => (
@@ -52,4 +55,4 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       </div>
     </NotificationContext.Provider>
   );
-}; 
+};

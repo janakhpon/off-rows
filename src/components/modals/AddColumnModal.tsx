@@ -82,7 +82,9 @@ export default function AddColumnModal({ open, onClose, onAddColumn }: AddColumn
         <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Add Column</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
+            <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+              Name
+            </label>
             <input
               name="name"
               value={form.name}
@@ -93,7 +95,9 @@ export default function AddColumnModal({ open, onClose, onAddColumn }: AddColumn
             />
           </div>
           <div>
-            <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
+            <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+              Type
+            </label>
             <select
               name="type"
               value={form.type}

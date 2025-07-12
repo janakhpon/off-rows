@@ -79,9 +79,9 @@ export default function ClientApp() {
   return (
     <div className="flex h-screen bg-white dark:bg-gray-800">
       <OfflineIndicator />
-      <Sidebar 
-        isCollapsed={sidebarCollapsed} 
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+      <Sidebar
+        isCollapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header

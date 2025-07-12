@@ -26,24 +26,24 @@ export default function SQLGeneratorDemo() {
 
   const generateSampleData = () => {
     if (!selectedTable) return;
-    
+
     // Generate sample INSERT statements
     const sampleData = [
       { taskName: 'Sample Task 1', status: 'In Progress', priority: 'High' },
       { taskName: 'Sample Task 2', status: 'Completed', priority: 'Medium' },
     ];
-    
-    const insertStatements = sampleData.map(data => 
-      SQLGenerator.generateInsertSQL(selectedTable, data)
-    ).join('\n\n');
-    
+
+    const insertStatements = sampleData
+      .map((data) => SQLGenerator.generateInsertSQL(selectedTable, data))
+      .join('\n\n');
+
     setGeneratedSQL(insertStatements);
   };
 
   return (
     <div className="p-6 mx-auto max-w-4xl">
       <h1 className="mb-6 text-2xl font-bold">SQL Schema Generator Demo</h1>
-      
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Left Panel - Table Selection */}
         <div className="space-y-4">
@@ -73,13 +73,16 @@ export default function SQLGeneratorDemo() {
             <h2 className="mb-3 text-lg font-semibold">Generate Options</h2>
             <div className="space-y-2">
               <button
-                onClick={() => selectedTable && setGeneratedSQL(SQLGenerator.generateCreateTableSQL(selectedTable))}
+                onClick={() =>
+                  selectedTable &&
+                  setGeneratedSQL(SQLGenerator.generateCreateTableSQL(selectedTable))
+                }
                 disabled={!selectedTable}
                 className="p-2 w-full text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Generate CREATE TABLE
               </button>
-              
+
               <button
                 onClick={generateSampleData}
                 disabled={!selectedTable}
@@ -87,7 +90,7 @@ export default function SQLGeneratorDemo() {
               >
                 Generate Sample INSERT
               </button>
-              
+
               <button
                 onClick={generateCompleteSchema}
                 className="p-2 w-full text-white bg-purple-600 rounded hover:bg-purple-700"
@@ -119,9 +122,11 @@ export default function SQLGeneratorDemo() {
         <div>
           <h2 className="mb-3 text-lg font-semibold">Generated SQL</h2>
           <div className="overflow-auto p-4 max-h-96 text-green-400 bg-gray-900 rounded-lg">
-            <pre className="text-sm whitespace-pre-wrap">{generatedSQL || 'Select a table and generate SQL to see the output...'}</pre>
+            <pre className="text-sm whitespace-pre-wrap">
+              {generatedSQL || 'Select a table and generate SQL to see the output...'}
+            </pre>
           </div>
-          
+
           {generatedSQL && (
             <div className="mt-4">
               <button
@@ -143,4 +148,4 @@ export default function SQLGeneratorDemo() {
       </div>
     </div>
   );
-} 
+}

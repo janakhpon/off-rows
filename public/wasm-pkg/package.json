@@ -1,0 +1,15 @@
+{
+  "name": "wasmimage",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "wasmimage_bg.wasm",
+    "wasmimage.js",
+    "wasmimage.d.ts"
+  ],
+  "main": "wasmimage.js",
+  "types": "wasmimage.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
