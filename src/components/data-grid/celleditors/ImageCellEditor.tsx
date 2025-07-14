@@ -60,7 +60,7 @@ const ImageCellEditor: React.FC<ImageCellEditorProps> = ({
       const processedFormat = ext.toUpperCase();
 
       // Save to IDB (will be synced to S3 in background if enabled)
-      await saveImageToIDB({ filename, data: processed, synced: false });
+      await saveImageToIDB({ filename, data: processed });
 
       // Create a new File object for the processed image
       const processedFile = new File([processed], filename, {
@@ -107,7 +107,7 @@ const ImageCellEditor: React.FC<ImageCellEditorProps> = ({
   return (
     <div className="flex flex-row gap-2 items-center h-full transition-all duration-200">
       {value && getFileUrl(value.fileId) ? (
-        <div className="flex items-center gap-1">
+        <div className="flex gap-1 items-center">
           <img
             src={getFileUrl(value.fileId)!}
             alt={value.name}
@@ -119,7 +119,7 @@ const ImageCellEditor: React.FC<ImageCellEditorProps> = ({
           />
           {/* Small replace button */}
           <button
-            className="flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium border border-gray-300 transition-all duration-150 text-gray-500 hover:text-blue-600 hover:bg-blue-50 hover:scale-110"
+            className="flex justify-center items-center w-6 h-6 text-xs font-medium text-gray-500 rounded-full border border-gray-300 transition-all duration-150 hover:text-blue-600 hover:bg-blue-50 hover:scale-110"
             onClick={() => fileInputRef.current?.click()}
             disabled={isProcessing}
             type="button"

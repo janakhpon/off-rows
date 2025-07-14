@@ -48,6 +48,7 @@ interface AppState {
   // Column operations
   addColumn: (field: Omit<Table['fields'][0], 'id'> & { id?: string }) => Promise<void>;
   deleteColumn: (fieldId: string) => Promise<void>;
+  updateColumn: (tableId: number, updatedField: Table['fields'][0]) => Promise<void>;
 
   // Add actions for colWidths/rowHeights
   updateColWidths: (tableId: number, colWidths: Record<string, number>) => Promise<void>;
@@ -94,6 +95,7 @@ const createInitialState = (): Omit<
   error: null,
   sidebarCollapsed: false,
   selectedRows: new Set<number>(),
+  updateColumn: async () => {},
 });
 
 const withLoading = <T extends object>(updates: T) => ({
@@ -410,6 +412,16 @@ export const useAppStore = create<AppState>()(
             set({ loading: false });
           }
         },
+        updateColumn: async (tableId, updatedField) => {
+          const { tables } = get();
+          const table = tables.find((t) => t.id === tableId);
+          if (!table) return;
+          const updatedFields = table.fields.map((f) =>
+            f.id === updatedField.id ? { ...f, ...updatedField } : f
+          );
+          await tableOperations.update(tableId, { fields: updatedFields });
+          await get().refreshTables();
+        },
 
         // Add actions for colWidths/rowHeights
         updateColWidths: async (tableId, colWidths) => {
@@ -440,6 +452,7 @@ export const useAppStore = create<AppState>()(
         partialize: (state) => ({
           sidebarCollapsed: state.sidebarCollapsed,
           selectedRows: Array.from(state.selectedRows),
+          updateColumn: state.updateColumn,
         }),
       },
     ),

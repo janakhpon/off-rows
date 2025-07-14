@@ -50,6 +50,7 @@
   ],
   "exclude": [
     "node_modules",
+    "backend",
     ".next",
     "out",
     "dist",

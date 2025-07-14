@@ -1,4 +1,4 @@
-import { syncImagesToS3IfNeeded } from './s3Sync';
+import { syncImagesToS3IfNeeded, retryFailedS3Operations } from './s3Sync';
 import { useImageSettingsStore } from './imageSettingsStore';
 
 class BackgroundSyncService {
@@ -37,10 +37,25 @@ class BackgroundSyncService {
   private async performSync() {
     try {
       const { syncImagesToS3 } = useImageSettingsStore.getState();
+      console.log('Background sync check:', { syncImagesToS3, isOnline: navigator.onLine });
 
       // Only sync if enabled and online
       if (syncImagesToS3 && navigator.onLine) {
-        await syncImagesToS3IfNeeded();
+        console.log('Starting S3 sync...');
+        const result = await syncImagesToS3IfNeeded();
+        
+        if (result.success) {
+          console.log('S3 sync completed with stats:', result.stats);
+          
+          // Log summary if there were operations
+          if (result.stats.uploaded > 0 || result.stats.deleted > 0) {
+            console.log(`Sync Summary: ${result.stats.uploaded} uploaded, ${result.stats.deleted} deleted, ${result.stats.failed} failed`);
+          }
+        } else {
+          console.error('S3 sync failed:', result.error);
+        }
+      } else {
+        console.log('S3 sync skipped - conditions not met');
       }
     } catch (error) {
       console.error('Background sync failed:', error);
@@ -50,6 +65,22 @@ class BackgroundSyncService {
   // Manual sync trigger (for immediate sync when settings change)
   async triggerSync() {
     await this.performSync();
+  }
+
+  // Manual retry trigger for failed operations
+  async triggerRetry() {
+    try {
+      console.log('Triggering retry of failed operations...');
+      const result = await retryFailedS3Operations();
+      
+      if (result.success) {
+        console.log('Retry completed with stats:', result.stats);
+      } else {
+        console.error('Retry failed:', result.error);
+      }
+    } catch (error) {
+      console.error('Retry trigger failed:', error);
+    }
   }
 }
 

@@ -8,7 +8,7 @@ import { useTheme } from '@/app/contexts/ThemeContext';
 import { useAppStore } from '@/lib/store';
 import { Field, TableRow, FileValueWithId, Table } from '@/lib/schemas';
 import { AddColumnModal, DeleteColumnModal, TableSchemaModal } from '@/components';
-import { fileOperations, addDeletedFileRecord } from '@/lib/database';
+import { fileOperations } from '@/lib/database';
 import TextCellEditor from './celleditors/TextCellEditor';
 import NumberCellEditor from './celleditors/NumberCellEditor';
 import DateCellEditor from './celleditors/DateCellEditor';
@@ -20,6 +20,9 @@ import FilesCellEditor from './celleditors/FilesCellEditor';
 import ImageCellEditor from './celleditors/ImageCellEditor';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
+import EditColumnModal from '@/components/modals/EditColumnModal';
+import ColumnHeaderModal from '@/components/modals/ColumnHeaderModal';
+import { saveFileWithSync, deleteFileWithSync } from '@/lib/syncOrchestrator';
 
 type DataGridRow = {
   id: number;
@@ -135,6 +138,10 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
   const [selectedRows, setSelectedRows] = useState<Set<number>>(createEmptySet());
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteType, setDeleteType] = useState<'rows' | 'table' | null>(null);
+  const [showEditColumn, setShowEditColumn] = useState(false);
+  const [columnToEdit, setColumnToEdit] = useState<Field | null>(null);
+  const [showColumnHeaderModal, setShowColumnHeaderModal] = useState(false);
+  const [columnForModal, setColumnForModal] = useState<Field | null>(null);
 
   // --- CELL EDITING STATE ---
   // Track which cell is currently being edited
@@ -190,7 +197,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
   }, [activeTable]);
 
   useEffect(() => {
-    if (activeTable) updateColWidths(activeTable.id!, colWidths);
+    if (activeTable && typeof activeTable.id === 'number') updateColWidths(activeTable.id, colWidths);
   }, [colWidths, activeTable, updateColWidths]);
 
   // --- ROW HEIGHT STATE (PERSISTED IN DB) ---
@@ -201,7 +208,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
   }, [activeTable]);
 
   useEffect(() => {
-    if (activeTable) updateRowHeights(activeTable.id!, rowHeights);
+    if (activeTable && typeof activeTable.id === 'number') updateRowHeights(activeTable.id, rowHeights);
   }, [rowHeights, activeTable, updateRowHeights]);
 
   // Helper to get column width with fallback to default
@@ -305,10 +312,21 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
   // State for image preview modal
   const [imageModal, setImageModal] = useState<{ images: { url: string; name: string; fileId: number }[]; index: number } | null>(null);
   const [imageModalFullscreen, setImageModalFullscreen] = useState(false);
+  const [imageModalClosing, setImageModalClosing] = useState(false);
   // Helper to open modal for single or multiple images
   const openImageModal = useCallback((images: { url: string; name: string; fileId: number }[], index: number) => {
     setImageModal({ images, index });
     setImageModalFullscreen(false);
+    setImageModalClosing(false);
+  }, []);
+
+  // Helper to close modal with fade-out
+  const closeImageModal = useCallback(() => {
+    setImageModalClosing(true);
+    setTimeout(() => {
+      setImageModal(null);
+      setImageModalClosing(false);
+    }, 200); // match CSS transition duration
   }, []);
   // --- SELECT ALL CHECKBOX LOGIC ---
   const allRowIds = orderedRows
@@ -392,7 +410,31 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
     // Data columns
     const dataCols = activeTable.fields.map((field) => ({
       key: field.id,
-      name: field.name,
+      name: (
+        <div 
+          className="flex justify-between items-center px-2 py-1 rounded transition-colors cursor-pointer group hover:bg-gray-50 dark:hover:bg-gray-700"
+          onClick={() => {
+            setColumnForModal(field);
+            setShowColumnHeaderModal(true);
+          }}
+          title={`Click to manage column: ${field.name}`}
+        >
+          <span className="truncate max-w-[120px]" title={field.name}>{field.name}</span>
+          <button
+            className="p-1 rounded opacity-0 transition-opacity group-hover:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-600"
+            onClick={(e) => {
+              e.stopPropagation();
+              setColumnForModal(field);
+              setShowColumnHeaderModal(true);
+            }}
+            title={`Manage column: ${field.name}`}
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+            </svg>
+          </button>
+        </div>
+      ),
       width: getColWidth(field.id, field.type),
       resizable: true,
       renderCell: ({ row }: RenderCellProps<DataGridRow>) => {
@@ -510,7 +552,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
                   try {
                     const newImages: FileValueWithId[] = [];
                     for (const file of files) {
-                      const fileId = await fileOperations.addFile(file);
+                      const fileId = await saveFileWithSync(file.name, new Uint8Array(await file.arrayBuffer()));
                       newImages.push({ fileId, name: file.name, type: file.type });
                     }
                     updateRow(row.id, {
@@ -551,7 +593,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
                   try {
                     const newFiles: FileValueWithId[] = [];
                     for (const file of files) {
-                      const fileId = await fileOperations.addFile(file);
+                      const fileId = await saveFileWithSync(file.name, new Uint8Array(await file.arrayBuffer()));
                       newFiles.push({ fileId, name: file.name, type: file.type });
                     }
                     updateRow(row.id, {
@@ -578,7 +620,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
                 getFileUrl={getFileUrl}
                 onUpload={async (file: File) => {
                   try {
-                    const fileId = await fileOperations.addFile(file);
+                    const fileId = await saveFileWithSync(file.name, new Uint8Array(await file.arrayBuffer()));
                     updateRow(row.id, {
                       data: {
                         ...row.data,
@@ -589,7 +631,11 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
                     // Error handling removed with notification system
                   }
                 }}
-                onPreview={(url: string, name: string, fileId?: number) => openImageModal([{ url, name, fileId: fileId ?? 0 }], 0)}
+                onPreview={(url: string, name: string) => {
+                  // Always use the fileId from the value for single image fields
+                  const fileValue = value && typeof value === 'object' && 'fileId' in value ? value : null;
+                  openImageModal([{ url, name, fileId: fileValue?.fileId ?? 0 }], 0);
+                }}
                 ariaLabel={field.name}
               />
             );
@@ -604,7 +650,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
                 getFileUrl={getFileUrl}
                 onUpload={async (file: File) => {
                   try {
-                    const fileId = await fileOperations.addFile(file);
+                    const fileId = await saveFileWithSync(file.name, new Uint8Array(await file.arrayBuffer()));
                     updateRow(row.id, {
                       data: {
                         ...row.data,
@@ -687,9 +733,9 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
 
   // Add new row with proper field initialization
   const handleAddRow = async () => {
-    if (!activeTable) return;
+    if (!activeTable || typeof activeTable.id !== 'number') return;
     const newRow: Omit<TableRow, 'id' | 'createdAt' | 'updatedAt'> = {
-      tableId: activeTable.id!,
+      tableId: activeTable.id,
       data: createNewRowData(activeTable),
     };
     try {
@@ -807,6 +853,63 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
     );
   }
 
+  // Helper to delete a file or image from a row (handles single/multiple, image/file)
+  async function handleDeleteFileOrImage({
+    fileId,
+    fieldType,
+    fieldId,
+    row,
+    updateRow,
+    setImageModal,
+    imageModal,
+  }: {
+    fileId: number;
+    fieldType: string;
+    fieldId: string;
+    row: TableRow;
+    updateRow: (id: number, updates: Partial<Omit<TableRow, 'id' | 'createdAt'>>) => Promise<void>;
+    setImageModal: (modal: { images: { url: string; name: string; fileId: number }[]; index: number } | null) => void;
+    imageModal: { images: { url: string; name: string; fileId: number }[]; index: number } | null;
+  }) {
+    console.log('[handleDeleteFileOrImage] called with:', { fileId, fieldType, fieldId, row });
+    // Remove the file from IDB
+    await deleteFileWithSync(fileId);
+    let newData;
+    if (fieldType === 'images' || fieldType === 'files') {
+      // Remove from array
+      const arr = Array.isArray(row.data[fieldId]) ? row.data[fieldId] : [];
+      const newArr = arr.filter((v) => v && typeof v === 'object' && 'fileId' in v && v.fileId !== fileId);
+      newData = { ...row.data, [fieldId]: newArr };
+      console.log('[handleDeleteFileOrImage] new array after deletion:', newArr);
+    } else if (fieldType === 'image' || fieldType === 'file') {
+      // Set to null
+      newData = { ...row.data, [fieldId]: null };
+      console.log('[handleDeleteFileOrImage] set field to null');
+    } else {
+      console.warn('[handleDeleteFileOrImage] unknown fieldType:', fieldType);
+      return;
+    }
+    if (typeof row.id === 'number') {
+      console.log('[handleDeleteFileOrImage] updating row', row.id, 'with data:', newData);
+      await updateRow(row.id, { data: newData });
+    } else {
+      console.warn('[handleDeleteFileOrImage] row.id is not a number:', row.id);
+    }
+    // Update modal state
+    if (imageModal) {
+      const newImages = imageModal.images.filter((img) => img.fileId !== fileId);
+      console.log('[handleDeleteFileOrImage] newImages for modal:', newImages);
+      if (newImages.length === 0) {
+        console.log('[handleDeleteFileOrImage] closing modal');
+        closeImageModal();
+      } else {
+        const newIndex = Math.max(0, imageModal.index - (imageModal.index === newImages.length ? 1 : 0));
+        console.log('[handleDeleteFileOrImage] updating modal, new index:', newIndex);
+        setImageModal({ images: newImages, index: newIndex });
+      }
+    }
+  }
+
   return (
     <div className="flex overflow-auto flex-col flex-grow px-1 min-w-0 sm:px-2">
       {/* Modals */}
@@ -825,6 +928,42 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
             setActiveTable(updated);
             setShowAddColumn(false);
           } catch {}
+        }}
+      />
+      <EditColumnModal
+        open={showEditColumn}
+        onClose={() => {
+          setShowEditColumn(false);
+          setColumnToEdit(null);
+        }}
+        onEditColumn={async (field) => {
+          try {
+            // update column logic
+            if (activeTable && typeof activeTable.id === 'number' && field.id) {
+              await useAppStore.getState().updateColumn(activeTable.id, field);
+              await refreshTables();
+              setActiveTable(
+                useAppStore.getState().tables.find((t) => t.id === activeTable.id) || activeTable
+              );
+            }
+          } catch {}
+        }}
+        column={columnToEdit!}
+      />
+      <ColumnHeaderModal
+        open={showColumnHeaderModal}
+        onClose={() => {
+          setShowColumnHeaderModal(false);
+          setColumnForModal(null);
+        }}
+        column={columnForModal!}
+        onEditColumn={(field) => {
+          setColumnToEdit(field);
+          setShowEditColumn(true);
+        }}
+        onDeleteColumn={(field) => {
+          setColumnToDelete(field);
+          setShowDeleteColumn(true);
         }}
       />
       <DeleteColumnModal
@@ -899,8 +1038,8 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
       {/* Image Modal */}
       {imageModal && imageModal.images && typeof imageModal.index === 'number' && (
         <div
-          className={`flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-60 animate-fade-in ${imageModalFullscreen ? 'p-0' : ''}`}
-          onClick={() => setImageModal(null)}
+          className={`flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-60 transition-opacity duration-200 ${imageModalClosing ? 'opacity-0' : 'opacity-100'} ${imageModalFullscreen ? 'p-0' : ''}`}
+          onClick={closeImageModal}
           role="dialog"
           aria-modal="true"
           aria-labelledby="image-modal-title"
@@ -954,12 +1093,29 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
               url={imageModal.images[imageModal.index]?.url || ''}
               name={imageModal.images[imageModal.index]?.name || ''}
               onDelete={async () => {
-                // Find the row and field for this image (multi-image field)
-                if (!activeTable) return;
-                let found = false;
-                if (!imageModal || !imageModal.images || typeof imageModal.index !== 'number') return;
+                console.log('onDelete in modal called');
+                if (!activeTable) {
+                  console.log('activeTable is falsy');
+                  return;
+                }
+                if (!imageModal) {
+                  console.log('imageModal is falsy');
+                  return;
+                }
+                if (!imageModal.images) {
+                  console.log('imageModal.images is falsy');
+                  return;
+                }
+                if (typeof imageModal.index !== 'number') {
+                  console.log('imageModal.index is not a number:', imageModal.index);
+                  return;
+                }
                 const currentImage = imageModal.images[imageModal.index];
-                if (!currentImage) return;
+                if (!currentImage) {
+                  console.log('currentImage is falsy');
+                  return;
+                }
+                // Find the row and field for this image/file
                 for (const row of orderedRows) {
                   for (const field of activeTable.fields) {
                     const value = row.data[field.id];
@@ -967,34 +1123,37 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
                       const idx = value.findIndex(
                         (v) => v && typeof v === 'object' && 'fileId' in v && v.fileId === currentImage.fileId
                       );
+                      console.log('Checking array field', field.id, 'row', row.id, 'idx', idx, 'currentImage.fileId', currentImage.fileId, 'value', value);
                       if (idx !== -1) {
-                        const fileValue = value[idx];
-                        if (fileValue && typeof fileValue.fileId === 'number') {
-                          // Remove the file from IDB
-                          await fileOperations.deleteFile(fileValue.fileId);
-                          // Add to deleted_files for S3 sync
-                          await addDeletedFileRecord({ fileId: fileValue.fileId, filename: fileValue.name });
-                          // Remove the image from the array
-                          const newArr = value.slice(0, idx).concat(value.slice(idx + 1));
-                          const newData = { ...row.data, [field.id]: newArr };
-                          if (typeof row.id === 'number') {
-                            await updateRow(row.id, { data: newData });
-                          }
-                          found = true;
-                          // Update modal images
-                          const newImages = imageModal.images.filter((img, i) => i !== imageModal.index);
-                          if (newImages.length === 0) {
-                            setImageModal(null);
-                          } else {
-                            setImageModal({ images: newImages, index: Math.max(0, imageModal.index - (imageModal.index === newImages.length ? 1 : 0)) });
-                          }
-                          break;
-                        }
+                        await handleDeleteFileOrImage({
+                          fileId: currentImage.fileId,
+                          fieldType: field.type,
+                          fieldId: field.id,
+                          row,
+                          updateRow,
+                          setImageModal,
+                          imageModal,
+                        });
+                        return;
                       }
+                    } else if (
+                      value && typeof value === 'object' && 'fileId' in value && value.fileId === currentImage.fileId
+                    ) {
+                      console.log('Found single file/image field', field.id, 'row', row.id, 'currentImage.fileId', currentImage.fileId, 'value', value);
+                      await handleDeleteFileOrImage({
+                        fileId: currentImage.fileId,
+                        fieldType: field.type,
+                        fieldId: field.id,
+                        row,
+                        updateRow,
+                        setImageModal,
+                        imageModal,
+                      });
+                      return;
                     }
                   }
-                  if (found) break;
                 }
+                console.log('No matching row/field found for currentImage.fileId', currentImage.fileId);
               }}
               fullscreen={imageModalFullscreen}
               onToggleFullscreen={() => setImageModalFullscreen((f) => !f)}
@@ -1204,7 +1363,7 @@ function ImageStatusBar({ url, name, onDelete, fullscreen, onToggleFullscreen }:
       <div className="flex gap-3 items-center">
         <button
           className="transition-colors cursor-pointer text-primary hover:text-red-600"
-          onClick={onDelete}
+          onClick={() => { console.log('Delete button clicked'); onDelete(); }}
           title="Delete image"
           aria-label="Delete image"
           type="button"

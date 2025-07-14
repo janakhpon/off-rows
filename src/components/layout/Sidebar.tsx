@@ -29,6 +29,8 @@ import { cn } from '@/lib/utils';
 import { useImageSettingsStore } from '@/lib/imageSettingsStore';
 import { backgroundSyncService } from '@/lib/backgroundSync';
 import { useBackgroundSync } from '@/lib/useBackgroundSync';
+import { ApiService } from '@/lib/api';
+import { useEffect } from 'react';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -51,6 +53,27 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
   // Background sync state
   const { isOnline, pendingCount, syncedCount } = useBackgroundSync();
+
+  // S3 backend status
+  const [isS3Available, setIsS3Available] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const checkS3Status = async () => {
+      try {
+        const status = await ApiService.getS3Status();
+        if (!cancelled) {
+          setIsS3Available(status.configured);
+        }
+      } catch {
+        if (!cancelled) {
+          setIsS3Available(false);
+        }
+      }
+    };
+    checkS3Status();
+    return () => { cancelled = true; };
+  }, []);
 
   // Image settings state (from global store)
   const convertToWebP = useImageSettingsStore((s) => s.convertToWebP);
@@ -497,6 +520,26 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                     )}
                   </div>
 
+                  {/* Backend API Status Indicator */}
+                  <div className="flex justify-between items-center p-3 bg-gray-50/80 rounded-lg dark:bg-gray-700/80 transition-all duration-200 hover:bg-gray-100/80 dark:hover:bg-gray-600/80">
+                    <div className="flex items-center space-x-2">
+                      {isS3Available === null ? (
+                        <AlertTriangle className="w-3 h-3 text-gray-400 animate-pulse" />
+                      ) : isS3Available ? (
+                        <Cloud className="w-3 h-3 text-green-600" />
+                      ) : (
+                        <Cloud className="w-3 h-3 text-red-600" />
+                      )}
+                      <span className="text-xs text-gray-600 dark:text-gray-300 transition-colors duration-200">
+                        {isS3Available === null
+                          ? 'Checking backend...'
+                          : isS3Available
+                          ? 'Backend API available'
+                          : 'Backend API unreachable'}
+                      </span>
+                    </div>
+                  </div>
+
                   {/* Sync Options - Only show when sync is enabled */}
                   {syncEnabled && (
                     <div className="p-3 space-y-3 bg-blue-50/80 rounded-lg border border-blue-200 dark:bg-blue-900/20 dark:border-blue-700 transition-all duration-300 animate-fade-in-up">
@@ -692,14 +735,16 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
                         {isOnline
-                          ? 'Sync images to AWS S3 when online'
+                          ? isS3Available === false
+                            ? 'S3 backend not reachable'
+                            : 'Sync images to AWS S3 when online'
                           : 'Requires internet connection'}
                       </p>
                     </div>
                     <Switch
                       checked={syncImagesToS3}
                       onCheckedChange={handleSyncImagesToS3Toggle}
-                      disabled={!isOnline}
+                      disabled={!isOnline || !isS3Available}
                       className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-gray-600 disabled:opacity-50 transition-all duration-200 hover:scale-105"
                     />
                   </div>

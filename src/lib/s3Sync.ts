@@ -1,37 +1,40 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { getUnsyncedImages, markImageAsSynced } from './database';
 import { getImageSettingsSnapshot } from './imageSettingsStore';
+import { executeS3Sync, retryFailedOperations, SyncResult } from './syncOrchestrator';
 
-const s3 = new S3Client({
-  region: process.env.NEXT_PUBLIC_AWS_REGION!,
-  credentials: {
-    accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY!,
-  },
-});
-
-export async function uploadImageToS3({ filename, data }: { filename: string; data: Uint8Array }) {
-  const command = new PutObjectCommand({
-    Bucket: process.env.NEXT_PUBLIC_AWS_BUCKET_NAME!,
-    Key: filename,
-    Body: data,
-    ContentType: filename.endsWith('.webp') ? 'image/webp' : 'image/jpeg',
+export async function syncImagesToS3IfNeeded(): Promise<SyncResult> {
+  const { syncImagesToS3 } = getImageSettingsSnapshot();
+  console.log('S3 Sync Debug:', {
+    syncImagesToS3,
+    isOnline: navigator.onLine,
   });
-  await s3.send(command);
+  
+  if (!syncImagesToS3 || !navigator.onLine) {
+    console.log('S3 Sync skipped:', { syncImagesToS3, isOnline: navigator.onLine });
+    return { success: false, stats: { uploaded: 0, deleted: 0, failed: 0, retried: 0 }, error: 'Sync disabled or offline' };
+  }
+  
+  // Execute S3 sync using the orchestrator
+  const result = await executeS3Sync();
+  
+  if (result.success) {
+    console.log('S3 Sync completed with stats:', result.stats);
+  } else {
+    console.error('S3 Sync failed:', result.error);
+  }
+  
+  return result;
 }
 
-export async function syncImagesToS3IfNeeded() {
-  const { syncImagesToS3 } = getImageSettingsSnapshot();
-  if (!syncImagesToS3 || !navigator.onLine) return;
-  const unsynced = await getUnsyncedImages();
-  for (const img of unsynced) {
-    try {
-      await uploadImageToS3({ filename: img.filename, data: img.data });
-      if (typeof img.id === 'number') {
-        await markImageAsSynced(img.id);
-      }
-    } catch {
-      // Optionally log or show error
-    }
+export async function retryFailedS3Operations(): Promise<SyncResult> {
+  console.log('Retrying failed S3 operations...');
+  
+  const result = await retryFailedOperations();
+  
+  if (result.success) {
+    console.log('Retry completed with stats:', result.stats);
+  } else {
+    console.error('Retry failed:', result.error);
   }
+  
+  return result;
 }

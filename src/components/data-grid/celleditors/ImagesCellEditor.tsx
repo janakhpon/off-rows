@@ -70,7 +70,7 @@ const ImagesCellEditor: React.FC<ImagesCellEditorProps> = ({
           const processedFormat = ext.toUpperCase();
 
           // Save to IDB (will be synced to S3 in background if enabled)
-          await saveImageToIDB({ filename, data: processed, synced: false });
+          await saveImageToIDB({ filename, data: processed });
 
           // Create a new File object for the processed image
           const processedFile = new File([processed], filename, {

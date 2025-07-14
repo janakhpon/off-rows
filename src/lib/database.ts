@@ -19,19 +19,49 @@ db.version(4).stores({
   files: '++id, name, type',
 });
 
-// Extend schema for images table
+// Enhanced schema for images with comprehensive tracking
 if (!db.tables.some((t) => t.name === 'images')) {
-  db.version(5).stores({
-    images: '++id, filename, synced, createdAt',
+  console.log('Creating images table with enhanced schema...');
+  db.version(7).stores({
+    images: '++id, filename, synced, syncStatus, s3Key, lastSyncAttempt, createdAt, updatedAt',
   });
+} else {
+  console.log('Images table already exists');
 }
 
 // Add deleted_files table for tracking deletions
 if (!db.tables.some((t) => t.name === 'deleted_files')) {
-  db.version(6).stores({
-    deleted_files: '++id, fileId, filename, deletedAt, synced',
+  console.log('Creating deleted_files table...');
+  db.version(8).stores({
+    deleted_files: '++id, fileId, filename, s3Key, deletedAt, synced, syncStatus',
+  });
+} else {
+  console.log('Deleted_files table already exists');
+}
+
+// Add file_operations table for tracking pending operations
+if (!db.tables.some((t) => t.name === 'file_operations')) {
+  console.log('Creating file_operations table...');
+  db.version(9).stores({
+    file_operations: '++id, fileId, operation, status, createdAt, retryCount',
+  });
+} else {
+  console.log('File_operations table already exists');
+}
+
+// Extend files table schema for S3 sync meta
+if (!db.tables.some((t) => t.name === 'files')) {
+  db.version(10).stores({
+    files: '++id, name, type, s3Key, synced, syncStatus, lastSyncAttempt, createdAt, updatedAt',
+  });
+} else {
+  db.version(10).stores({
+    files: '++id, name, type, s3Key, synced, syncStatus, lastSyncAttempt, createdAt, updatedAt',
   });
 }
+
+console.log('Database schema version:', db.verno);
+console.log('Available tables:', db.tables.map(t => t.name));
 
 // Initialize with sample data if database is empty
 export async function initializeDatabase() {
@@ -391,74 +421,340 @@ export const viewOperations = {
   },
 };
 
-// File operations for offline blob storage
+// File operations for offline blob storage with meta tracking
 export const fileOperations = {
   async addFile(file: File): Promise<number> {
+    const now = new Date().toISOString();
+    const s3Key = `files/${Date.now()}_${file.name}`;
     const id = await db.table('files').add({
       name: file.name,
       type: file.type,
       blob: file,
+      s3Key,
+      synced: false,
+      syncStatus: 'pending',
+      lastSyncAttempt: '',
+      createdAt: now,
+      updatedAt: now,
     });
     return id as number;
   },
-  async getFileById(id: number): Promise<{ name: string; type: string; blob: Blob } | undefined> {
+  async updateFile(id: number, file: File): Promise<void> {
+    const now = new Date().toISOString();
+    await db.table('files').update(id, {
+      name: file.name,
+      type: file.type,
+      blob: file,
+      synced: false,
+      syncStatus: 'pending',
+      lastSyncAttempt: '',
+      updatedAt: now,
+    });
+  },
+  async getFileById(id: number): Promise<{ name: string; type: string; blob: Blob; s3Key?: string } | undefined> {
     const file = await db.table('files').get(id);
     if (!file) return undefined;
-    return { name: file.name, type: file.type, blob: file.blob };
+    return { name: file.name, type: file.type, blob: file.blob, s3Key: file.s3Key };
   },
   async deleteFile(id: number): Promise<void> {
     await db.table('files').delete(id);
   },
+  async getUnsyncedFiles(): Promise<import('./syncOrchestrator').SyncedFileRecord[]> {
+    return db.table('files').filter(f => f.syncStatus === 'pending' || f.syncStatus === 'failed').toArray();
+  },
+  async markFileAsSynced(id: number): Promise<void> {
+    await db.table('files').update(id, { synced: true, syncStatus: 'synced' });
+  },
+  async markFileAsFailed(id: number): Promise<void> {
+    await db.table('files').update(id, { syncStatus: 'failed' });
+  },
 };
 
-export async function saveImageToIDB({
-  filename,
-  data,
-  synced = false,
-}: {
-  filename: string;
-  data: Uint8Array;
-  synced?: boolean;
-}): Promise<number> {
-  const id = await db.table('images').add({
-    filename,
-    data,
-    synced,
-    createdAt: new Date().toISOString(),
-  } as ImageRecord);
+// File meta management for S3 sync (mirroring images)
+export async function saveFileToIDB({ filename, data }: { filename: string; data: Uint8Array }): Promise<number> {
+  const now = new Date().toISOString();
+  const s3Key = `files/${Date.now()}_${filename}`;
+  const file = new File([data], filename);
+  const id = await db.table('files').add({
+    name: filename,
+    type: file.type,
+    blob: file,
+    s3Key,
+    synced: false,
+    syncStatus: 'pending',
+    lastSyncAttempt: '',
+    createdAt: now,
+    updatedAt: now,
+  });
   return id as number;
 }
 
-export async function getUnsyncedImages(): Promise<ImageRecord[]> {
-  // Use 0 for false in IndexedDB boolean index
-  return db.table('images').where('synced').equals(0).toArray() as Promise<ImageRecord[]>;
-}
-
-export async function markImageAsSynced(id: number): Promise<void> {
-  await db.table('images').update(id, { synced: true });
-}
-
-export async function addDeletedFileRecord({ fileId, filename }: { fileId: number; filename: string }) {
-  await db.table('deleted_files').add({
-    fileId,
-    filename,
-    deletedAt: new Date().toISOString(),
+export async function updateFileInIDB({ id, filename, data }: { id: number; filename: string; data: Uint8Array }): Promise<void> {
+  const now = new Date().toISOString();
+  const file = new File([data], filename);
+  await db.table('files').update(id, {
+    name: filename,
+    type: file.type,
+    blob: file,
     synced: false,
+    syncStatus: 'pending',
+    lastSyncAttempt: '',
+    updatedAt: now,
   });
 }
 
-export async function getUnsyncedDeletedFiles() {
-  return db.table('deleted_files').where('synced').equals(0).toArray();
+export async function deleteFileFromIDB(id: number): Promise<void> {
+  await db.table('files').delete(id);
 }
 
-export async function markDeletedFileAsSynced(id: number) {
-  await db.table('deleted_files').update(id, { synced: true });
+// Migration: update existing files with meta fields
+(async function migrateFilesTable() {
+  const files = await db.table('files').toArray();
+  for (const file of files) {
+    if (!file.s3Key) {
+      const s3Key = `files/${Date.now()}_${file.name}`;
+      await db.table('files').update(file.id, {
+        s3Key,
+        synced: false,
+        syncStatus: 'pending',
+        lastSyncAttempt: '',
+        createdAt: file.createdAt || new Date().toISOString(),
+        updatedAt: file.updatedAt || new Date().toISOString(),
+      });
+    }
+  }
+})();
+
+// Enhanced file/image management functions - Single Purpose Functions
+
+// === IMAGE STORAGE FUNCTIONS ===
+export async function saveImageToIDB({
+  filename,
+  data,
+}: {
+  filename: string;
+  data: Uint8Array;
+}): Promise<number> {
+  const now = new Date().toISOString();
+  const s3Key = `images/${Date.now()}_${filename}`;
+  
+  const id = await db.table('images').add({
+    filename,
+    data,
+    synced: false,
+    syncStatus: 'pending',
+    s3Key,
+    lastSyncAttempt: '',
+    createdAt: now,
+    updatedAt: now,
+  } as ImageRecord);
+  
+  return id as number;
 }
 
+export async function updateImageInIDB({
+  id,
+  filename,
+  data,
+}: {
+  id: number;
+  filename: string;
+  data: Uint8Array;
+}): Promise<void> {
+  const now = new Date().toISOString();
+  
+  await db.table('images').update(id, {
+    filename,
+    data,
+    synced: false,
+    syncStatus: 'pending',
+    lastSyncAttempt: '',
+    updatedAt: now,
+  });
+}
+
+export async function deleteImageFromIDB(id: number): Promise<void> {
+  await db.table('images').delete(id);
+}
+
+// === SYNC TRACKING FUNCTIONS ===
+export async function createUploadOperation(fileId: number): Promise<number> {
+  const now = new Date().toISOString();
+  
+  const operationId = await db.table('file_operations').add({
+    fileId,
+    operation: 'upload',
+    status: 'pending',
+    createdAt: now,
+    retryCount: 0,
+  } as FileOperation);
+  
+  return operationId as number;
+}
+
+export async function createUpdateOperation(fileId: number): Promise<number> {
+  const now = new Date().toISOString();
+  
+  const operationId = await db.table('file_operations').add({
+    fileId,
+    operation: 'update',
+    status: 'pending',
+    createdAt: now,
+    retryCount: 0,
+  } as FileOperation);
+  
+  return operationId as number;
+}
+
+export async function createDeleteOperation(fileId: number, filename: string, s3Key?: string): Promise<number> {
+  const now = new Date().toISOString();
+  
+  // Add to deleted_files table
+  await db.table('deleted_files').add({
+    fileId,
+    filename,
+    s3Key,
+    deletedAt: now,
+    synced: false,
+    syncStatus: 'pending',
+  } as DeletedFileRecord);
+  
+  // Create delete operation
+  const operationId = await db.table('file_operations').add({
+    fileId,
+    operation: 'delete',
+    status: 'pending',
+    createdAt: now,
+    retryCount: 0,
+  } as FileOperation);
+  
+  return operationId as number;
+}
+
+// === SYNC STATUS FUNCTIONS ===
+export async function markImageAsSynced(id: number): Promise<void> {
+  const now = new Date().toISOString();
+  await db.table('images').update(id, {
+    synced: true,
+    syncStatus: 'synced',
+    lastSyncAttempt: now,
+    updatedAt: now,
+  });
+}
+
+export async function markImageSyncFailed(id: number): Promise<void> {
+  const now = new Date().toISOString();
+  await db.table('images').update(id, {
+    syncStatus: 'failed',
+    lastSyncAttempt: now,
+    updatedAt: now,
+  });
+}
+
+export async function markImageAsSyncing(id: number): Promise<void> {
+  const now = new Date().toISOString();
+  await db.table('images').update(id, {
+    syncStatus: 'syncing',
+    lastSyncAttempt: now,
+    updatedAt: now,
+  });
+}
+
+export async function markOperationAsCompleted(operationId: number): Promise<void> {
+  await db.table('file_operations').update(operationId, {
+    status: 'completed',
+  });
+}
+
+export async function markOperationAsFailed(operationId: number): Promise<void> {
+  await db.table('file_operations').update(operationId, {
+    status: 'failed',
+  });
+}
+
+export async function markOperationAsProcessing(operationId: number): Promise<void> {
+  await db.table('file_operations').update(operationId, {
+    status: 'processing',
+  });
+}
+
+export async function markDeletionAsSynced(id: number): Promise<void> {
+  await db.table('deleted_files').update(id, {
+    synced: true,
+    syncStatus: 'synced',
+  });
+}
+
+export async function incrementRetryCount(operationId: number): Promise<void> {
+  const operation = await db.table('file_operations').get(operationId) as FileOperation;
+  if (operation) {
+    await db.table('file_operations').update(operationId, {
+      retryCount: operation.retryCount + 1,
+    });
+  }
+}
+
+// === QUERY FUNCTIONS ===
+export async function getUnsyncedImages(): Promise<ImageRecord[]> {
+  return db.table('images')
+    .filter(img => img.syncStatus === 'pending' || img.syncStatus === 'failed')
+    .toArray() as Promise<ImageRecord[]>;
+}
+
+export async function getPendingOperations(): Promise<FileOperation[]> {
+  return db.table('file_operations')
+    .filter(op => op.status === 'pending' || op.status === 'processing')
+    .toArray() as Promise<FileOperation[]>;
+}
+
+export async function getUnsyncedDeletions(): Promise<DeletedFileRecord[]> {
+  return db.table('deleted_files')
+    .filter(record => record.syncStatus === 'pending' || record.syncStatus === 'failed')
+    .toArray() as Promise<DeletedFileRecord[]>;
+}
+
+export async function getImageById(id: number): Promise<ImageRecord | null> {
+  try {
+    return await db.table('images').get(id) as ImageRecord;
+  } catch {
+    return null;
+  }
+}
+
+export async function getFailedOperations(): Promise<FileOperation[]> {
+  return db.table('file_operations')
+    .filter(op => op.status === 'failed' && op.retryCount < 3)
+    .toArray() as Promise<FileOperation[]>;
+}
+
+// Enhanced types for file/image tracking
 export interface ImageRecord {
   id?: number;
   filename: string;
   data: Uint8Array;
   synced: boolean;
+  syncStatus: 'pending' | 'syncing' | 'synced' | 'failed';
+  s3Key?: string;
+  lastSyncAttempt?: string;
   createdAt: string;
+  updatedAt: string;
+}
+
+export interface DeletedFileRecord {
+  id?: number;
+  fileId: number;
+  filename: string;
+  s3Key?: string;
+  deletedAt: string;
+  synced: boolean;
+  syncStatus: 'pending' | 'syncing' | 'synced' | 'failed';
+}
+
+export interface FileOperation {
+  id?: number;
+  fileId: number;
+  operation: 'upload' | 'update' | 'delete';
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  createdAt: string;
+  retryCount: number;
 }
