@@ -23,7 +23,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { useAppStore } from '@/lib/store';
-import { db } from '@/lib/database';
+import { getDB } from '@/lib/database';
 import { useTheme } from '@/app/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
 import { useImageSettingsStore } from '@/lib/imageSettingsStore';
@@ -114,7 +114,8 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     setIsLoading(true);
     try {
       // Clear IndexedDB
-      await db.delete();
+      const db = getDB();
+      if (db) await db.delete();
 
       // Clear localStorage
       localStorage.clear();
@@ -148,6 +149,8 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     setIsLoading(true);
     try {
       // Delete all tables and data
+      const db = getDB();
+      if (!db) return;
       await db.table('tables').clear();
       await db.table('rows').clear();
       await db.table('views').clear();
@@ -170,6 +173,8 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     setIsLoading(true);
     try {
       // Export all data from IndexedDB
+      const db = getDB();
+      if (!db) return;
       const tables = await db.table('tables').toArray();
       const rows = await db.table('rows').toArray();
       const views = await db.table('views').toArray();
@@ -248,6 +253,8 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       }
 
       // Clear existing data
+      const db = getDB();
+      if (!db) return;
       await db.table('tables').clear();
       await db.table('rows').clear();
       await db.table('views').clear();

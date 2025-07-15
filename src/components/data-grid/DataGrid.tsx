@@ -412,16 +412,16 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
       key: field.id,
       name: (
         <div 
-          className="flex justify-between items-center px-2 py-1 rounded transition-colors cursor-pointer group hover:bg-gray-50 dark:hover:bg-gray-700"
+          className="flex justify-between items-center h-full rounded transition-colors cursor-pointer group hover:bg-gray-50 dark:hover:bg-gray-700"
           onClick={() => {
             setColumnForModal(field);
             setShowColumnHeaderModal(true);
           }}
           title={`Click to manage column: ${field.name}`}
         >
-          <span className="truncate max-w-[120px]" title={field.name}>{field.name}</span>
+          <span className="truncate max-w-[120px] h-full flex items-center" title={field.name}>{field.name}</span>
           <button
-            className="p-1 rounded opacity-0 transition-opacity group-hover:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-600"
+            className="flex justify-center items-center p-1 h-full rounded opacity-0 transition-opacity group-hover:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-600"
             onClick={(e) => {
               e.stopPropagation();
               setColumnForModal(field);
@@ -752,6 +752,8 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
         await deleteColumn(columnToDelete.id);
         setShowDeleteColumn(false);
         setColumnToDelete(null);
+        setShowColumnHeaderModal(false);
+        setColumnForModal(null);
       } catch {
         // Error handling removed with notification system
       }
@@ -985,7 +987,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div
-          className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50 animate-fade-in"
+          className="flex fixed inset-0 z-50 justify-center items-center bg-transparent bg-opacity-10 animate-fade-in"
           onClick={() => {
             setShowDeleteConfirm(false);
             setDeleteType(null);
@@ -995,7 +997,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
           aria-labelledby="delete-modal-title"
         >
           <div
-            className="p-6 mx-4 w-96 max-w-md bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scale-in"
+            className="p-6 mx-4 w-96 max-w-md bg-transparent rounded-lg shadow-lg animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center mb-4">

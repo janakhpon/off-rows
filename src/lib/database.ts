@@ -8,21 +8,43 @@ import {
   ViewSettingsSchema as ViewSettingsSchemaType,
 } from './schemas';
 
-// Create database instance
-export const db = new Dexie('OffrowsDatabase');
+// Only initialize Dexie in the browser
+declare global {
+  // eslint-disable-next-line no-var
+  var __offrows_db__: Dexie | undefined;
+}
 
-// Define database schema
-db.version(4).stores({
-  tables: '++id, name, description, colWidths, rowHeights',
-  rows: '++id, tableId, data, order',
-  views: '++id, tableId, name, isDefault',
-  files: '++id, name, type',
-});
+function createDB() {
+  const db = new Dexie('OffrowsDatabase');
+  db.version(11).stores({
+    tables: '++id, name, description, colWidths, rowHeights',
+    rows: '++id, tableId, data, order',
+    views: '++id, tableId, name, isDefault',
+    files: '++id, name, type, s3Key, synced, syncStatus, lastSyncAttempt, createdAt, updatedAt',
+    images: '++id, filename, synced, syncStatus, s3Key, lastSyncAttempt, createdAt, updatedAt',
+    deleted_files: '++id, fileId, filename, s3Key, deletedAt, synced, syncStatus',
+    file_operations: '++id, fileId, operation, status, createdAt, retryCount',
+    settings: 'key, value',
+  });
+  return db;
+}
+
+export function getDB(): Dexie | undefined {
+  if (typeof window !== 'undefined' && 'indexedDB' in window) {
+    if (!globalThis.__offrows_db__) {
+      globalThis.__offrows_db__ = createDB();
+    }
+    return globalThis.__offrows_db__;
+  }
+  return undefined;
+}
+
+// --- All DB operations below use getDB() ---
 
 // Enhanced schema for images with comprehensive tracking
-if (!db.tables.some((t) => t.name === 'images')) {
+if (!getDB()?.tables.some((t) => t.name === 'images')) {
   console.log('Creating images table with enhanced schema...');
-  db.version(7).stores({
+  getDB()?.version(7).stores({
     images: '++id, filename, synced, syncStatus, s3Key, lastSyncAttempt, createdAt, updatedAt',
   });
 } else {
@@ -30,9 +52,9 @@ if (!db.tables.some((t) => t.name === 'images')) {
 }
 
 // Add deleted_files table for tracking deletions
-if (!db.tables.some((t) => t.name === 'deleted_files')) {
+if (!getDB()?.tables.some((t) => t.name === 'deleted_files')) {
   console.log('Creating deleted_files table...');
-  db.version(8).stores({
+  getDB()?.version(8).stores({
     deleted_files: '++id, fileId, filename, s3Key, deletedAt, synced, syncStatus',
   });
 } else {
@@ -40,9 +62,9 @@ if (!db.tables.some((t) => t.name === 'deleted_files')) {
 }
 
 // Add file_operations table for tracking pending operations
-if (!db.tables.some((t) => t.name === 'file_operations')) {
+if (!getDB()?.tables.some((t) => t.name === 'file_operations')) {
   console.log('Creating file_operations table...');
-  db.version(9).stores({
+  getDB()?.version(9).stores({
     file_operations: '++id, fileId, operation, status, createdAt, retryCount',
   });
 } else {
@@ -50,22 +72,22 @@ if (!db.tables.some((t) => t.name === 'file_operations')) {
 }
 
 // Extend files table schema for S3 sync meta
-if (!db.tables.some((t) => t.name === 'files')) {
-  db.version(10).stores({
+if (!getDB()?.tables.some((t) => t.name === 'files')) {
+  getDB()?.version(10).stores({
     files: '++id, name, type, s3Key, synced, syncStatus, lastSyncAttempt, createdAt, updatedAt',
   });
 } else {
-  db.version(10).stores({
+  getDB()?.version(10).stores({
     files: '++id, name, type, s3Key, synced, syncStatus, lastSyncAttempt, createdAt, updatedAt',
   });
 }
 
-console.log('Database schema version:', db.verno);
-console.log('Available tables:', db.tables.map(t => t.name));
+console.log('Database schema version:', getDB()?.verno);
+console.log('Available tables:', getDB()?.tables.map(t => t.name));
 
 // Initialize with sample data if database is empty
 export async function initializeDatabase() {
-  const tableCount = await db.table('tables').count();
+  const tableCount = await getDB()?.table('tables').count();
 
   // Check if we should skip initialization (after clearing storage)
   const skipInitialization = sessionStorage.getItem('skipInitialization');
@@ -141,7 +163,7 @@ export async function initializeDatabase() {
       },
     ];
 
-    const createdTables = await db.table('tables').bulkAdd(sampleTables);
+    const createdTables = await getDB()?.table('tables').bulkAdd(sampleTables);
     const tableIds = Array.isArray(createdTables) ? createdTables : [createdTables];
 
     // Add sample rows for each table
@@ -236,7 +258,7 @@ export async function initializeDatabase() {
       },
     ];
 
-    await db.table('rows').bulkAdd(sampleRows);
+    await getDB()?.table('rows').bulkAdd(sampleRows);
 
     // Create default views for each table
     const defaultViews: Omit<ViewSettings, 'id' | 'createdAt' | 'updatedAt'>[] = (
@@ -252,7 +274,7 @@ export async function initializeDatabase() {
       isDefault: true,
     }));
 
-    await db.table('views').bulkAdd(defaultViews);
+    await getDB()?.table('views').bulkAdd(defaultViews);
   }
 }
 
@@ -283,16 +305,22 @@ const parseDates = <T extends { createdAt: string | Date; updatedAt: string | Da
 // Table operations
 export const tableOperations = {
   async getAll(): Promise<Table[]> {
+    const db = getDB();
+    if (!db) return [];
     const tables = (await db.table('tables').toArray()) as Table[];
     return tables.map(parseDates);
   },
 
   async getById(id: number): Promise<Table | undefined> {
+    const db = getDB();
+    if (!db) return undefined;
     const table = (await db.table('tables').get(id)) as Table | undefined;
     return table ? parseDates(table) : undefined;
   },
 
   async add(table: Omit<Table, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
+    const db = getDB();
+    if (!db) throw new Error('Database not initialized');
     // Validate with Zod
     const validatedTable = TableSchemaType.parse(addTimestamps(table));
 
@@ -309,26 +337,34 @@ export const tableOperations = {
       colorRules: [],
       isDefault: true,
     });
-    await db.table('views').add(defaultView);
+    await getDB()?.table('views').add(defaultView);
 
     return tableId;
   },
 
   async update(id: number, updates: Partial<Omit<Table, 'id' | 'createdAt'>>): Promise<void> {
+    const db = getDB();
+    if (!db) throw new Error('Database not initialized');
     await db.table('tables').update(id, updateTimestamp(updates));
   },
 
   async delete(id: number): Promise<void> {
+    const db = getDB();
+    if (!db) throw new Error('Database not initialized');
     await db.table('tables').delete(id);
-    await db.table('rows').where('tableId').equals(id).delete();
-    await db.table('views').where('tableId').equals(id).delete();
+    await getDB()?.table('rows').where('tableId').equals(id).delete();
+    await getDB()?.table('views').where('tableId').equals(id).delete();
   },
 
   async updateColWidths(tableId: number, colWidths: Record<string, number>) {
+    const db = getDB();
+    if (!db) throw new Error('Database not initialized');
     await db.table('tables').update(tableId, updateTimestamp({ colWidths }));
   },
 
   async updateRowHeights(tableId: number, rowHeights: Record<string, number>) {
+    const db = getDB();
+    if (!db) throw new Error('Database not initialized');
     await db.table('tables').update(tableId, updateTimestamp({ rowHeights }));
   },
 };
@@ -336,17 +372,23 @@ export const tableOperations = {
 // Row operations
 export const rowOperations = {
   async getByTableId(tableId: number): Promise<TableRow[]> {
+    const db = getDB();
+    if (!db) return [];
     const rows = (await db.table('rows').where('tableId').equals(tableId).toArray()) as TableRow[];
     // Always sort by 'order' (fallback to id)
     return rows.map(parseDates).sort((a, b) => (a.order ?? a.id ?? 0) - (b.order ?? b.id ?? 0));
   },
 
   async getById(id: number): Promise<TableRow | undefined> {
+    const db = getDB();
+    if (!db) return undefined;
     const row = (await db.table('rows').get(id)) as TableRow | undefined;
     return row ? parseDates(row) : undefined;
   },
 
   async add(row: Omit<TableRow, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
+    const db = getDB();
+    if (!db) throw new Error('Database not initialized');
     // Find max order for this table
     const maxOrder = await db
       .table('rows')
@@ -364,14 +406,20 @@ export const rowOperations = {
   },
 
   async update(id: number, updates: Partial<Omit<TableRow, 'id' | 'createdAt'>>): Promise<void> {
+    const db = getDB();
+    if (!db) throw new Error('Database not initialized');
     await db.table('rows').update(id, updateTimestamp(updates));
   },
 
   async delete(id: number): Promise<void> {
+    const db = getDB();
+    if (!db) throw new Error('Database not initialized');
     await db.table('rows').delete(id);
   },
 
   async bulkUpdate(rows: TableRow[]): Promise<void> {
+    const db = getDB();
+    if (!db) throw new Error('Database not initialized');
     await db.table('rows').bulkPut(rows);
   },
 };
@@ -379,6 +427,8 @@ export const rowOperations = {
 // View operations
 export const viewOperations = {
   async getByTableId(tableId: number): Promise<ViewSettings[]> {
+    const db = getDB();
+    if (!db) return [];
     const views = (await db
       .table('views')
       .where('tableId')
@@ -388,6 +438,8 @@ export const viewOperations = {
   },
 
   async getDefaultView(tableId: number): Promise<ViewSettings | undefined> {
+    const db = getDB();
+    if (!db) return undefined;
     const view = (await db
       .table('views')
       .where('tableId')
@@ -398,11 +450,15 @@ export const viewOperations = {
   },
 
   async getById(id: number): Promise<ViewSettings | undefined> {
+    const db = getDB();
+    if (!db) return undefined;
     const view = (await db.table('views').get(id)) as ViewSettings | undefined;
     return view ? parseDates(view) : undefined;
   },
 
   async add(view: Omit<ViewSettings, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
+    const db = getDB();
+    if (!db) throw new Error('Database not initialized');
     // Validate with Zod
     const validatedView = ViewSettingsSchemaType.parse(addTimestamps(view));
 
@@ -413,10 +469,14 @@ export const viewOperations = {
     id: number,
     updates: Partial<Omit<ViewSettings, 'id' | 'createdAt'>>,
   ): Promise<void> {
+    const db = getDB();
+    if (!db) throw new Error('Database not initialized');
     await db.table('views').update(id, updateTimestamp(updates));
   },
 
   async delete(id: number): Promise<void> {
+    const db = getDB();
+    if (!db) throw new Error('Database not initialized');
     await db.table('views').delete(id);
   },
 };
@@ -424,6 +484,8 @@ export const viewOperations = {
 // File operations for offline blob storage with meta tracking
 export const fileOperations = {
   async addFile(file: File): Promise<number> {
+    const db = getDB();
+    if (!db) throw new Error('Database not initialized');
     const now = new Date().toISOString();
     const s3Key = `files/${Date.now()}_${file.name}`;
     const id = await db.table('files').add({
@@ -440,6 +502,8 @@ export const fileOperations = {
     return id as number;
   },
   async updateFile(id: number, file: File): Promise<void> {
+    const db = getDB();
+    if (!db) throw new Error('Database not initialized');
     const now = new Date().toISOString();
     await db.table('files').update(id, {
       name: file.name,
@@ -452,26 +516,38 @@ export const fileOperations = {
     });
   },
   async getFileById(id: number): Promise<{ name: string; type: string; blob: Blob; s3Key?: string } | undefined> {
+    const db = getDB();
+    if (!db) return undefined;
     const file = await db.table('files').get(id);
     if (!file) return undefined;
     return { name: file.name, type: file.type, blob: file.blob, s3Key: file.s3Key };
   },
   async deleteFile(id: number): Promise<void> {
+    const db = getDB();
+    if (!db) throw new Error('Database not initialized');
     await db.table('files').delete(id);
   },
   async getUnsyncedFiles(): Promise<import('./syncOrchestrator').SyncedFileRecord[]> {
+    const db = getDB();
+    if (!db) return [];
     return db.table('files').filter(f => f.syncStatus === 'pending' || f.syncStatus === 'failed').toArray();
   },
   async markFileAsSynced(id: number): Promise<void> {
+    const db = getDB();
+    if (!db) throw new Error('Database not initialized');
     await db.table('files').update(id, { synced: true, syncStatus: 'synced' });
   },
   async markFileAsFailed(id: number): Promise<void> {
+    const db = getDB();
+    if (!db) throw new Error('Database not initialized');
     await db.table('files').update(id, { syncStatus: 'failed' });
   },
 };
 
 // File meta management for S3 sync (mirroring images)
 export async function saveFileToIDB({ filename, data }: { filename: string; data: Uint8Array }): Promise<number> {
+  const db = getDB();
+  if (!db) throw new Error('Database not initialized');
   const now = new Date().toISOString();
   const s3Key = `files/${Date.now()}_${filename}`;
   const file = new File([data], filename);
@@ -490,6 +566,8 @@ export async function saveFileToIDB({ filename, data }: { filename: string; data
 }
 
 export async function updateFileInIDB({ id, filename, data }: { id: number; filename: string; data: Uint8Array }): Promise<void> {
+  const db = getDB();
+  if (!db) throw new Error('Database not initialized');
   const now = new Date().toISOString();
   const file = new File([data], filename);
   await db.table('files').update(id, {
@@ -504,11 +582,15 @@ export async function updateFileInIDB({ id, filename, data }: { id: number; file
 }
 
 export async function deleteFileFromIDB(id: number): Promise<void> {
+  const db = getDB();
+  if (!db) throw new Error('Database not initialized');
   await db.table('files').delete(id);
 }
 
 // Migration: update existing files with meta fields
 (async function migrateFilesTable() {
+  const db = getDB();
+  if (!db) return;
   const files = await db.table('files').toArray();
   for (const file of files) {
     if (!file.s3Key) {
@@ -535,6 +617,8 @@ export async function saveImageToIDB({
   filename: string;
   data: Uint8Array;
 }): Promise<number> {
+  const db = getDB();
+  if (!db) throw new Error('Database not initialized');
   const now = new Date().toISOString();
   const s3Key = `images/${Date.now()}_${filename}`;
   
@@ -561,6 +645,8 @@ export async function updateImageInIDB({
   filename: string;
   data: Uint8Array;
 }): Promise<void> {
+  const db = getDB();
+  if (!db) throw new Error('Database not initialized');
   const now = new Date().toISOString();
   
   await db.table('images').update(id, {
@@ -574,11 +660,15 @@ export async function updateImageInIDB({
 }
 
 export async function deleteImageFromIDB(id: number): Promise<void> {
+  const db = getDB();
+  if (!db) throw new Error('Database not initialized');
   await db.table('images').delete(id);
 }
 
 // === SYNC TRACKING FUNCTIONS ===
 export async function createUploadOperation(fileId: number): Promise<number> {
+  const db = getDB();
+  if (!db) throw new Error('Database not initialized');
   const now = new Date().toISOString();
   
   const operationId = await db.table('file_operations').add({
@@ -593,6 +683,8 @@ export async function createUploadOperation(fileId: number): Promise<number> {
 }
 
 export async function createUpdateOperation(fileId: number): Promise<number> {
+  const db = getDB();
+  if (!db) throw new Error('Database not initialized');
   const now = new Date().toISOString();
   
   const operationId = await db.table('file_operations').add({
@@ -607,6 +699,8 @@ export async function createUpdateOperation(fileId: number): Promise<number> {
 }
 
 export async function createDeleteOperation(fileId: number, filename: string, s3Key?: string): Promise<number> {
+  const db = getDB();
+  if (!db) throw new Error('Database not initialized');
   const now = new Date().toISOString();
   
   // Add to deleted_files table
@@ -633,6 +727,8 @@ export async function createDeleteOperation(fileId: number, filename: string, s3
 
 // === SYNC STATUS FUNCTIONS ===
 export async function markImageAsSynced(id: number): Promise<void> {
+  const db = getDB();
+  if (!db) throw new Error('Database not initialized');
   const now = new Date().toISOString();
   await db.table('images').update(id, {
     synced: true,
@@ -643,6 +739,8 @@ export async function markImageAsSynced(id: number): Promise<void> {
 }
 
 export async function markImageSyncFailed(id: number): Promise<void> {
+  const db = getDB();
+  if (!db) throw new Error('Database not initialized');
   const now = new Date().toISOString();
   await db.table('images').update(id, {
     syncStatus: 'failed',
@@ -652,6 +750,8 @@ export async function markImageSyncFailed(id: number): Promise<void> {
 }
 
 export async function markImageAsSyncing(id: number): Promise<void> {
+  const db = getDB();
+  if (!db) throw new Error('Database not initialized');
   const now = new Date().toISOString();
   await db.table('images').update(id, {
     syncStatus: 'syncing',
@@ -661,24 +761,32 @@ export async function markImageAsSyncing(id: number): Promise<void> {
 }
 
 export async function markOperationAsCompleted(operationId: number): Promise<void> {
+  const db = getDB();
+  if (!db) throw new Error('Database not initialized');
   await db.table('file_operations').update(operationId, {
     status: 'completed',
   });
 }
 
 export async function markOperationAsFailed(operationId: number): Promise<void> {
+  const db = getDB();
+  if (!db) throw new Error('Database not initialized');
   await db.table('file_operations').update(operationId, {
     status: 'failed',
   });
 }
 
 export async function markOperationAsProcessing(operationId: number): Promise<void> {
+  const db = getDB();
+  if (!db) throw new Error('Database not initialized');
   await db.table('file_operations').update(operationId, {
     status: 'processing',
   });
 }
 
 export async function markDeletionAsSynced(id: number): Promise<void> {
+  const db = getDB();
+  if (!db) throw new Error('Database not initialized');
   await db.table('deleted_files').update(id, {
     synced: true,
     syncStatus: 'synced',
@@ -686,6 +794,8 @@ export async function markDeletionAsSynced(id: number): Promise<void> {
 }
 
 export async function incrementRetryCount(operationId: number): Promise<void> {
+  const db = getDB();
+  if (!db) throw new Error('Database not initialized');
   const operation = await db.table('file_operations').get(operationId) as FileOperation;
   if (operation) {
     await db.table('file_operations').update(operationId, {
@@ -696,24 +806,32 @@ export async function incrementRetryCount(operationId: number): Promise<void> {
 
 // === QUERY FUNCTIONS ===
 export async function getUnsyncedImages(): Promise<ImageRecord[]> {
+  const db = getDB();
+  if (!db) return [];
   return db.table('images')
     .filter(img => img.syncStatus === 'pending' || img.syncStatus === 'failed')
     .toArray() as Promise<ImageRecord[]>;
 }
 
 export async function getPendingOperations(): Promise<FileOperation[]> {
+  const db = getDB();
+  if (!db) return [];
   return db.table('file_operations')
     .filter(op => op.status === 'pending' || op.status === 'processing')
     .toArray() as Promise<FileOperation[]>;
 }
 
 export async function getUnsyncedDeletions(): Promise<DeletedFileRecord[]> {
+  const db = getDB();
+  if (!db) return [];
   return db.table('deleted_files')
     .filter(record => record.syncStatus === 'pending' || record.syncStatus === 'failed')
     .toArray() as Promise<DeletedFileRecord[]>;
 }
 
 export async function getImageById(id: number): Promise<ImageRecord | null> {
+  const db = getDB();
+  if (!db) return null;
   try {
     return await db.table('images').get(id) as ImageRecord;
   } catch {
@@ -722,6 +840,8 @@ export async function getImageById(id: number): Promise<ImageRecord | null> {
 }
 
 export async function getFailedOperations(): Promise<FileOperation[]> {
+  const db = getDB();
+  if (!db) return [];
   return db.table('file_operations')
     .filter(op => op.status === 'failed' && op.retryCount < 3)
     .toArray() as Promise<FileOperation[]>;
@@ -758,3 +878,24 @@ export interface FileOperation {
   createdAt: string;
   retryCount: number;
 }
+
+// Settings operations for key-value settings
+export const settingsOperations = {
+  async get(key: string): Promise<unknown> {
+    const db = getDB();
+    if (!db) return undefined;
+    const record = await db.table('settings').get(key);
+    return record ? record.value : undefined;
+  },
+  async set(key: string, value: unknown): Promise<void> {
+    const db = getDB();
+    if (!db) return;
+    await db.table('settings').put({ key, value });
+  },
+  async getAll() {
+    const db = getDB();
+    if (!db) return {};
+    const all = await db.table('settings').toArray();
+    return Object.fromEntries(all.map(({ key, value }) => [key, value]));
+  },
+};

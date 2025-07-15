@@ -35,7 +35,7 @@ export default function ColumnHeaderModal({
   };
 
   return (
-    <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-40">
+    <div className="flex fixed inset-0 z-50 justify-center items-center bg-transparent backdrop-blur-xs">
       <div className="relative p-6 mx-2 w-full max-w-sm bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-fade-in">
         <button
           onClick={onClose}

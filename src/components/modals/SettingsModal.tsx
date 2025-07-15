@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { X, Shield, Trash2, Download, Upload, RotateCcw, AlertTriangle } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
-import { db } from '@/lib/database';
+import { getDB } from '@/lib/database';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -20,7 +20,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     setIsLoading(true);
     try {
       // Clear IndexedDB
-      await db.delete();
+      const db = getDB();
+      if (db) await db.delete();
 
       // Clear localStorage
       localStorage.clear();
@@ -48,6 +49,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     setIsLoading(true);
     try {
       // Delete all tables and data
+      const db = getDB();
+      if (!db) return;
       await db.table('tables').clear();
       await db.table('rows').clear();
       await db.table('views').clear();
@@ -74,6 +77,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     setIsLoading(true);
     try {
       // Export all data from IndexedDB
+      const db = getDB();
+      if (!db) return;
       const tables = await db.table('tables').toArray();
       const rows = await db.table('rows').toArray();
       const views = await db.table('views').toArray();
@@ -124,6 +129,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       }
 
       // Clear existing data
+      const db = getDB();
+      if (!db) return;
       await db.table('tables').clear();
       await db.table('rows').clear();
       await db.table('views').clear();

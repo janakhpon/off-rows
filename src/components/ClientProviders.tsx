@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/app/contexts/ThemeContext';
 import { TableProvider } from '@/app/contexts/TableContext';
 import { NotificationProvider } from '@/app/contexts/NotificationContext';
 import { ErrorBoundary, OfflineIndicator } from '@/components';
+import { loadImageSettingsFromDB, usePersistImageSettings } from '@/lib/imageSettingsStore';
 
 interface ClientProvidersProps {
   children: React.ReactNode;
@@ -25,8 +26,11 @@ function StaticLoading() {
 export default function ClientProviders({ children }: ClientProvidersProps) {
   const [mounted, setMounted] = useState(false);
 
+  usePersistImageSettings();
+
   useEffect(() => {
     setMounted(true);
+    loadImageSettingsFromDB();
   }, []);
 
   // During SSR and initial hydration, render a static loading state
