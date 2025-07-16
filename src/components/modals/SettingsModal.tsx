@@ -173,13 +173,13 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-50 bg-black bg-opacity-50 modal-backdrop" onClick={onClose} />
+      <div className="fixed inset-0 z-50 bg-primary/5 animate-fade-in modal-backdrop" onClick={onClose} />
 
       {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="flex fixed inset-0 z-50 justify-center items-center p-4">
         <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex justify-between items-center p-6 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-900">Settings</h2>
             <button
               onClick={onClose}
@@ -201,7 +201,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     : 'bg-red-50 text-red-800 border border-red-200'
                 }`}
               >
-                <div className="flex items-center justify-between">
+                <div className="flex justify-between items-center">
                   <span>{message.text}</span>
                   <button
                     onClick={clearMessage}
@@ -216,13 +216,13 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
             {/* Security Section */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900 flex items-center space-x-2">
+              <h3 className="flex items-center space-x-2 text-lg font-medium text-gray-900">
                 <Shield className="w-5 h-5 text-blue-600" />
                 <span>Security</span>
               </h3>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex justify-between items-center">
                   <div>
                     <p className="text-sm font-medium text-gray-900">Encryption</p>
                     <p className="text-xs text-gray-500">
@@ -231,11 +231,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </div>
                   <button
                     disabled
-                    className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition-colors duration-200 cursor-not-allowed"
+                    className="inline-flex relative items-center w-11 h-6 bg-gray-200 rounded-full transition-colors duration-200 cursor-not-allowed"
                     type="button"
                   >
                     <span className="sr-only">Enable encryption</span>
-                    <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 translate-x-1" />
+                    <span className="inline-block w-4 h-4 bg-white rounded-full transition-transform duration-200 transform translate-x-1" />
                   </button>
                 </div>
               </div>
@@ -250,7 +250,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <button
                   onClick={exportDatabase}
                   disabled={isLoading}
-                  className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-gray-700 bg-gray-50 rounded-lg transition-colors duration-200 cursor-pointer hover:bg-gray-100 focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center px-4 py-3 space-x-3 w-full text-sm text-gray-700 bg-gray-50 rounded-lg transition-colors duration-200 cursor-pointer hover:bg-gray-100 focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
                   type="button"
                 >
                   <Download className="w-4 h-4" />
@@ -269,7 +269,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   />
                   <label
                     htmlFor="import-database"
-                    className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-gray-700 bg-gray-50 rounded-lg transition-colors duration-200 cursor-pointer hover:bg-gray-100 focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center px-4 py-3 space-x-3 w-full text-sm text-gray-700 bg-gray-50 rounded-lg transition-colors duration-200 cursor-pointer hover:bg-gray-100 focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Upload className="w-4 h-4" />
                     <span>Import Database</span>
@@ -280,7 +280,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <button
                   onClick={() => setShowResetConfirm(true)}
                   disabled={isLoading}
-                  className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-orange-700 bg-orange-50 rounded-lg transition-colors duration-200 cursor-pointer hover:bg-orange-100 focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center px-4 py-3 space-x-3 w-full text-sm text-orange-700 bg-orange-50 rounded-lg transition-colors duration-200 cursor-pointer hover:bg-orange-100 focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
                   type="button"
                 >
                   <RotateCcw className="w-4 h-4" />
@@ -291,7 +291,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <button
                   onClick={() => setShowClearConfirm(true)}
                   disabled={isLoading}
-                  className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-red-700 bg-red-50 rounded-lg transition-colors duration-200 cursor-pointer hover:bg-red-100 focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center px-4 py-3 space-x-3 w-full text-sm text-red-700 bg-red-50 rounded-lg transition-colors duration-200 cursor-pointer hover:bg-red-100 focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
                   type="button"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -305,17 +305,17 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
       {/* Clear Storage Confirmation Modal */}
       {showClearConfirm && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+        <div className="flex fixed inset-0 justify-center items-center p-4 z-60">
           <div
-            className="bg-black bg-opacity-50 absolute inset-0"
+            className="absolute inset-0 bg-black bg-opacity-50"
             onClick={() => setShowClearConfirm(false)}
           />
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
-            <div className="flex items-center space-x-3 mb-4">
+          <div className="relative p-6 w-full max-w-md bg-white rounded-lg shadow-xl">
+            <div className="flex items-center mb-4 space-x-3">
               <AlertTriangle className="w-6 h-6 text-red-600" />
               <h3 className="text-lg font-semibold text-gray-900">Clear All Storage</h3>
             </div>
-            <p className="text-sm text-gray-600 mb-6">
+            <p className="mb-6 text-sm text-gray-600">
               This will permanently delete all your data including tables, rows, files, and all
               browser storage. This action cannot be undone.
             </p>
@@ -342,17 +342,17 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
       {/* Reset Database Confirmation Modal */}
       {showResetConfirm && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+        <div className="flex fixed inset-0 justify-center items-center p-4 z-60">
           <div
-            className="bg-black bg-opacity-50 absolute inset-0"
+            className="absolute inset-0 bg-black bg-opacity-50"
             onClick={() => setShowResetConfirm(false)}
           />
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
-            <div className="flex items-center space-x-3 mb-4">
+          <div className="relative p-6 w-full max-w-md bg-white rounded-lg shadow-xl">
+            <div className="flex items-center mb-4 space-x-3">
               <AlertTriangle className="w-6 h-6 text-orange-600" />
               <h3 className="text-lg font-semibold text-gray-900">Reset Database</h3>
             </div>
-            <p className="text-sm text-gray-600 mb-6">
+            <p className="mb-6 text-sm text-gray-600">
               This will delete all your tables and data, then reinitialize with sample data. This
               action cannot be undone.
             </p>

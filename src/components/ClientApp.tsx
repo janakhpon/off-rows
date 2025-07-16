@@ -5,6 +5,7 @@ import { useTables } from '@/app/contexts/TableContext';
 import { useAppStore } from '@/lib/store';
 import { Header, Sidebar, DataGrid as DataGridComponent, OfflineIndicator } from '@/components';
 import { cn } from '@/lib/utils';
+import CreateTableModal from '@/components/modals/CreateTableModal';
 
 // Pure utility functions
 const createEmptyString = () => '';
@@ -26,9 +27,9 @@ const createNewTableData = (name: string) => ({
 function AppLoading() {
   return (
     <div className="flex flex-col h-screen bg-white dark:bg-gray-800">
-      <div className="flex items-center justify-center h-full">
+      <div className="flex justify-center items-center h-full">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="mx-auto mb-4 w-12 h-12 rounded-full border-b-2 border-blue-600 animate-spin"></div>
           <p className="text-gray-600 dark:text-gray-400">Loading your data...</p>
         </div>
       </div>
@@ -77,13 +78,13 @@ export default function ClientApp() {
   };
 
   return (
-    <div className="flex h-screen bg-white dark:bg-gray-800 transition-all duration-300 ease-in-out">
+    <div className="flex h-screen bg-white transition-all duration-300 ease-in-out dark:bg-gray-800">
       <OfflineIndicator />
       <Sidebar
         isCollapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
-      <div className="flex flex-col flex-1 overflow-hidden transition-all duration-300 ease-in-out">
+      <div className="flex overflow-hidden flex-col flex-1 transition-all duration-300 ease-in-out">
         <Header
           onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
           searchQuery={searchQuery}
@@ -93,7 +94,7 @@ export default function ClientApp() {
           {/* Table Tabs */}
           <div className="flex flex-col w-full">
             {/* Tab Bar with enhanced animations */}
-            <div className="flex overflow-x-auto items-center px-4 py-2 space-x-2 bg-white/95 dark:bg-gray-800/95 border-b border-gray-200 dark:border-gray-700 backdrop-blur-sm transition-all duration-300 ease-in-out">
+            <div className="flex overflow-x-auto items-center px-4 py-2 space-x-2 border-b border-gray-200 backdrop-blur-sm transition-all duration-300 ease-in-out bg-white/95 dark:bg-gray-800/95 dark:border-gray-700">
               {tables.map((table, index) => (
                 <button
                   key={table.id}
@@ -127,47 +128,17 @@ export default function ClientApp() {
         </div>
       </div>
       {/* Create Table Modal with enhanced animations */}
-      {showCreateTable && (
-        <div className="flex fixed inset-0 z-50 justify-center items-center p-4 animate-fade-in">
-          <div 
-            className="absolute inset-0 backdrop-blur-sm bg-black/30 transition-all duration-300"
-            onClick={() => setShowCreateTable(false)}
-          />
-          <div className="relative p-6 mx-4 w-96 max-w-md bg-white/95 dark:bg-gray-800/95 rounded-lg shadow-xl backdrop-blur-md transition-all duration-300 animate-scale-in">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">
-              Create New Table
-            </h2>
-            <input
-              type="text"
-              value={newTableName}
-              onChange={(e) => setNewTableName(e.target.value)}
-              placeholder="Enter table name"
-              className={cn(
-                'p-2 w-full text-gray-900 bg-white/80 dark:bg-gray-700/80 rounded-md border border-gray-200 dark:border-gray-600 dark:text-gray-100 transition-all duration-300',
-                'focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500',
-                'hover:border-gray-400 dark:hover:border-gray-500',
-              )}
-              onKeyDown={handleKeyPress}
-            />
-            <div className="flex justify-end mt-4 space-x-2">
-              <button
-                onClick={() => setShowCreateTable(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-md transition-all duration-200 hover:bg-gray-100/80 dark:hover:bg-gray-700/80 hover:scale-105"
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreateTable}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md transition-all duration-200 hover:bg-blue-700 hover:scale-105 hover:shadow-lg"
-                type="button"
-              >
-                Create
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CreateTableModal
+        open={showCreateTable}
+        onClose={() => {
+          setShowCreateTable(false);
+          setNewTableName('');
+        }}
+        value={newTableName}
+        onValueChange={setNewTableName}
+        onCreate={handleCreateTable}
+        onKeyPress={handleKeyPress}
+      />
     </div>
   );
 }

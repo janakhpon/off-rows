@@ -6,6 +6,7 @@ import { TableProvider } from '@/app/contexts/TableContext';
 import { NotificationProvider } from '@/app/contexts/NotificationContext';
 import { ErrorBoundary, OfflineIndicator } from '@/components';
 import { loadImageSettingsFromDB, usePersistImageSettings } from '@/lib/imageSettingsStore';
+import { loadThemeFromDB } from '@/lib/themeSettingsStore';
 
 interface ClientProvidersProps {
   children: React.ReactNode;
@@ -29,8 +30,11 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
   usePersistImageSettings();
 
   useEffect(() => {
-    setMounted(true);
-    loadImageSettingsFromDB();
+    setMounted(false);
+    Promise.all([
+      loadImageSettingsFromDB(),
+      loadThemeFromDB(),
+    ]).then(() => setMounted(true));
   }, []);
 
   // During SSR and initial hydration, render a static loading state

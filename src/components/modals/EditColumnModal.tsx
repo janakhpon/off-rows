@@ -137,7 +137,7 @@ export default function EditColumnModal({ open, onClose, onEditColumn, column }:
 
   return (
     <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-40">
-      <div className="relative p-6 mx-2 w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-lg animate-fade-in">
+      <div className="relative p-6 mx-2 w-full max-w-md bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-fade-in">
         <button
           onClick={onClose}
           className="absolute top-3 right-3 p-1 text-gray-400 transition-colors cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
@@ -147,7 +147,7 @@ export default function EditColumnModal({ open, onClose, onEditColumn, column }:
         </button>
         
         <div className="flex items-center mb-4 space-x-3">
-          <div className="flex justify-center items-center w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-full">
+          <div className="flex justify-center items-center w-10 h-10 bg-blue-100 rounded-full dark:bg-blue-900/20">
             <Settings className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
@@ -167,7 +167,7 @@ export default function EditColumnModal({ open, onClose, onEditColumn, column }:
               name="name"
               value={form.name}
               onChange={handleChange}
-              className="px-3 py-2 w-full text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+              className="px-3 py-2 w-full text-sm text-gray-900 bg-white rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
               required
               autoFocus
             />
@@ -182,7 +182,7 @@ export default function EditColumnModal({ open, onClose, onEditColumn, column }:
                 name="type"
                 value={form.type}
                 onChange={handleChange}
-                className="px-3 py-2 w-full text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                className="px-3 py-2 w-full text-sm text-gray-900 bg-white rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
               >
                 {FieldTypeSchema.options.map((type) => (
                   <option key={type} value={type}>
@@ -190,7 +190,7 @@ export default function EditColumnModal({ open, onClose, onEditColumn, column }:
                   </option>
                 ))}
               </select>
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+              <div className="absolute right-3 top-1/2 text-gray-400 transform -translate-y-1/2">
                 {getTypeIcon(form.type)}
               </div>
             </div>
@@ -205,7 +205,7 @@ export default function EditColumnModal({ open, onClose, onEditColumn, column }:
                 name="options"
                 value={Array.isArray(form.options) ? form.options.join(', ') : ''}
                 onChange={handleOptionsChange}
-                className="px-3 py-2 w-full text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                className="px-3 py-2 w-full text-sm text-gray-900 bg-white rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
                 placeholder="Option 1, Option 2, Option 3"
               />
             </div>
@@ -220,7 +220,7 @@ export default function EditColumnModal({ open, onClose, onEditColumn, column }:
                 name="defaultValue"
                 value={form.defaultValue}
                 onChange={(e) => setForm((prev) => ({ ...prev, defaultValue: e.target.value }))}
-                className="px-3 py-2 w-full text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                className="px-3 py-2 w-full text-sm text-gray-900 bg-white rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
               />
             </div>
           )}
@@ -235,22 +235,22 @@ export default function EditColumnModal({ open, onClose, onEditColumn, column }:
           </div>
 
           {error && (
-            <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-md">
+            <div className="p-3 text-sm text-red-600 bg-red-50 rounded-md dark:bg-red-900/20 dark:text-red-400">
               {error}
             </div>
           )}
 
-          <div className="flex justify-end space-x-3 pt-4">
+          <div className="flex justify-end pt-4 space-x-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg transition-colors duration-200 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600"
+              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg transition-colors duration-200 cursor-pointer dark:text-gray-300 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex items-center px-4 py-2 space-x-2 text-white bg-blue-600 dark:bg-blue-500 rounded-lg transition-colors duration-200 cursor-pointer hover:bg-blue-700 dark:hover:bg-blue-600"
+              className="flex items-center px-4 py-2 space-x-2 text-white bg-blue-600 rounded-lg transition-colors duration-200 cursor-pointer dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600"
             >
               <Settings className="w-4 h-4" />
               <span>Update Column</span>

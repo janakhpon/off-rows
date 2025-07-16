@@ -1,8 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-
-type Theme = 'light' | 'dark';
+import { useThemeSettingsStore, loadThemeFromDB, usePersistThemeSetting, Theme } from '@/lib/themeSettingsStore';
 
 interface ThemeContextType {
   theme: Theme;
@@ -14,34 +13,19 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  // Start with 'light' theme to match server-side rendering
-  const [theme, setThemeState] = useState<Theme>('light');
+  const { theme, setTheme } = useThemeSettingsStore();
   const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => {
-    // Mark that we're on the client
-    setIsClient(true);
+  usePersistThemeSetting();
 
-    // Get theme from localStorage or default to light
-    const savedTheme = localStorage.getItem('theme') as Theme;
-    if (savedTheme) {
-      setThemeState(savedTheme);
-    } else {
-      // Check system preference
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light';
-      setThemeState(systemTheme);
-    }
+  useEffect(() => {
+    setIsClient(true);
+    loadThemeFromDB();
   }, []);
 
   useEffect(() => {
-    if (!isClient) return; // Don't run on server
-
-    // Update data-theme attribute and localStorage
+    if (!isClient) return;
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-
     // Also add/remove dark class for Tailwind compatibility
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -50,16 +34,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [theme, isClient]);
 
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
+  const handleSetTheme = (newTheme: Theme) => {
+    setTheme(newTheme);
   };
 
   const toggleTheme = () => {
-    setThemeState((prev) => (prev === 'light' ? 'dark' : 'light'));
+    setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme, isClient }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme: handleSetTheme, isClient }}>
       {children}
     </ThemeContext.Provider>
   );

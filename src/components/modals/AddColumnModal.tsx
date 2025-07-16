@@ -70,8 +70,8 @@ export default function AddColumnModal({ open, onClose, onAddColumn }: AddColumn
   };
 
   return (
-    <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-40">
-      <div className="relative p-6 mx-2 w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-lg animate-fade-in">
+    <div className="flex fixed inset-0 z-50 justify-center items-center bg-primary/5 animate-fade-in">
+      <div className="relative p-6 mx-2 w-full max-w-md bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-fade-in">
         <button
           onClick={onClose}
           className="absolute top-3 right-3 p-1 text-gray-400 transition-colors cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
@@ -89,7 +89,7 @@ export default function AddColumnModal({ open, onClose, onAddColumn }: AddColumn
               name="name"
               value={form.name}
               onChange={handleChange}
-              className="px-3 py-2 w-full text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+              className="px-3 py-2 w-full text-sm text-gray-900 bg-white rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
               required
               autoFocus
             />
@@ -102,7 +102,7 @@ export default function AddColumnModal({ open, onClose, onAddColumn }: AddColumn
               name="type"
               value={form.type}
               onChange={handleChange}
-              className="px-3 py-2 w-full text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+              className="px-3 py-2 w-full text-sm text-gray-900 bg-white rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
             >
               {FieldTypeSchema.options.map((type) => (
                 <option key={type} value={type}>
@@ -120,7 +120,7 @@ export default function AddColumnModal({ open, onClose, onAddColumn }: AddColumn
                 name="options"
                 value={form.options.join(', ')}
                 onChange={handleOptionsChange}
-                className="px-3 py-2 w-full text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                className="px-3 py-2 w-full text-sm text-gray-900 bg-white rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
               />
             </div>
           )}
@@ -141,7 +141,7 @@ export default function AddColumnModal({ open, onClose, onAddColumn }: AddColumn
                       .filter(Boolean),
                   }))
                 }
-                className="px-3 py-2 w-full text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                className="px-3 py-2 w-full text-sm text-gray-900 bg-white rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
               />
             </div>
           )}

@@ -140,11 +140,11 @@ const TabButton: React.FC<{
       onClick={onClick}
       className={`flex items-center px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
         isActive
-          ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-          : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+          ? 'text-blue-600 border-blue-500 dark:text-blue-400'
+          : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
       }`}
     >
-      <Icon className="w-4 h-4 mr-2" />
+      <Icon className="mr-2 w-4 h-4" />
       {tab.label}
     </button>
   );
@@ -161,14 +161,14 @@ const CodeBlock: React.FC<{
       <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{title}</h3>
       <button
         onClick={onCopy}
-        className="flex items-center px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors cursor-pointer"
+        className="flex items-center px-3 py-1 text-sm text-gray-700 bg-gray-100 rounded transition-colors cursor-pointer hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
       >
-        <Copy className="w-4 h-4 mr-1" />
+        <Copy className="mr-1 w-4 h-4" />
         {copyLabel}
       </button>
     </div>
-    <div className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-auto max-h-96">
-      <pre className="text-sm whitespace-pre-wrap font-mono">{code}</pre>
+    <div className="overflow-auto p-4 max-h-96 text-green-400 bg-gray-900 rounded-lg">
+      <pre className="font-mono text-sm whitespace-pre-wrap">{code}</pre>
     </div>
   </div>
 );
@@ -200,7 +200,7 @@ const TabNavigation: React.FC<{
   activeTab: TabType;
   onTabChange: (tab: TabType) => void;
 }> = ({ activeTab, onTabChange }) => (
-  <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
+  <div className="flex mb-6 border-b border-gray-200 dark:border-gray-700">
     {Object.values(TAB_CONFIG).map((tab) => (
       <TabButton
         key={tab.id}
@@ -259,7 +259,7 @@ export default function TableSchemaModal({ open, onClose, table }: TableSchemaMo
 
   return (
     <div
-      className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50 animate-fade-in"
+      className="flex fixed inset-0 z-50 justify-center items-center bg-primary/5 animate-fade-in"
       onKeyDown={handleKeyDown}
       role="dialog"
       aria-modal="true"
@@ -291,10 +291,10 @@ export default function TableSchemaModal({ open, onClose, table }: TableSchemaMo
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex justify-end pt-4 mt-6 border-t border-gray-200 dark:border-gray-700">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 cursor-pointer"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md transition-colors cursor-pointer hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
           >
             Close
           </button>
