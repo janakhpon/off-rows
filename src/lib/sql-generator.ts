@@ -34,19 +34,13 @@ const STANDARD_COLUMNS = [
 ] as const;
 
 // Utility functions
-const sanitizeTableName = (name: string): string => {
-  return name
-    .toLowerCase()
-    .replace(/\s+/g, '_')
-    .replace(/[^a-z0-9_]/g, '');
-};
+const sanitizeTableName = (name: string): string =>
+  name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
 
-const escapeSqlString = (value: string): string => {
-  return value.replace(/'/g, "''");
-};
+const escapeSqlString = (value: string): string => value.replace(/'/g, "''");
 
-const getFieldTypeMapping = (fieldType: Field['type']): SqlDataType => {
-  const typeMap: Record<Field['type'], SqlDataType> = {
+const getFieldTypeMapping = (fieldType: Field['type']): SqlDataType =>
+  ({
     text: SQL_DATA_TYPES.TEXT,
     number: SQL_DATA_TYPES.DECIMAL,
     boolean: SQL_DATA_TYPES.BOOLEAN,
@@ -56,100 +50,62 @@ const getFieldTypeMapping = (fieldType: Field['type']): SqlDataType => {
     file: SQL_DATA_TYPES.TEXT,
     images: SQL_DATA_TYPES.TEXT,
     files: SQL_DATA_TYPES.TEXT,
-  };
+  }[fieldType] || SQL_DATA_TYPES.TEXT);
 
-  return typeMap[fieldType] || SQL_DATA_TYPES.TEXT;
+const generateFieldConstraints = (field: Field): string[] => [
+  ...(field.required ? ['NOT NULL'] : []),
+  ...(field.type === 'dropdown' && field.options?.length
+    ? [`CHECK (${field.id} IN (${field.options.map((opt) => `'${escapeSqlString(opt)}'`).join(', ')}))`]
+    : []),
+  ...(field.type === 'number' ? [`CHECK (typeof(${field.id}) = 'numeric')`] : []),
+];
+
+const valueMap: Record<Field['type'], (value: FieldValue) => string> = {
+  text: (value) => `DEFAULT '${escapeSqlString(String(value))}'`,
+  number: (value) => `DEFAULT ${Number(value)}`,
+  boolean: (value) => `DEFAULT ${value ? 1 : 0}`,
+  date: (value) => `DEFAULT '${String(value)}'`,
+  dropdown: (value) => `DEFAULT '${escapeSqlString(String(value))}'`,
+  image: (value) => `DEFAULT '${escapeSqlString(JSON.stringify(value))}'`,
+  file: (value) => `DEFAULT '${escapeSqlString(JSON.stringify(value))}'`,
+  images: (value) => `DEFAULT '${escapeSqlString(JSON.stringify(value))}'`,
+  files: (value) => `DEFAULT '${escapeSqlString(JSON.stringify(value))}'`,
 };
 
-const generateFieldConstraints = (field: Field): string[] => {
-  const constraints: string[] = [];
+const generateDefaultValue = (field: Field): string =>
+  field.defaultValue === undefined || field.defaultValue === null
+    ? ''
+    : valueMap[field.type]?.(field.defaultValue) || '';
 
-  if (field.required) {
-    constraints.push('NOT NULL');
-  }
-
-  if (field.type === 'dropdown' && field.options?.length) {
-    const escapedOptions = field.options.map((opt) => `'${escapeSqlString(opt)}'`).join(', ');
-    constraints.push(`CHECK (${field.id} IN (${escapedOptions}))`);
-  }
-
-  if (field.type === 'number') {
-    constraints.push(`CHECK (typeof(${field.id}) = 'numeric')`);
-  }
-
-  return constraints;
+const formatters: Record<Field['type'], (value: FieldValue) => string> = {
+  text: (value) => `'${escapeSqlString(String(value))}'`,
+  number: (value) => String(Number(value)),
+  boolean: (value) => (value ? '1' : '0'),
+  date: (value) => `'${escapeSqlString(String(value))}'`,
+  dropdown: (value) => `'${escapeSqlString(String(value))}'`,
+  image: (value) => `'${escapeSqlString(JSON.stringify(value))}'`,
+  file: (value) => `'${escapeSqlString(JSON.stringify(value))}'`,
+  images: (value) => `'${escapeSqlString(JSON.stringify(value))}'`,
+  files: (value) => `'${escapeSqlString(JSON.stringify(value))}'`,
 };
 
-const generateDefaultValue = (field: Field): string => {
-  if (field.defaultValue === undefined || field.defaultValue === null) {
-    return '';
-  }
-
-  const valueMap: Record<Field['type'], (value: FieldValue) => string> = {
-    text: (value) => `DEFAULT '${escapeSqlString(String(value))}'`,
-    number: (value) => `DEFAULT ${Number(value)}`,
-    boolean: (value) => `DEFAULT ${value ? 1 : 0}`,
-    date: (value) => `DEFAULT '${String(value)}'`,
-    dropdown: (value) => `DEFAULT '${escapeSqlString(String(value))}'`,
-    image: (value) => `DEFAULT '${escapeSqlString(JSON.stringify(value))}'`,
-    file: (value) => `DEFAULT '${escapeSqlString(JSON.stringify(value))}'`,
-    images: (value) => `DEFAULT '${escapeSqlString(JSON.stringify(value))}'`,
-    files: (value) => `DEFAULT '${escapeSqlString(JSON.stringify(value))}'`,
-  };
-
-  return valueMap[field.type]?.(field.defaultValue) || '';
-};
-
-const formatFieldValue = (field: Field, value: FieldValue): string => {
-  if (value === null || value === undefined) {
-    return 'NULL';
-  }
-
-  const formatters: Record<Field['type'], (value: FieldValue) => string> = {
-    text: (value) => `'${escapeSqlString(String(value))}'`,
-    number: (value) => String(Number(value)),
-    boolean: (value) => (value ? '1' : '0'),
-    date: (value) => `'${escapeSqlString(String(value))}'`,
-    dropdown: (value) => `'${escapeSqlString(String(value))}'`,
-    image: (value) => `'${escapeSqlString(JSON.stringify(value))}'`,
-    file: (value) => `'${escapeSqlString(JSON.stringify(value))}'`,
-    images: (value) => `'${escapeSqlString(JSON.stringify(value))}'`,
-    files: (value) => `'${escapeSqlString(JSON.stringify(value))}'`,
-  };
-
-  return formatters[field.type]?.(value) || `'${escapeSqlString(String(value))}'`;
-};
+const formatFieldValue = (field: Field, value: FieldValue): string =>
+  value === null || value === undefined
+    ? 'NULL'
+    : formatters[field.type]?.(value) || `'${escapeSqlString(String(value))}'`;
 
 /**
  * Generate CREATE TABLE statement for a dynamic table
+ * Pure, declarative, and point-free style
  */
 export const generateCreateTableSQL = (table: Table): string => {
-  if (!table.fields.length) {
-    throw new Error('Table must have at least one field');
-  }
-
+  if (!table.fields.length) throw new Error('Table must have at least one field');
   const tableName = sanitizeTableName(table.name);
-
-  const fieldDefinitions = table.fields.map((field) => {
-    const dataType = getFieldTypeMapping(field.type);
-    const constraints = generateFieldConstraints(field);
-    const defaultValue = generateDefaultValue(field);
-
-    let definition = `  ${field.id} ${dataType}`;
-
-    if (defaultValue) {
-      definition += ` ${defaultValue}`;
-    }
-
-    if (constraints.length > 0) {
-      definition += ` ${constraints.join(' ')}`;
-    }
-
-    return definition;
-  });
-
+  const fieldDefinitions = table.fields.map(
+    (field) =>
+      `  ${field.id} ${getFieldTypeMapping(field.type)}${generateDefaultValue(field) ? ` ${generateDefaultValue(field)}` : ''}${generateFieldConstraints(field).length > 0 ? ` ${generateFieldConstraints(field).join(' ')}` : ''}`
+  );
   const allColumns = [...STANDARD_COLUMNS, ...fieldDefinitions];
-
   return `CREATE TABLE ${tableName} (
 ${allColumns.join(',\n')}
 );
@@ -169,18 +125,18 @@ END;`;
 
 /**
  * Generate INSERT statement for a table row
+ * Pure and declarative
  */
 export const generateInsertSQL = (table: Table, rowData: RowData): string => {
   const tableName = sanitizeTableName(table.name);
   const fieldNames = table.fields.map((f) => f.id);
   const values = table.fields.map((field) => formatFieldValue(field, rowData[field.id] ?? null));
-
-  return `INSERT INTO ${tableName} (table_id, ${fieldNames.join(', ')}) 
-VALUES (${table.id}, ${values.join(', ')});`;
+  return `INSERT INTO ${tableName} (table_id, ${fieldNames.join(', ')}) \nVALUES (${table.id}, ${values.join(', ')});`;
 };
 
 /**
  * Generate SELECT statement for a table
+ * Pure and declarative
  */
 export const generateSelectSQL = (
   table: Table,
@@ -192,60 +148,42 @@ export const generateSelectSQL = (
 ): string => {
   const tableName = sanitizeTableName(table.name);
   const fieldNames = table.fields.map((f) => f.id);
-
-  let sql = `SELECT id, table_id, ${fieldNames.join(', ')}, created_at, updated_at 
-FROM ${tableName}`;
-
-  if (options.where && Object.keys(options.where).length > 0) {
-    const whereConditions = Object.entries(options.where).map(([key, value]) => {
-      if (value === null) {
-        return `${key} IS NULL`;
-      }
-      return `${key} = '${escapeSqlString(String(value))}'`;
-    });
-    sql += ` WHERE ${whereConditions.join(' AND ')}`;
-  }
-
-  if (options.orderBy) {
-    sql += ` ORDER BY ${options.orderBy}`;
-  } else {
-    sql += ` ORDER BY created_at DESC`;
-  }
-
-  if (options.limit) {
-    sql += ` LIMIT ${options.limit}`;
-  }
-
-  return sql + ';';
+  const whereConditions = options.where
+    ? Object.entries(options.where).map(([key, value]) =>
+        value === null ? `${key} IS NULL` : `${key} = '${escapeSqlString(String(value))}'`
+      )
+    : [];
+  return [
+    `SELECT id, table_id, ${fieldNames.join(', ')}, created_at, updated_at FROM ${tableName}`,
+    whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '',
+    options.orderBy ? `ORDER BY ${options.orderBy}` : 'ORDER BY created_at DESC',
+    options.limit ? `LIMIT ${options.limit}` : '',
+  ]
+    .filter(Boolean)
+    .join(' ') + ';';
 };
 
 /**
  * Generate UPDATE statement for a table row
+ * Pure and declarative
  */
 export const generateUpdateSQL = (table: Table, rowId: number, updates: RowData): string => {
   const tableName = sanitizeTableName(table.name);
-
   const setClauses = Object.entries(updates).map(([key, value]) => {
     const field = table.fields.find((f) => f.id === key);
-    if (!field) {
-      return `${key} = '${escapeSqlString(String(value))}'`;
-    }
-
-    return `${key} = ${formatFieldValue(field, value)}`;
+    return field
+      ? `${key} = ${formatFieldValue(field, value)}`
+      : `${key} = '${escapeSqlString(String(value))}'`;
   });
-
-  return `UPDATE ${tableName} 
-SET ${setClauses.join(', ')}
-WHERE id = ${rowId};`;
+  return `UPDATE ${tableName} \nSET ${setClauses.join(', ')}\nWHERE id = ${rowId};`;
 };
 
 /**
  * Generate DELETE statement for a table row
+ * Pure and declarative
  */
-export const generateDeleteSQL = (table: Table, rowId: number): string => {
-  const tableName = sanitizeTableName(table.name);
-  return `DELETE FROM ${tableName} WHERE id = ${rowId};`;
-};
+export const generateDeleteSQL = (table: Table, rowId: number): string =>
+  `DELETE FROM ${sanitizeTableName(table.name)} WHERE id = ${rowId};`;
 
 /**
  * Generate complete database schema for all tables
