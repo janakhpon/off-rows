@@ -61,3 +61,5 @@ wasmimage/.cargo/
 
 # WASM build output (committed for deployment)
 # public/wasm-pkg/ is committed to git for deployment
+
+.cursor/

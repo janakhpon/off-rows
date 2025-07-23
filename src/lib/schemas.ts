@@ -49,14 +49,18 @@ export const TableSchema = z.object({
   fields: z.array(FieldSchema).min(1, 'At least one field is required'),
   colWidths: z.record(z.string(), z.number()).optional(),
   rowHeights: z.record(z.string(), z.number()).optional(),
+  version: z.number().default(0), // For optimistic concurrency control
   createdAt: z.date(),
   updatedAt: z.date(),
+  syncConflict: z.boolean().optional(),
+  syncError: z.string().optional(),
 });
 
 // Table row schema
 export const TableRowSchema = z.object({
   id: z.number().optional(),
   tableId: z.number(),
+  rowKey: z.string().optional(), // Unique stable identifier for deduplication
   data: z.record(
     z.string(),
     z.union([
@@ -69,8 +73,11 @@ export const TableRowSchema = z.object({
     ]),
   ),
   order: z.number().optional(),
+  version: z.number().default(0), // For optimistic concurrency control
   createdAt: z.date(),
   updatedAt: z.date(),
+  syncConflict: z.boolean().optional(),
+  syncError: z.string().optional(),
 });
 
 // Filter rule schema
@@ -105,8 +112,11 @@ export const ViewSettingsSchema = z.object({
   rowHeight: z.enum(['compact', 'default', 'large']),
   colorRules: z.array(ColorRuleSchema),
   isDefault: z.boolean().optional(),
+  version: z.number().default(0), // For optimistic concurrency control
   createdAt: z.date(),
   updatedAt: z.date(),
+  syncConflict: z.boolean().optional(),
+  syncError: z.string().optional(),
 });
 
 // New table form schema

@@ -3,9 +3,12 @@ import helmet from "helmet";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
 import pino from "pino";
+import path from "path";
 import { ENV } from "./config";
 import storiesRouter from "./routes/stories";
 import s3Router from "./routes/s3";
+import tablesRouter from "./routes/tables";
+import docsRouter from "./routes/docs";
 
 const logger = pino({ level: process.env.LOG_LEVEL || "info" });
 
@@ -13,6 +16,7 @@ export const app = express();
 
 app.use(express.json({ limit: '10mb' })); // Increased limit for image uploads
 app.use(helmet());
+app.use(express.static(path.join(__dirname, '../public')));
 // Restrict CORS to frontend dev origins only. Update for production as needed.
 app.use(cors({
   origin: [
@@ -26,8 +30,32 @@ app.use(cors({
 app.use(rateLimit({ windowMs: 10 * 60 * 1000, max: 100 }));
 app.use("/api/stories", storiesRouter);
 app.use("/api/s3", s3Router);
+app.use("/api/tables", tablesRouter);
+app.use("/docs", docsRouter);
 
-app.get("/health", (req, res) => {
+/**
+ * @openapi
+ * /api/health:
+ *   get:
+ *     summary: Health check endpoint
+ *     tags: [Health]
+ *     responses:
+ *       200:
+ *         description: Server health status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "ok"
+ *                 env:
+ *                   type: string
+ *                   description: Current environment
+ *                   example: "development"
+ */
+app.get("/api/health", (req, res) => {
   res.json({ status: "ok", env: ENV });
 });
 

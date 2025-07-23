@@ -21,6 +21,7 @@ const createNewTableData = (name: string) => ({
     { id: 'name', name: 'Name', type: 'text' as const, required: true },
     { id: 'description', name: 'Description', type: 'text' as const },
   ],
+  version: 0,
 });
 
 // Static loading component for the app

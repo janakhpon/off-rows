@@ -737,6 +737,7 @@ export default function DataGridComponent({ searchQuery = '' }: DataGridComponen
     const newRow: Omit<TableRow, 'id' | 'createdAt' | 'updatedAt'> = {
       tableId: activeTable.id,
       data: createNewRowData(activeTable),
+      version: 0,
     };
     try {
       await addRow(newRow);

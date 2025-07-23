@@ -126,7 +126,7 @@ function useTableExportImport(
             }
           }
         }
-        await addRow({ tableId: activeTable.id!, data });
+        await addRow({ tableId: activeTable.id!, data, version: 0 });
       }
       setNotification({ message: 'CSV import complete!', type: 'success' });
     };
@@ -170,7 +170,7 @@ function useTableExportImport(
               | null;
           }
         }
-        await addRow({ tableId: activeTable.id!, data });
+        await addRow({ tableId: activeTable.id!, data, version: 0 });
       }
       setNotification({ message: 'JSON import complete!', type: 'success' });
     };
@@ -248,6 +248,7 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery }:
             defaultValue: '',
           },
         ],
+        version: 0,
       });
     }
   };

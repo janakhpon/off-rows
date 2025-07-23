@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OffRows API Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .nav {
+            background: white;
+            border-bottom: 1px solid #e1e5e9;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            height: fit-content;
+            position: sticky;
+            top: 80px;
+        }
+
+        .sidebar h3 {
+            margin-bottom: 1rem;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .sidebar ul {
+            list-style: none;
+        }
+
+        .sidebar li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar a {
+            color: #666;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+            display: block;
+            padding: 0.25rem 0;
+        }
+
+        .sidebar a:hover {
+            color: #667eea;
+        }
+
+        .content {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .section h3 {
+            font-size: 1.4rem;
+            margin: 2rem 0 1rem 0;
+            color: #444;
+        }
+
+        .section h4 {
+            font-size: 1.1rem;
+            margin: 1.5rem 0 0.5rem 0;
+            color: #555;
+        }
+
+        .endpoint {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .method {
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .method.get { background: #d4edda; color: #155724; }
+        .method.post { background: #d1ecf1; color: #0c5460; }
+        .method.put { background: #fff3cd; color: #856404; }
+        .method.delete { background: #f8d7da; color: #721c24; }
+
+        .endpoint-url {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        .description {
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .code-block pre {
+            margin: 0;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: #4a5568;
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #2d3748;
+        }
+
+        .copy-btn.copied {
+            background: #38a169;
+        }
+
+        .response-example {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .response-example h5 {
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .table th,
+        .table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .note strong {
+            color: #856404;
+        }
+
+        .warning {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .warning strong {
+            color: #721c24;
+        }
+
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .success strong {
+            color: #155724;
+        }
+
+        .try-it {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            transition: background 0.2s;
+        }
+
+        .try-it:hover {
+            background: #5a67d8;
+        }
+
+        .footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+
+        .api-tester {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .api-tester h5 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .api-tester input,
+        .api-tester textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        .api-tester button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-right: 0.5rem;
+        }
+
+        .api-tester button:hover {
+            background: #5a67d8;
+        }
+
+        .response-area {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.85rem;
+            margin-top: 1rem;
+            min-height: 100px;
+            white-space: pre-wrap;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: static;
+                margin-bottom: 1rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .content {
+                padding: 1rem;
+            }
+
+            .endpoint-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+        }
+
+        .mobile-nav {
+            display: none;
+            background: white;
+            border-top: 1px solid #e1e5e9;
+            padding: 1rem 0;
+        }
+
+        .mobile-nav.active {
+            display: block;
+        }
+
+        .mobile-nav ul {
+            list-style: none;
+        }
+
+        .mobile-nav li {
+            margin-bottom: 0.5rem;
+        }
+
+        .mobile-nav a {
+            color: #333;
+            text-decoration: none;
+            display: block;
+            padding: 0.5rem 0;
+        }
+
+        .syntax-highlight {
+            color: #81c784;
+        }
+
+        .syntax-string {
+            color: #ffb74d;
+        }
+
+        .syntax-number {
+            color: #64b5f6;
+        }
+
+        .syntax-boolean {
+            color: #f06292;
+        }
+
+        .syntax-null {
+            color: #9e9e9e;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>OffRows API Documentation</h1>
+            <p>Build powerful integrations with our REST API</p>
+        </div>
+    </div>
+
+    <nav class="nav">
+        <div class="container">
+            <div class="nav-content">
+                <div>
+                    <strong>OffRows API v1</strong>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="#introduction">Introduction</a></li>
+                    <li><a href="#authentication">Authentication</a></li>
+                    <li><a href="#tables">Tables</a></li>
+                    <li><a href="#rows">Rows</a></li>
+                    <li><a href="#views">Views</a></li>
+                    <li><a href="#sync">Sync</a></li>
+                </ul>
+                <button class="mobile-menu-btn" onclick="toggleMobileNav()">☰</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="mobile-nav" id="mobileNav">
+        <div class="container">
+            <ul>
+                <li><a href="#introduction">Introduction</a></li>
+                <li><a href="#authentication">Authentication</a></li>
+                <li><a href="#tables">Tables</a></li>
+                <li><a href="#rows">Rows</a></li>
+                <li><a href="#views">Views</a></li>
+                <li><a href="#sync">Sync</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="main-content">
+            <aside class="sidebar">
+                <h3>Quick Navigation</h3>
+                <ul>
+                    <li><a href="#introduction">Introduction</a></li>
+                    <li><a href="#authentication">Authentication</a></li>
+                    <li><a href="#base-url">Base URL</a></li>
+                    <li><a href="#tables">Tables</a></li>
+                    <li><a href="#rows">Rows</a></li>
+                    <li><a href="#views">Views</a></li>
+                    <li><a href="#sync">Sync</a></li>
+                    <li><a href="#rate-limits">Rate Limits</a></li>
+                    <li><a href="#errors">Error Handling</a></li>
+                </ul>
+            </aside>
+
+            <main class="content">
+                <section id="introduction" class="section">
+                    <h2>Introduction</h2>
+                    <p>The OffRows API allows you to programmatically access and manipulate your data. It provides a RESTful interface that follows standard HTTP conventions and returns JSON responses.</p>
+                    
+                    <div class="note">
+                        <strong>Note:</strong> This API is designed for offline-first applications. Data is stored locally and synced to the cloud when connectivity is available.
+                    </div>
+                </section>
+
+                <section id="authentication" class="section">
+                    <h2>Authentication</h2>
+                    <p>Currently, the API does not require authentication. However, for production use, we recommend implementing proper authentication mechanisms.</p>
+                    
+                    <div class="warning">
+                        <strong>Warning:</strong> This API is intended for development and testing. Add authentication before deploying to production.
+                    </div>
+                </section>
+
+                <section id="base-url" class="section">
+                    <h2>Base URL</h2>
+                    <p>All API requests should be made to your backend server:</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyToClipboard(this, 'http://localhost:3001/api')">Copy</button>
+                        <pre>http://localhost:3001/api</pre>
+                    </div>
+                </section>
+
+                <section id="tables" class="section">
+                    <h2>Tables</h2>
+                    <p>Tables are the primary data structure in OffRows. Each table contains a schema defining its fields and can hold multiple rows of data.</p>
+
+                    <h3>List Tables</h3>
+                    <div class="endpoint">
+                        <div class="endpoint-header">
+                            <span class="method get">GET</span>
+                            <span class="endpoint-url">/tables</span>
+                        </div>
+                        <p class="description">Retrieve all tables in your workspace.</p>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyToClipboard(this, 'curl -X GET http://localhost:3001/api/tables')">Copy</button>
+                            <pre>curl -X GET http://localhost:3001/api/tables</pre>
+                        </div>
+                        <div class="api-tester">
+                            <h5>Try it out</h5>
+                            <button onclick="testAPI('GET', '/tables')">Send Request</button>
+                            <div class="response-area" id="response-tables"></div>
+                        </div>
+                    </div>
+
+                    <h3>Get Table</h3>
+                    <div class="endpoint">
+                        <div class="endpoint-header">
+                            <span class="method get">GET</span>
+                            <span class="endpoint-url">/tables/{id}</span>
+                        </div>
+                        <p class="description">Retrieve a specific table by ID.</p>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyToClipboard(this, 'curl -X GET http://localhost:3001/api/tables/1')">Copy</button>
+                            <pre>curl -X GET http://localhost:3001/api/tables/1</pre>
+                        </div>
+                    </div>
+
+                    <h3>Create Table</h3>
+                    <div class="endpoint">
+                        <div class="endpoint-header">
+                            <span class="method post">POST</span>
+                            <span class="endpoint-url">/tables</span>
+                        </div>
+                        <p class="description">Create a new table with the specified schema.</p>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyToClipboard(this, 'curl -X POST http://localhost:3001/api/tables -H \"Content-Type: application/json\" -d \'{\"name\": \"My Table\", \"fields\": [{\"id\": \"name\", \"name\": \"Name\", \"type\": \"text\", \"required\": true}]}\'')">Copy</button>
+                            <pre>curl -X POST http://localhost:3001/api/tables \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "name": "My Table",
+    "description": "A new table",
+    "fields": [
+      {
+        "id": "name",
+        "name": "Name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "id": "email",
+        "name": "Email",
+        "type": "text",
+        "required": true
+      }
+    ]
+  }'</pre>
+                        </div>
+                        <div class="api-tester">
+                            <h5>Try it out</h5>
+                            <input type="text" id="table-name" placeholder="Table name" value="Test Table">
+                            <textarea id="table-fields" placeholder="Fields JSON" rows="4">[
+  {
+    "id": "name",
+    "name": "Name",
+    "type": "text",
+    "required": true
+  },
+  {
+    "id": "email",
+    "name": "Email",
+    "type": "text",
+    "required": true
+  }
+]</textarea>
+                            <button onclick="testCreateTable()">Create Table</button>
+                            <div class="response-area" id="response-create-table"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="rows" class="section">
+                    <h2>Rows</h2>
+                    <p>Rows contain the actual data within tables. Each row represents a record with values for each field defined in the table schema.</p>
+
+                    <h3>List Rows</h3>
+                    <div class="endpoint">
+                        <div class="endpoint-header">
+                            <span class="method get">GET</span>
+                            <span class="endpoint-url">/tables/{tableId}/rows</span>
+                        </div>
+                        <p class="description">Retrieve all rows for a specific table.</p>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyToClipboard(this, 'curl -X GET http://localhost:3001/api/tables/1/rows')">Copy</button>
+                            <pre>curl -X GET http://localhost:3001/api/tables/1/rows</pre>
+                        </div>
+                    </div>
+
+                    <h3>Create Row</h3>
+                    <div class="endpoint">
+                        <div class="endpoint-header">
+                            <span class="method post">POST</span>
+                            <span class="endpoint-url">/tables/{tableId}/rows</span>
+                        </div>
+                        <p class="description">Create a new row in the specified table.</p>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyToClipboard(this, 'curl -X POST http://localhost:3001/api/tables/1/rows -H \"Content-Type: application/json\" -d \'{\"data\": {\"name\": \"Jane Smith\", \"email\": \"jane@example.com\"}}\'')">Copy</button>
+                            <pre>curl -X POST http://localhost:3001/api/tables/1/rows \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "data": {
+      "name": "Jane Smith",
+      "email": "jane@example.com"
+    },
+    "order": 2
+  }'</pre>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="sync" class="section">
+                    <h2>Sync</h2>
+                    <p>The sync endpoint allows you to synchronize all data (tables, rows, and views) between local storage and the cloud database.</p>
+
+                    <h3>Sync All Data</h3>
+                    <div class="endpoint">
+                        <div class="endpoint-header">
+                            <span class="method post">POST</span>
+                            <span class="endpoint-url">/tables/sync</span>
+                        </div>
+                        <p class="description">Synchronize all tables, rows, and views. This endpoint performs upsert operations for all provided data.</p>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyToClipboard(this, 'curl -X POST http://localhost:3001/api/tables/sync -H \"Content-Type: application/json\" -d \'{}\'')">Copy</button>
+                            <pre>curl -X POST http://localhost:3001/api/tables/sync \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "tables": [...],
+    "rows": [...],
+    "views": [...]
+  }'</pre>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="rate-limits" class="section">
+                    <h2>Rate Limits</h2>
+                    <p>To ensure fair usage and prevent abuse, the API implements rate limiting:</p>
+                    <ul>
+                        <li><strong>100 requests per 10 minutes</strong> per IP address</li>
+                        <li>Rate limit headers are included in responses</li>
+                        <li>Exceeding limits returns HTTP 429 (Too Many Requests)</li>
+                    </ul>
+                </section>
+
+                <section id="errors" class="section">
+                    <h2>Error Handling</h2>
+                    <p>The API uses standard HTTP status codes and returns error details in JSON format.</p>
+
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Status Code</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>200</td>
+                                <td>Success</td>
+                            </tr>
+                            <tr>
+                                <td>201</td>
+                                <td>Created</td>
+                            </tr>
+                            <tr>
+                                <td>204</td>
+                                <td>No Content (for deletions)</td>
+                            </tr>
+                            <tr>
+                                <td>400</td>
+                                <td>Bad Request</td>
+                            </tr>
+                            <tr>
+                                <td>404</td>
+                                <td>Not Found</td>
+                            </tr>
+                            <tr>
+                                <td>429</td>
+                                <td>Too Many Requests</td>
+                            </tr>
+                            <tr>
+                                <td>500</td>
+                                <td>Internal Server Error</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Error Response Format</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyToClipboard(this, '{\"error\": \"Error message description\"}')">Copy</button>
+                        <pre>{
+  "error": "Error message description"
+}</pre>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 OffRows API. Built for offline-first data management.</p>
+        </div>
+    </footer>
+
+    <script>
+        function toggleMobileNav() {
+            const mobileNav = document.getElementById('mobileNav');
+            mobileNav.classList.toggle('active');
+        }
+
+        function copyToClipboard(button, text) {
+            navigator.clipboard.writeText(text).then(() => {
+                button.textContent = 'Copied!';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                    button.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        function syntaxHighlight(json) {
+            if (typeof json !== 'string') {
+                json = JSON.stringify(json, null, 2);
+            }
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = 'syntax-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'syntax-highlight';
+                    } else {
+                        cls = 'syntax-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'syntax-boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'syntax-null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        async function testAPI(method, endpoint, data = null) {
+            const responseArea = document.getElementById('response-' + endpoint.replace(/\//g, '-').replace(/[{}]/g, ''));
+            if (!responseArea) return;
+
+            responseArea.textContent = 'Loading...';
+
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+
+                const response = await fetch('http://localhost:3001/api' + endpoint, options);
+                const result = await response.json();
+
+                responseArea.innerHTML = syntaxHighlight(result);
+            } catch (error) {
+                responseArea.textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function testCreateTable() {
+            const name = document.getElementById('table-name').value;
+            const fieldsText = document.getElementById('table-fields').value;
+            const responseArea = document.getElementById('response-create-table');
+
+            try {
+                const fields = JSON.parse(fieldsText);
+                const data = {
+                    name: name,
+                    description: 'Test table created via API',
+                    fields: fields
+                };
+
+                responseArea.textContent = 'Loading...';
+
+                const response = await fetch('http://localhost:3001/api/tables', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                responseArea.innerHTML = syntaxHighlight(result);
+            } catch (error) {
+                responseArea.textContent = 'Error: ' + error.message;
+            }
+        }
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Close mobile nav when clicking on a link
+        document.querySelectorAll('.mobile-nav a').forEach(link => {
+            link.addEventListener('click', () => {
+                document.getElementById('mobileNav').classList.remove('active');
+            });
+        });
+    </script>
+</body>
+</html> 

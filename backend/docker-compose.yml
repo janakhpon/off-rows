@@ -1,22 +1,32 @@
 services:
   db:
     image: postgres:15
-    restart: always
+    container_name: offrows_postgres
+    restart: unless-stopped
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: express_rest_starter
+      POSTGRES_DB: offrows
     ports:
-      - "5433:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+      - "5432:5432" # Standard Postgres port
+    # volumes:
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d offrows"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   redis:
     image: redis:7
-    restart: always
+    container_name: offrows_redis
+    restart: unless-stopped
     ports:
-      - "6389:6379"
-    volumes:
-      - redisdata:/data
-volumes:
-  pgdata:
-  redisdata:
+      - "6379:6379" # Standard Redis port
+    # volumes:
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # No persistent volumes

@@ -13,7 +13,6 @@ import {
   AlertTriangle,
   X,
   Cloud,
-  ArrowUpDown,
   ArrowDown,
   ArrowUp,
   Wifi,
@@ -30,6 +29,8 @@ import { useImageSettingsStore } from '@/lib/imageSettingsStore';
 import { backgroundSyncService } from '@/lib/backgroundSync';
 import { useBackgroundSync } from '@/lib/useBackgroundSync';
 import { ApiService } from '@/lib/api';
+import { useCloudSyncStore } from '@/lib/cloudSyncStore';
+import { tableSyncService } from '@/lib/tableSyncService';
 import { useEffect } from 'react';
 
 interface SidebarProps {
@@ -45,17 +46,22 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // Cloud sync state
-  const [syncEnabled, setSyncEnabled] = useState(false);
-  const [bidirectionalSync, setBidirectionalSync] = useState(false);
-  const [autoSync, setAutoSync] = useState(false);
-  const [lastSyncTime] = useState<string | null>(null);
-
   // Background sync state
   const { isOnline, pendingCount, syncedCount } = useBackgroundSync();
 
   // S3 backend status
   const [isS3Available, setIsS3Available] = useState<boolean | null>(null);
+
+  // Cloud sync state
+  const {
+    autoSyncTables,
+    setAutoSyncTables,
+    lastTableSyncTime,
+    isBackendAvailable,
+    syncInProgress,
+    pendingTableChanges,
+    syncedTableChanges,
+  } = useCloudSyncStore();
 
   useEffect(() => {
     let cancelled = false;
@@ -73,6 +79,18 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     };
     checkS3Status();
     return () => { cancelled = true; };
+  }, []);
+
+  // Check backend availability
+  useEffect(() => {
+    const checkBackendStatus = async () => {
+      try {
+        await tableSyncService.checkBackendAvailability();
+      } catch (error) {
+        console.error('Failed to check backend status:', error);
+      }
+    };
+    checkBackendStatus();
   }, []);
 
   // Image settings state (from global store)
@@ -309,7 +327,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       {/* Mobile overlay with blur effect */}
       {!isCollapsed && (
         <div
-          className="fixed inset-0 z-40 backdrop-blur-sm bg-black/20 md:hidden transition-all duration-300 ease-in-out"
+          className="fixed inset-0 z-40 backdrop-blur-sm transition-all duration-300 ease-in-out bg-black/20 md:hidden"
           onClick={onToggle}
         />
       )}
@@ -337,12 +355,12 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           {showSettings ? (
             <>
               <Settings className="w-6 h-6 text-blue-600 transition-colors duration-200" />
-              <span className="font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Settings</span>
+              <span className="font-semibold text-gray-900 transition-colors duration-200 dark:text-gray-100">Settings</span>
             </>
           ) : (
             <>
               <Settings className="w-6 h-6 text-blue-600 transition-colors duration-200" />
-              <span className="font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Application</span>
+              <span className="font-semibold text-gray-900 transition-colors duration-200 dark:text-gray-100">Application</span>
             </>
           )}
           {showSettings && (
@@ -367,7 +385,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             // Main menu with enhanced animations
             <div className="p-4 space-y-2">
               <div className="mb-4 animate-fade-in">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                <h3 className="text-sm font-medium text-gray-900 transition-colors duration-200 dark:text-gray-100">
                   Application
                 </h3>
               </div>
@@ -438,6 +456,35 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                   />
                   <span className="text-sm font-medium">GitHub</span>
                 </button>
+
+                {/* New button for API Documentation */}
+                <button
+                  onClick={() => window.open('/docs', '_blank')}
+                  className={cn(
+                    'w-full text-left p-3 rounded-lg transition-all duration-200 cursor-pointer group border border-transparent',
+                    'hover:scale-[1.02] hover:shadow-sm',
+                    theme === 'dark'
+                      ? 'text-gray-300 hover:bg-gray-700/80 hover:text-gray-100'
+                      : 'text-gray-700 hover:bg-gray-50/80 hover:text-gray-900',
+                    'flex items-center space-x-3',
+                  )}
+                  type="button"
+                >
+                  {/* You can replace this with a more suitable API icon if available */}
+                  <span
+                    className={cn(
+                      'w-4 h-4 transition-all duration-200',
+                      'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300',
+                      'group-hover:scale-110',
+                    )}
+                    role="img"
+                    aria-label="API"
+                  >
+                    {/* Simple API icon (could be replaced with a real icon component) */}
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="4" y="4" width="16" height="16" rx="2" strokeWidth="2"/><path d="M8 12h8M12 8v8" strokeWidth="2"/></svg>
+                  </span>
+                  <span className="text-sm font-medium">API Documentation</span>
+                </button>
               </div>
             </div>
           ) : (
@@ -457,7 +504,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                     <span className="text-sm">{message.text}</span>
                     <button
                       onClick={clearMessage}
-                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 hover:scale-110"
+                      className="text-gray-400 transition-colors duration-200 hover:text-gray-600 dark:hover:text-gray-300 hover:scale-110"
                       type="button"
                     >
                       <X className="w-3 h-3" />
@@ -468,156 +515,75 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
               {/* Cloud Sync Section with enhanced styling */}
               <div className="space-y-3 animate-fade-in-up">
-                <h3 className="flex items-center space-x-2 text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                <h3 className="flex items-center space-x-2 text-sm font-medium text-gray-900 transition-colors duration-200 dark:text-gray-100">
                   <Cloud className="w-4 h-4 text-blue-600 transition-colors duration-200" />
                   <span>Cloud Sync</span>
                 </h3>
 
                 <div className="space-y-3">
-                  {/* Enable Sync Toggle with enhanced animations */}
-                  <div className="flex justify-between items-center p-3 rounded-lg transition-all duration-200 hover:bg-gray-50/50 dark:hover:bg-gray-700/50">
-                    <div>
-                      <p className="text-xs font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
-                        Enable Cloud Sync
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
-                        {isOnline
-                          ? 'Sync data with cloud storage'
-                          : 'Requires internet connection'}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setSyncEnabled(!syncEnabled)}
-                      disabled={!isOnline}
-                      className={cn(
-                        'inline-flex relative items-center w-11 h-6 rounded-full transition-all duration-300 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
-                        'hover:scale-105',
-                        syncEnabled
-                          ? 'bg-blue-600 hover:bg-blue-700 shadow-lg'
-                          : 'bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500',
-                      )}
-                      type="button"
-                    >
-                      <span className="sr-only">Enable cloud sync</span>
-                      <span
-                        className={cn(
-                          'inline-block w-4 h-4 bg-white rounded-full transition-all duration-300 transform shadow-md',
-                          syncEnabled ? 'translate-x-6' : 'translate-x-1',
-                        )}
-                      />
-                    </button>
-                  </div>
-
                   {/* Connection Status with enhanced styling */}
-                  <div className="flex justify-between items-center p-3 bg-gray-50/80 rounded-lg dark:bg-gray-700/80 transition-all duration-200 hover:bg-gray-100/80 dark:hover:bg-gray-600/80">
+                  <div className="flex justify-between items-center p-3 rounded-lg transition-all duration-200 bg-gray-50/80 dark:bg-gray-700/80 hover:bg-gray-100/80 dark:hover:bg-gray-600/80">
                     <div className="flex items-center space-x-2">
                       {isOnline ? (
-                        <Wifi className="w-3 h-3 text-green-600 animate-pulse" />
+                        <Wifi className="w-3 h-3 text-green-600" />
                       ) : (
-                        <WifiOff className="w-3 h-3 text-gray-400" />
+                        <WifiOff className="w-3 h-3 text-red-600" />
                       )}
-                      <span className="text-xs text-gray-600 dark:text-gray-300 transition-colors duration-200">
+                      <span className="text-xs text-gray-600 transition-colors duration-200 dark:text-gray-300">
                         {isOnline ? 'Online' : 'Offline'}
                       </span>
                     </div>
-                    {lastSyncTime && (
-                      <span className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
-                        Last: {new Date(lastSyncTime).toLocaleTimeString()}
-                      </span>
-                    )}
                   </div>
 
-                  {/* Backend API Status Indicator */}
-                  <div className="flex justify-between items-center p-3 bg-gray-50/80 rounded-lg dark:bg-gray-700/80 transition-all duration-200 hover:bg-gray-100/80 dark:hover:bg-gray-600/80">
+                  {/* Backend Status with enhanced styling */}
+                  <div className="flex justify-between items-center p-3 rounded-lg transition-all duration-200 bg-gray-50/80 dark:bg-gray-700/80 hover:bg-gray-100/80 dark:hover:bg-gray-600/80">
                     <div className="flex items-center space-x-2">
-                      {isS3Available === null ? (
+                      {isBackendAvailable === null ? (
                         <AlertTriangle className="w-3 h-3 text-gray-400 animate-pulse" />
-                      ) : isS3Available ? (
+                      ) : isBackendAvailable ? (
                         <Cloud className="w-3 h-3 text-green-600" />
                       ) : (
                         <Cloud className="w-3 h-3 text-red-600" />
                       )}
-                      <span className="text-xs text-gray-600 dark:text-gray-300 transition-colors duration-200">
-                        {isS3Available === null
+                      <span className="text-xs text-gray-600 transition-colors duration-200 dark:text-gray-300">
+                        {isBackendAvailable === null
                           ? 'Checking backend...'
-                          : isS3Available
+                          : isBackendAvailable
                           ? 'Backend API available'
                           : 'Backend API unreachable'}
                       </span>
                     </div>
                   </div>
 
-                  {/* Sync Options - Only show when sync is enabled */}
-                  {syncEnabled && (
-                    <div className="p-3 space-y-3 bg-blue-50/80 rounded-lg border border-blue-200 dark:bg-blue-900/20 dark:border-blue-700 transition-all duration-300 animate-fade-in-up">
-                      {/* Bidirectional Sync */}
-                      <div className="flex justify-between items-center p-2 rounded-lg transition-all duration-200 hover:bg-blue-100/50 dark:hover:bg-blue-800/30">
-                        <div>
-                          <p className="text-xs font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
-                            Bidirectional Sync
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
-                            Sync both ways automatically
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => setBidirectionalSync(!bidirectionalSync)}
-                          disabled={!syncEnabled}
-                          className={cn(
-                            'inline-flex relative items-center w-9 h-5 rounded-full transition-all duration-300 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
-                            'hover:scale-105',
-                            bidirectionalSync
-                              ? 'bg-blue-600 hover:bg-blue-700 shadow-md'
-                              : 'bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500',
-                          )}
-                          type="button"
-                        >
-                          <span className="sr-only">Enable bidirectional sync</span>
-                          <span
-                            className={cn(
-                              'inline-block w-3 h-3 bg-white rounded-full transition-all duration-300 transform shadow-sm',
-                              bidirectionalSync ? 'translate-x-5' : 'translate-x-1',
-                            )}
-                          />
-                        </button>
-                      </div>
+                  {/* Auto Sync Tables Toggle with enhanced styling */}
+                  <div className="flex justify-between items-center p-3 rounded-lg transition-all duration-200 hover:bg-gray-50/50 dark:hover:bg-gray-700/50">
+                    <div>
+                      <p className="text-xs font-medium text-gray-900 transition-colors duration-200 dark:text-gray-100">
+                        Auto Sync Tables
+                      </p>
+                      <p className="text-xs text-gray-500 transition-colors duration-200 dark:text-gray-400">
+                        {isOnline && isBackendAvailable
+                          ? 'Sync tables automatically when online'
+                          : !isOnline
+                          ? 'Requires internet connection'
+                          : 'Backend not reachable'}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={autoSyncTables}
+                      onCheckedChange={setAutoSyncTables}
+                      disabled={!isOnline || !isBackendAvailable}
+                      className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-gray-600 disabled:opacity-50 transition-all duration-200 hover:scale-105"
+                    />
+                  </div>
 
-                      {/* Auto Sync */}
-                      <div className="flex justify-between items-center p-2 rounded-lg transition-all duration-200 hover:bg-blue-100/50 dark:hover:bg-blue-800/30">
-                        <div>
-                          <p className="text-xs font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
-                            Auto Sync
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
-                            Sync automatically when online
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => setAutoSync(!autoSync)}
-                          disabled={!syncEnabled}
-                          className={cn(
-                            'inline-flex relative items-center w-9 h-5 rounded-full transition-all duration-300 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
-                            'hover:scale-105',
-                            autoSync
-                              ? 'bg-blue-600 hover:bg-blue-700 shadow-md'
-                              : 'bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500',
-                          )}
-                          type="button"
-                        >
-                          <span className="sr-only">Enable auto sync</span>
-                          <span
-                            className={cn(
-                              'inline-block w-3 h-3 bg-white rounded-full transition-all duration-300 transform shadow-sm',
-                              autoSync ? 'translate-x-5' : 'translate-x-1',
-                            )}
-                          />
-                        </button>
-                      </div>
-
-                      {/* Manual Sync Buttons with enhanced styling */}
+                  {/* Manual Sync Buttons with enhanced styling */}
+                  {isOnline && isBackendAvailable && (
+                    <div className="p-3 space-y-2 rounded-lg border border-blue-200 transition-all duration-300 bg-blue-50/80 dark:bg-blue-900/20 dark:border-blue-700 animate-fade-in-up">
                       <div className="space-y-2">
                         <button
-                          disabled={!syncEnabled || !isOnline}
+                          onClick={() => tableSyncService.syncToCloud(isOnline)}
+                          disabled={syncInProgress}
                           className={cn(
                             'flex items-center px-3 py-2 space-x-2 w-full text-xs rounded-lg transition-all duration-200 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
                             'hover:scale-[1.02] hover:shadow-sm',
@@ -627,60 +593,52 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                           )}
                           type="button"
                         >
-                          <ArrowUpDown className="w-3 h-3" />
-                          <span>Sync All</span>
+                          <ArrowUp className="w-3 h-3" />
+                          <span>{syncInProgress ? 'Syncing...' : 'Sync to Cloud'}</span>
                         </button>
 
-                        <div className="grid grid-cols-2 gap-2">
-                          <button
-                            disabled={!syncEnabled || !isOnline}
-                            className={cn(
-                              'flex items-center px-2 py-2 space-x-1 text-xs rounded-lg transition-all duration-200 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
-                              'hover:scale-[1.02] hover:shadow-sm',
-                              theme === 'dark'
-                                ? 'text-gray-300 bg-gray-700/80 hover:bg-gray-600'
-                                : 'text-gray-700 bg-gray-50/80 hover:bg-gray-100',
-                            )}
-                            type="button"
-                          >
-                            <ArrowUp className="w-3 h-3" />
-                            <span>Upload</span>
-                          </button>
-
-                          <button
-                            disabled={!syncEnabled || !isOnline}
-                            className={cn(
-                              'flex items-center px-2 py-2 space-x-1 text-xs rounded-lg transition-all duration-200 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
-                              'hover:scale-[1.02] hover:shadow-sm',
-                              theme === 'dark'
-                                ? 'text-gray-300 bg-gray-700/80 hover:bg-gray-600'
-                                : 'text-gray-700 bg-gray-50/80 hover:bg-gray-100',
-                            )}
-                            type="button"
-                          >
-                            <ArrowDown className="w-3 h-3" />
-                            <span>Download</span>
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => tableSyncService.syncFromCloud(isOnline)}
+                          disabled={syncInProgress}
+                          className={cn(
+                            'flex items-center px-3 py-2 space-x-2 w-full text-xs rounded-lg transition-all duration-200 cursor-pointer focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
+                            'hover:scale-[1.02] hover:shadow-sm',
+                            theme === 'dark'
+                              ? 'text-gray-300 bg-gray-700/80 hover:bg-gray-600'
+                              : 'text-gray-700 bg-gray-50/80 hover:bg-gray-100',
+                          )}
+                          type="button"
+                        >
+                          <ArrowDown className="w-3 h-3" />
+                          <span>{syncInProgress ? 'Syncing...' : 'Sync from Cloud'}</span>
+                        </button>
                       </div>
                     </div>
                   )}
 
-                  {/* Sync Status Indicators with enhanced styling */}
-                  {syncEnabled && (
-                    <div className="space-y-2 p-3 bg-gray-50/80 rounded-lg dark:bg-gray-700/80 transition-all duration-200">
+                  {/* Table Sync Status with enhanced styling */}
+                  {isOnline && isBackendAvailable && (
+                    <div className="p-3 space-y-2 rounded-lg transition-all duration-200 bg-gray-50/80 dark:bg-gray-700/80">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-gray-600 dark:text-gray-400 transition-colors duration-200">Pending Changes:</span>
-                        <span className="font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
-                          {pendingCount}
+                        <span className="text-gray-600 transition-colors duration-200 dark:text-gray-400">Pending Changes:</span>
+                        <span className="font-medium text-gray-900 transition-colors duration-200 dark:text-gray-100">
+                          {pendingTableChanges}
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-gray-600 dark:text-gray-400 transition-colors duration-200">Synced Items:</span>
-                        <span className="font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
-                          {syncedCount}
+                        <span className="text-gray-600 transition-colors duration-200 dark:text-gray-400">Synced Changes:</span>
+                        <span className="font-medium text-gray-900 transition-colors duration-200 dark:text-gray-100">
+                          {syncedTableChanges}
                         </span>
                       </div>
+                      {lastTableSyncTime && (
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-gray-600 transition-colors duration-200 dark:text-gray-400">Last Sync:</span>
+                          <span className="font-medium text-gray-900 transition-colors duration-200 dark:text-gray-100">
+                            {new Date(lastTableSyncTime).toLocaleString()}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -688,7 +646,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
               {/* Image Settings Section with enhanced animations */}
               <div className="space-y-3 animate-fade-in-up">
-                <h3 className="flex items-center space-x-2 text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                <h3 className="flex items-center space-x-2 text-sm font-medium text-gray-900 transition-colors duration-200 dark:text-gray-100">
                   <Image className="w-4 h-4 text-blue-600 transition-colors duration-200" aria-hidden="true" />
                   <span>Image Settings</span>
                 </h3>
@@ -697,10 +655,10 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                   {/* Convert to WebP Toggle with enhanced styling */}
                   <div className="flex justify-between items-center p-3 rounded-lg transition-all duration-200 hover:bg-gray-50/50 dark:hover:bg-gray-700/50">
                     <div>
-                      <p className="text-xs font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                      <p className="text-xs font-medium text-gray-900 transition-colors duration-200 dark:text-gray-100">
                         Convert to WebP
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                      <p className="text-xs text-gray-500 transition-colors duration-200 dark:text-gray-400">
                         Convert images to WebP format after compression
                       </p>
                     </div>
@@ -712,12 +670,12 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                   </div>
 
                   {/* Image Quality Slider with enhanced styling */}
-                  <div className="space-y-2 p-3 rounded-lg transition-all duration-200 hover:bg-gray-50/50 dark:hover:bg-gray-700/50">
+                  <div className="p-3 space-y-2 rounded-lg transition-all duration-200 hover:bg-gray-50/50 dark:hover:bg-gray-700/50">
                     <div className="flex justify-between items-center">
-                      <p className="text-xs font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                      <p className="text-xs font-medium text-gray-900 transition-colors duration-200 dark:text-gray-100">
                         Image Quality
                       </p>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                      <span className="text-xs text-gray-500 transition-colors duration-200 dark:text-gray-400">
                         {imageQuality[0]}%
                       </span>
                     </div>
@@ -729,7 +687,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                       step={5}
                       className="w-full transition-all duration-200"
                     />
-                    <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                    <p className="text-xs text-gray-500 transition-colors duration-200 dark:text-gray-400">
                       Higher quality = larger file size
                     </p>
                   </div>
@@ -737,10 +695,10 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                   {/* Sync Images to S3 Toggle with enhanced styling */}
                   <div className="flex justify-between items-center p-3 rounded-lg transition-all duration-200 hover:bg-gray-50/50 dark:hover:bg-gray-700/50">
                     <div>
-                      <p className="text-xs font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                      <p className="text-xs font-medium text-gray-900 transition-colors duration-200 dark:text-gray-100">
                         Sync Images to S3
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                      <p className="text-xs text-gray-500 transition-colors duration-200 dark:text-gray-400">
                         {isOnline
                           ? isS3Available === false
                             ? 'S3 backend not reachable'
@@ -759,10 +717,10 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                   {/* Show Image Notifications Toggle with enhanced styling */}
                   <div className="flex justify-between items-center p-3 rounded-lg transition-all duration-200 hover:bg-gray-50/50 dark:hover:bg-gray-700/50">
                     <div>
-                      <p className="text-xs font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                      <p className="text-xs font-medium text-gray-900 transition-colors duration-200 dark:text-gray-100">
                         Display Image Notifications
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                      <p className="text-xs text-gray-500 transition-colors duration-200 dark:text-gray-400">
                         Show compression and conversion status notifications
                       </p>
                     </div>
@@ -775,19 +733,19 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
                   {/* Image Sync Status with enhanced styling */}
                   {syncImagesToS3 && (
-                    <div className="p-3 bg-blue-50/80 rounded-lg border border-blue-200 dark:bg-blue-900/20 dark:border-blue-700 transition-all duration-300 animate-fade-in-up">
+                    <div className="p-3 rounded-lg border border-blue-200 transition-all duration-300 bg-blue-50/80 dark:bg-blue-900/20 dark:border-blue-700 animate-fade-in-up">
                       <div className="space-y-2">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-gray-600 dark:text-gray-400 transition-colors duration-200">
+                          <span className="text-gray-600 transition-colors duration-200 dark:text-gray-400">
                             Pending Images:
                           </span>
-                          <span className="font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                          <span className="font-medium text-gray-900 transition-colors duration-200 dark:text-gray-100">
                             {pendingCount}
                           </span>
                         </div>
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-gray-600 dark:text-gray-400 transition-colors duration-200">Synced Images:</span>
-                          <span className="font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                          <span className="text-gray-600 transition-colors duration-200 dark:text-gray-400">Synced Images:</span>
+                          <span className="font-medium text-gray-900 transition-colors duration-200 dark:text-gray-100">
                             {syncedCount}
                           </span>
                         </div>
@@ -797,9 +755,11 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 </div>
               </div>
 
+
+
               {/* Security Section with enhanced styling */}
               <div className="space-y-3 animate-fade-in-up">
-                <h3 className="flex items-center space-x-2 text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                <h3 className="flex items-center space-x-2 text-sm font-medium text-gray-900 transition-colors duration-200 dark:text-gray-100">
                   <Shield className="w-4 h-4 text-blue-600 transition-colors duration-200" />
                   <span>Security</span>
                 </h3>
@@ -807,10 +767,10 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 <div className="space-y-2">
                   <div className="flex justify-between items-center p-3 rounded-lg transition-all duration-200 hover:bg-gray-50/50 dark:hover:bg-gray-700/50">
                     <div>
-                      <p className="text-xs font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                      <p className="text-xs font-medium text-gray-900 transition-colors duration-200 dark:text-gray-100">
                         Encryption
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                      <p className="text-xs text-gray-500 transition-colors duration-200 dark:text-gray-400">
                         Encrypt data stored locally (coming soon)
                       </p>
                     </div>
@@ -828,10 +788,10 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
               {/* Data Management Section with enhanced styling */}
               <div className="space-y-3 animate-fade-in-up">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">
+                <h3 className="text-sm font-medium text-gray-900 transition-colors duration-200 dark:text-gray-100">
                   Data Management
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                <p className="text-xs text-gray-500 transition-colors duration-200 dark:text-gray-400">
                   Note: Database export excludes file content to prevent errors. Use individual
                   table exports for files.
                 </p>
@@ -921,7 +881,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         {/* Footer with enhanced styling */}
         <div className={cn('border-t transition-colors duration-200', theme === 'dark' ? 'border-gray-700' : 'border-gray-200')}>
           <div className="p-4">
-            <div className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">Offrows v0.1.0</div>
+            <div className="text-xs text-gray-500 transition-colors duration-200 dark:text-gray-400">Offrows v0.1.0</div>
           </div>
         </div>
       </div>
@@ -930,7 +890,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       {showClearConfirm && (
         <div className="flex fixed inset-0 justify-center items-center p-4 z-60 animate-fade-in">
           <div
-            className="absolute inset-0 backdrop-blur-sm bg-black/30 transition-all duration-300"
+            className="absolute inset-0 backdrop-blur-sm transition-all duration-300 bg-black/30"
             onClick={() => setShowClearConfirm(false)}
           />
           <div
@@ -942,11 +902,11 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           >
             <div className="flex items-center mb-4 space-x-3">
               <AlertTriangle className="w-6 h-6 text-red-600 transition-colors duration-200" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">
+              <h3 className="text-lg font-semibold text-gray-900 transition-colors duration-200 dark:text-gray-100">
                 Clear All Storage
               </h3>
             </div>
-            <p className="mb-6 text-sm text-gray-600 dark:text-gray-300 transition-colors duration-200">
+            <p className="mb-6 text-sm text-gray-600 transition-colors duration-200 dark:text-gray-300">
               This will permanently delete all your data including tables, rows, files, and all
               browser storage. This action cannot be undone.
             </p>
@@ -980,7 +940,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       {showResetConfirm && (
         <div className="flex fixed inset-0 justify-center items-center p-4 z-60 animate-fade-in">
           <div
-            className="absolute inset-0 backdrop-blur-sm bg-black/30 transition-all duration-300"
+            className="absolute inset-0 backdrop-blur-sm transition-all duration-300 bg-black/30"
             onClick={() => setShowResetConfirm(false)}
           />
           <div
@@ -992,11 +952,11 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           >
             <div className="flex items-center mb-4 space-x-3">
               <AlertTriangle className="w-6 h-6 text-orange-600 transition-colors duration-200" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">
+              <h3 className="text-lg font-semibold text-gray-900 transition-colors duration-200 dark:text-gray-100">
                 Reset Database
               </h3>
             </div>
-            <p className="mb-6 text-sm text-gray-600 dark:text-gray-300 transition-colors duration-200">
+            <p className="mb-6 text-sm text-gray-600 transition-colors duration-200 dark:text-gray-300">
               This will delete all your tables and data, then reinitialize with sample data. This
               action cannot be undone.
             </p>
@@ -1028,3 +988,4 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     </>
   );
 }
+

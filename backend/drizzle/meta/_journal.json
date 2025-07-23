@@ -15,6 +15,34 @@
       "when": 1752051771087,
       "tag": "0001_lovely_flatman",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1752728227592,
+      "tag": "0002_smart_spectrum",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1752738661954,
+      "tag": "0003_awesome_ultimatum",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1752745768220,
+      "tag": "0004_white_gamora",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1752746001505,
+      "tag": "0005_uneven_spitfire",
+      "breakpoints": true
     }
   ]
 }

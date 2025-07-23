@@ -7,19 +7,19 @@ import {
   TableRowSchema as TableRowSchemaType,
   ViewSettingsSchema as ViewSettingsSchemaType,
 } from './schemas';
+import { generateRowKey } from './utils';
 
 // Only initialize Dexie in the browser
 declare global {
-  // eslint-disable-next-line no-var
   var __offrows_db__: Dexie | undefined;
 }
 
 function createDB() {
   const db = new Dexie('OffrowsDatabase');
-  db.version(11).stores({
-    tables: '++id, name, description, colWidths, rowHeights',
-    rows: '++id, tableId, data, order',
-    views: '++id, tableId, name, isDefault',
+  db.version(12).stores({
+    tables: '++id, name, description, colWidths, rowHeights, version',
+    rows: '++id, tableId, rowKey, data, order, version',
+    views: '++id, tableId, name, isDefault, version',
     files: '++id, name, type, s3Key, synced, syncStatus, lastSyncAttempt, createdAt, updatedAt',
     images: '++id, filename, synced, syncStatus, s3Key, lastSyncAttempt, createdAt, updatedAt',
     deleted_files: '++id, fileId, filename, s3Key, deletedAt, synced, syncStatus',
@@ -123,6 +123,7 @@ export async function initializeDatabase() {
           { id: 'completed', name: 'Completed', type: 'boolean', defaultValue: false },
           { id: 'attachments', name: 'Attachments', type: 'file' },
         ],
+        version: 0,
       },
       {
         name: 'User Management',
@@ -141,6 +142,7 @@ export async function initializeDatabase() {
           { id: 'lastLogin', name: 'Last Login', type: 'date' },
           { id: 'avatar', name: 'Avatar', type: 'image' },
         ],
+        version: 0,
       },
       {
         name: 'Inventory System',
@@ -160,6 +162,7 @@ export async function initializeDatabase() {
           { id: 'lastUpdated', name: 'Last Updated', type: 'date' },
           { id: 'image', name: 'Product Image', type: 'image' },
         ],
+        version: 0,
       },
     ];
 
@@ -181,6 +184,7 @@ export async function initializeDatabase() {
           completed: false,
           attachments: null,
         },
+        version: 0,
       },
       {
         tableId: tableIds[0] as number,
@@ -194,6 +198,7 @@ export async function initializeDatabase() {
           completed: true,
           attachments: null,
         },
+        version: 0,
       },
       {
         tableId: tableIds[0] as number,
@@ -202,11 +207,12 @@ export async function initializeDatabase() {
           status: 'Pending',
           dueDate: '2024-01-20',
           priority: 'Medium',
-          assignee: 'Mike Johnson',
-          progress: 25,
+          assignee: 'Bob Johnson',
+          progress: 0,
           completed: false,
           attachments: null,
         },
+        version: 0,
       },
       // User Management rows
       {
@@ -216,9 +222,10 @@ export async function initializeDatabase() {
           email: 'john@example.com',
           role: 'Admin',
           active: true,
-          lastLogin: '2024-01-10',
+          lastLogin: '2024-01-12',
           avatar: null,
         },
+        version: 0,
       },
       {
         tableId: tableIds[1] as number,
@@ -227,11 +234,12 @@ export async function initializeDatabase() {
           email: 'jane@example.com',
           role: 'User',
           active: true,
-          lastLogin: '2024-01-12',
+          lastLogin: '2024-01-11',
           avatar: null,
         },
+        version: 0,
       },
-      // Inventory rows
+      // Inventory System rows
       {
         tableId: tableIds[2] as number,
         data: {
@@ -240,9 +248,10 @@ export async function initializeDatabase() {
           quantity: 10,
           price: 999.99,
           inStock: true,
-          lastUpdated: '2024-01-10',
+          lastUpdated: '2024-01-12',
           image: null,
         },
+        version: 0,
       },
       {
         tableId: tableIds[2] as number,
@@ -252,9 +261,10 @@ export async function initializeDatabase() {
           quantity: 50,
           price: 19.99,
           inStock: true,
-          lastUpdated: '2024-01-12',
+          lastUpdated: '2024-01-10',
           image: null,
         },
+        version: 0,
       },
     ];
 
@@ -272,6 +282,7 @@ export async function initializeDatabase() {
       rowHeight: 'default',
       colorRules: [],
       isDefault: true,
+      version: 0,
     }));
 
     await getDB()?.table('views').bulkAdd(defaultViews);
@@ -336,6 +347,7 @@ export const tableOperations = {
       rowHeight: 'default',
       colorRules: [],
       isDefault: true,
+      version: 0,
     });
     await getDB()?.table('views').add(defaultView);
 
@@ -396,9 +408,14 @@ export const rowOperations = {
       .equals(row.tableId)
       .toArray()
       .then((rs) => rs.reduce((max, r) => Math.max(max, r.order ?? 0), 0));
+    
+    // Generate rowKey if not provided
+    const rowKey = row.rowKey || generateRowKey(row.tableId, row.data);
+    
     const validatedRow = TableRowSchemaType.parse(
       addTimestamps({
         ...row,
+        rowKey,
         order: maxOrder + 1,
       }),
     );

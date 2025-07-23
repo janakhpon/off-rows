@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "table_row_key_unique" ON "table_rows" USING btree ("table_id","row_key");

@@ -150,7 +150,7 @@ export default function Toolbar() {
             }
           }
         });
-        await addRow({ tableId: activeTable.id!, data });
+        await addRow({ tableId: activeTable.id!, data, version: 0 });
       }
       setNotification({ message: 'CSV import complete!', type: 'success' });
       setIsFileMenuOpen(false);
@@ -191,7 +191,7 @@ export default function Toolbar() {
         for (const fid of fieldIds) {
           if (Object.prototype.hasOwnProperty.call(obj, fid)) data[fid] = obj[fid] as string;
         }
-        await addRow({ tableId: activeTable.id!, data });
+        await addRow({ tableId: activeTable.id!, data, version: 0 });
       }
       setNotification({ message: 'JSON import complete!', type: 'success' });
       setIsFileMenuOpen(false);

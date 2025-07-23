@@ -94,6 +94,7 @@ export const createDefaultTable = (name: string): Omit<Table, 'id' | 'createdAt'
   ],
   colWidths: {},
   rowHeights: {},
+  version: 0,
 });
 
 export const getTableStats = (table: Table) => {

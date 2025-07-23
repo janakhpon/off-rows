@@ -8,11 +8,19 @@ import { validate } from "../middleware/validate";
  * /api/stories:
  *   get:
  *     summary: List all stories
+ *     tags: [Stories]
  *     responses:
  *       200:
  *         description: A list of stories
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/StoryInput'
  *   post:
  *     summary: Create a story
+ *     tags: [Stories]
  *     requestBody:
  *       required: true
  *       content:
@@ -22,29 +30,41 @@ import { validate } from "../middleware/validate";
  *     responses:
  *       201:
  *         description: The created story
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StoryInput'
  *
  * /api/stories/{id}:
  *   get:
  *     summary: Get a story
+ *     tags: [Stories]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: integer
+ *         description: Story ID
  *     responses:
  *       200:
  *         description: A story
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StoryInput'
  *       404:
- *         description: Not found
+ *         $ref: '#/components/responses/NotFound'
  *   put:
  *     summary: Update a story
+ *     tags: [Stories]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: integer
+ *         description: Story ID
  *     requestBody:
  *       required: true
  *       content:
@@ -54,41 +74,27 @@ import { validate } from "../middleware/validate";
  *     responses:
  *       200:
  *         description: The updated story
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StoryInput'
  *       404:
- *         description: Not found
+ *         $ref: '#/components/responses/NotFound'
  *   delete:
  *     summary: Delete a story
+ *     tags: [Stories]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: integer
+ *         description: Story ID
  *     responses:
  *       204:
- *         description: Deleted
+ *         description: Story deleted successfully
  *       404:
- *         description: Not found
- *
- * components:
- *   schemas:
- *     StoryInput:
- *       type: object
- *       required:
- *         - header
- *         - paragraphs
- *         - tags
- *       properties:
- *         header:
- *           type: string
- *         paragraphs:
- *           type: array
- *           items:
- *             type: string
- *         tags:
- *           type: array
- *           items:
- *             type: string
+ *         $ref: '#/components/responses/NotFound'
  */
 const router = Router();
 

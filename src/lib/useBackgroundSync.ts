@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { backgroundSyncService } from './backgroundSync';
 import { useImageSettingsStore } from './imageSettingsStore';
 import { getUnsyncedImages } from './database';
+import { tableSyncService } from './tableSyncService';
+import { useCloudSyncStore } from './cloudSyncStore';
 
 export function useBackgroundSync() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -9,6 +11,7 @@ export function useBackgroundSync() {
   const [syncedCount, setSyncedCount] = useState(0);
 
   const syncImagesToS3 = useImageSettingsStore((s) => s.syncImagesToS3);
+  const { autoSyncTables } = useCloudSyncStore();
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -54,6 +57,21 @@ export function useBackgroundSync() {
       backgroundSyncService.stop();
     }
   }, [syncImagesToS3, isOnline]);
+
+  // Trigger table sync when online status changes and auto sync is enabled
+  useEffect(() => {
+    if (isOnline && autoSyncTables) {
+      // Small delay to ensure backend availability check has completed
+      const timeoutId = setTimeout(() => {
+        tableSyncService.triggerSync(isOnline).catch(error => {
+          console.error('Failed to trigger table sync:', error);
+        });
+      }, 1000);
+
+      return () => clearTimeout(timeoutId);
+    }
+    return undefined;
+  }, [isOnline, autoSyncTables]);
 
   return {
     isOnline,

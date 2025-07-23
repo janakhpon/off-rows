@@ -33,6 +33,18 @@ export interface S3StatusResponse {
   hasBucket: boolean;
 }
 
+export interface TableSyncResponse {
+  tables: Record<string, unknown>[];
+  rows: Record<string, unknown>[];
+  views: Record<string, unknown>[];
+  conflicts?: Array<{ type: string; id: string; message?: string }>;
+}
+
+export interface BackendStatusResponse {
+  available: boolean;
+  version?: string;
+}
+
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -125,6 +137,125 @@ export class ApiService {
     } catch (error) {
       console.error('[ApiService] Failed to get S3 status:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Check backend availability
+   */
+  static async getBackendStatus(): Promise<BackendStatusResponse> {
+    try {
+      const response = await fetchWithRetry(`${API_BASE_URL}/health`, {}, 2, 300);
+      const data = await response.json();
+      return { available: true, version: data.version };
+    } catch (error) {
+      console.error('[ApiService] Failed to get backend status:', error);
+      return { available: false };
+    }
+  }
+
+  /**
+   * Sync all table data to backend
+   */
+  static async syncTablesToCloud(data: {
+    tables: Record<string, unknown>[];
+    rows: Record<string, unknown>[];
+    views: Record<string, unknown>[];
+  }): Promise<TableSyncResponse> {
+    try {
+      console.log('[ApiService] Sending sync request to:', `${API_BASE_URL}/tables/sync`);
+      console.log('[ApiService] Request data:', JSON.stringify(data, null, 2));
+      
+      const response = await fetchWithRetry(`${API_BASE_URL}/tables/sync`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      const result = await response.json();
+      console.log('[ApiService] Sync response:', result);
+      return result;
+    } catch {
+      console.error('[ApiService] Failed to sync tables to cloud');
+      throw new Error('Failed to sync tables to cloud');
+    }
+  }
+
+  /**
+   * Get all tables from backend
+   */
+  static async getTablesFromCloud(): Promise<Record<string, unknown>[]> {
+    try {
+      const response = await fetchWithRetry(`${API_BASE_URL}/tables`, {}, 2, 300);
+      return await response.json();
+    } catch {
+      console.error('[ApiService] Failed to get tables from cloud');
+      throw new Error('Failed to get tables from cloud');
+    }
+  }
+
+  /**
+   * Get all rows for a table from backend
+   */
+  static async getTableRowsFromCloud(tableId: number): Promise<Record<string, unknown>[]> {
+    try {
+      const response = await fetchWithRetry(`${API_BASE_URL}/tables/${tableId}/rows`, {}, 2, 300);
+      return await response.json();
+    } catch {
+      console.error('[ApiService] Failed to get table rows from cloud');
+      throw new Error('Failed to get table rows from cloud');
+    }
+  }
+
+  /**
+   * Get all views for a table from backend
+   */
+  static async getTableViewsFromCloud(tableId: number): Promise<Record<string, unknown>[]> {
+    try {
+      const response = await fetchWithRetry(`${API_BASE_URL}/tables/${tableId}/views`, {}, 2, 300);
+      return await response.json();
+    } catch {
+      console.error('[ApiService] Failed to get table views from cloud');
+      throw new Error('Failed to get table views from cloud');
+    }
+  }
+
+  /**
+   * Get a single table by ID from backend
+   */
+  static async getTableFromCloud(tableId: string | number): Promise<Record<string, unknown> | null> {
+    try {
+      const response = await fetchWithRetry(`${API_BASE_URL}/tables/${tableId}`, {}, 2, 300);
+      if (response.status === 404) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+  /**
+   * Get a single row by ID from backend
+   */
+  static async getTableRowFromCloud(rowId: string | number): Promise<Record<string, unknown> | null> {
+    try {
+      const response = await fetchWithRetry(`${API_BASE_URL}/tables/rows/${rowId}`, {}, 2, 300);
+      if (response.status === 404) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+  /**
+   * Get a single view by ID from backend
+   */
+  static async getTableViewFromCloud(viewId: string | number): Promise<Record<string, unknown> | null> {
+    try {
+      const response = await fetchWithRetry(`${API_BASE_URL}/tables/views/${viewId}`, {}, 2, 300);
+      if (response.status === 404) return null;
+      return await response.json();
+    } catch {
+      return null;
     }
   }
 } 

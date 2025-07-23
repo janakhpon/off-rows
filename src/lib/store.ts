@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { Table, TableRow, ViewSettings } from './schemas';
 import { tableOperations, rowOperations, viewOperations, initializeDatabase } from './database';
+import { tableSyncService } from './tableSyncService';
 
 interface AppState {
   // State
@@ -14,6 +15,7 @@ interface AppState {
   error: string | null;
   sidebarCollapsed: boolean;
   selectedRows: Set<number>;
+  syncNotification?: string | null;
 
   // Actions
   initialize: () => Promise<void>;
@@ -21,6 +23,8 @@ interface AppState {
   setSidebarCollapsed: (collapsed: boolean) => void;
   setSelectedRows: (rows: Set<number>) => void;
   setError: (error: string | null) => void;
+  setSyncNotification: (msg: string | null) => void;
+  clearSyncNotification: () => void;
 
   // Table operations
   addTable: (table: Omit<Table, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
@@ -85,6 +89,8 @@ const createInitialState = (): Omit<
   | 'updateColWidths'
   | 'updateRowHeights'
   | 'resetState'
+  | 'setSyncNotification'
+  | 'clearSyncNotification'
 > => ({
   tables: [],
   activeTable: null,
@@ -96,6 +102,7 @@ const createInitialState = (): Omit<
   sidebarCollapsed: false,
   selectedRows: new Set<number>(),
   updateColumn: async () => {},
+  syncNotification: null,
 });
 
 const withLoading = <T extends object>(updates: T) => ({
@@ -132,6 +139,9 @@ export const useAppStore = create<AppState>()(
       (set, get) => ({
         // Initial state
         ...createInitialState(),
+        syncNotification: null,
+        setSyncNotification: (msg) => set({ syncNotification: msg }),
+        clearSyncNotification: () => set({ syncNotification: null }),
 
         // Basic actions
         initialize: async () => {
@@ -175,6 +185,10 @@ export const useAppStore = create<AppState>()(
               if (tables.length === 1 && tables[0]) {
                 get().setActiveTable(tables[0]);
               }
+
+              // Trigger table sync if enabled
+              tableSyncService.incrementPendingChanges();
+              await tableSyncService.triggerSync(navigator.onLine);
             }, 'Failed to add table');
             set(withoutLoading({}));
           } catch (error) {
@@ -197,6 +211,10 @@ export const useAppStore = create<AppState>()(
                   set({ activeTable: updatedTable });
                 }
               }
+
+              // Trigger table sync if enabled
+              tableSyncService.incrementPendingChanges();
+              await tableSyncService.triggerSync(navigator.onLine);
             }, 'Failed to update table');
             set(withoutLoading({}));
           } catch (error) {
@@ -217,6 +235,10 @@ export const useAppStore = create<AppState>()(
                 const { tables } = get();
                 set({ activeTable: tables.length > 0 && tables[0] ? tables[0] : null });
               }
+
+              // Trigger table sync if enabled
+              tableSyncService.incrementPendingChanges();
+              await tableSyncService.triggerSync(navigator.onLine);
             }, 'Failed to delete table');
             set(withoutLoading({}));
           } catch (error) {
@@ -243,6 +265,10 @@ export const useAppStore = create<AppState>()(
             await withAsyncErrorHandling(async () => {
               await rowOperations.add(row);
               await get().refreshRows();
+
+              // Trigger row sync if enabled
+              tableSyncService.incrementPendingChanges();
+              await tableSyncService.triggerSync(navigator.onLine);
             }, 'Failed to add row');
             set(withoutLoading({}));
           } catch (error) {
@@ -257,6 +283,10 @@ export const useAppStore = create<AppState>()(
             await withAsyncErrorHandling(async () => {
               await rowOperations.update(id, updates);
               await get().refreshRows();
+
+              // Trigger row sync if enabled
+              tableSyncService.incrementPendingChanges();
+              await tableSyncService.triggerSync(navigator.onLine);
             }, 'Failed to update row');
             set(withoutLoading({}));
           } catch (error) {
@@ -271,6 +301,10 @@ export const useAppStore = create<AppState>()(
             await withAsyncErrorHandling(async () => {
               await rowOperations.delete(id);
               await get().refreshRows();
+
+              // Trigger row sync if enabled
+              tableSyncService.incrementPendingChanges();
+              await tableSyncService.triggerSync(navigator.onLine);
             }, 'Failed to delete row');
             set(withoutLoading({ selectedRows: new Set<number>() }));
           } catch (error) {
@@ -284,6 +318,10 @@ export const useAppStore = create<AppState>()(
           try {
             await rowOperations.bulkUpdate(rows);
             set({ rows });
+
+            // Trigger row sync if enabled
+            tableSyncService.incrementPendingChanges();
+            await tableSyncService.triggerSync(navigator.onLine);
           } catch (error) {
             set({ error: error instanceof Error ? error.message : 'Failed to update rows' });
             throw error;
@@ -313,6 +351,10 @@ export const useAppStore = create<AppState>()(
           try {
             await viewOperations.add(view);
             await get().refreshViews();
+
+            // Trigger view sync if enabled
+            tableSyncService.incrementPendingChanges();
+            await tableSyncService.triggerSync(navigator.onLine);
           } catch (error) {
             set({ error: error instanceof Error ? error.message : 'Failed to add view' });
           } finally {
@@ -325,6 +367,10 @@ export const useAppStore = create<AppState>()(
           try {
             await viewOperations.update(id, updates);
             await get().refreshViews();
+
+            // Trigger view sync if enabled
+            tableSyncService.incrementPendingChanges();
+            await tableSyncService.triggerSync(navigator.onLine);
           } catch (error) {
             set({ error: error instanceof Error ? error.message : 'Failed to update view' });
           } finally {
@@ -337,6 +383,10 @@ export const useAppStore = create<AppState>()(
           try {
             await viewOperations.delete(id);
             await get().refreshViews();
+
+            // Trigger view sync if enabled
+            tableSyncService.incrementPendingChanges();
+            await tableSyncService.triggerSync(navigator.onLine);
           } catch (error) {
             set({ error: error instanceof Error ? error.message : 'Failed to delete view' });
           } finally {
@@ -383,6 +433,10 @@ export const useAppStore = create<AppState>()(
             }
             await rowOperations.bulkUpdate(rows);
             await get().refreshRows();
+
+            // Trigger table sync if enabled
+            tableSyncService.incrementPendingChanges();
+            await tableSyncService.triggerSync(navigator.onLine);
           } catch (error) {
             set({ error: error instanceof Error ? error.message : 'Failed to add column' });
             throw error;
@@ -405,6 +459,10 @@ export const useAppStore = create<AppState>()(
             }
             await rowOperations.bulkUpdate(rows);
             await get().refreshRows();
+
+            // Trigger table sync if enabled
+            tableSyncService.incrementPendingChanges();
+            await tableSyncService.triggerSync(navigator.onLine);
           } catch (error) {
             set({ error: error instanceof Error ? error.message : 'Failed to delete column' });
             throw error;
@@ -421,16 +479,28 @@ export const useAppStore = create<AppState>()(
           );
           await tableOperations.update(tableId, { fields: updatedFields });
           await get().refreshTables();
+
+          // Trigger table sync if enabled
+          tableSyncService.incrementPendingChanges();
+          await tableSyncService.triggerSync(navigator.onLine);
         },
 
         // Add actions for colWidths/rowHeights
         updateColWidths: async (tableId, colWidths) => {
           await tableOperations.updateColWidths(tableId, colWidths);
           await get().refreshTables();
+
+          // Trigger table sync if enabled
+          tableSyncService.incrementPendingChanges();
+          await tableSyncService.triggerSync(navigator.onLine);
         },
         updateRowHeights: async (tableId, rowHeights) => {
           await tableOperations.updateRowHeights(tableId, rowHeights);
           await get().refreshTables();
+
+          // Trigger table sync if enabled
+          tableSyncService.incrementPendingChanges();
+          await tableSyncService.triggerSync(navigator.onLine);
         },
 
         // Reset state
